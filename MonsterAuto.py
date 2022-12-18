@@ -15,7 +15,7 @@ import numpy
 import ThunderBorg
 import Settings
 import ImageProcessor
-print 'Libraries loaded'
+print('Libraries loaded')
 
 # Derive some settings from the main settings
 if Settings.voltageOut > Settings.voltageIn:
@@ -29,10 +29,10 @@ waitKeyDelay = int(showFrameDelay * 1000)
 # Change the current directory to where this script is
 scriptDir = os.path.dirname(sys.argv[0])
 os.chdir(scriptDir)
-print 'Running script in directory "%s"' % (scriptDir)
+print('Running script in directory "%s"' % (scriptDir))
 
 if Settings.testMode:
-    print 'TEST MODE: Skipping board setup'
+    print('TEST MODE: Skipping board setup')
 else:
     # Setup the ThunderBorg
     global TB
@@ -42,13 +42,13 @@ else:
     if not TB.foundChip:
         boards = ThunderBorg.ScanForThunderBorg()
         if len(boards) == 0:
-            print 'No ThunderBorg found, check you are attached :)'
+            print('No ThunderBorg found, check you are attached :)')
         else:
-            print 'No ThunderBorg at address %02X, but we did find boards:' % (TB.i2cAddress)
+            print('No ThunderBorg at address %02X, but we did find boards:' % (TB.i2cAddress))
             for board in boards:
-                print '    %02X (%d)' % (board, board)
-            print 'If you need to change the I²C address change the setup line so it is correct, e.g.'
-            print 'TB.i2cAddress = 0x%02X' % (boards[0])
+                print('    %02X (%d)' % (board, board))
+            print('If you need to change the I²C address change the setup line so it is correct, e.g.')
+            print('TB.i2cAddress = 0x%02X' % (boards[0]))
         sys.exit()
     TB.SetCommsFailsafe(False)
 
@@ -76,7 +76,7 @@ def TestModeMotors(driveLeft, driveRight):
     Settings.testModeCounter += 1
     if Settings.testModeCounter >= Settings.fpsInterval:
         Settings.testModeCounter = 0
-        print 'MOTORS: %+07.2f %% left, %+07.2f %% right' % (driveLeft, driveRight)
+        print('MOTORS: %+07.2f %% left, %+07.2f %% right' % (driveLeft, driveRight))
 
 # Push the appropriate motor function into the settings module
 if Settings.testMode:
@@ -85,7 +85,7 @@ else:
     Settings.MonsterMotors = MonsterMotors
 
 # Startup sequence
-print 'Setup camera input'
+print('Setup camera input')
 os.system('sudo modprobe bcm2835-v4l2')
 Settings.capture = cv2.VideoCapture(0) 
 Settings.capture.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, Settings.cameraWidth);
@@ -94,23 +94,23 @@ Settings.capture.set(cv2.cv.CV_CAP_PROP_FPS, Settings.frameRate);
 if not Settings.capture.isOpened():
     Settings.capture.open()
     if not Settings.capture.isOpened():
-        print 'Failed to open the camera'
+        print('Failed to open the camera')
         sys.exit()
 
-print 'Setup stream processor threads'
+print('Setup stream processor threads')
 Settings.frameLock = threading.Lock()
 Settings.processorPool = [ImageProcessor.StreamProcessor(i+1) for i in range(Settings.processingThreads)]
 allProcessors = Settings.processorPool[:]
 
-print 'Setup control loop'
+print('Setup control loop')
 Settings.controller = ImageProcessor.ControlLoop()
 
-print 'Wait ...'
+print('Wait ...')
 time.sleep(2)
 captureThread = ImageProcessor.ImageCapture()
 
 try:
-    print 'Press CTRL+C to quit'
+    print('Press CTRL+C to quit')
     Settings.MonsterMotors(0, 0)
     # Create a window to show images if we need one
     if Settings.showImages:
@@ -133,14 +133,14 @@ try:
     Settings.MonsterMotors(0, 0)
 except KeyboardInterrupt:
     # CTRL+C exit, disable all drives
-    print '\nUser shutdown'
+    print('\nUser shutdown')
     Settings.MonsterMotors(0, 0)
 except:
     # Unexpected error, shut down!
     e = sys.exc_info()
-    print
-    print e
-    print '\nUnexpected error, shutting down!'
+    print()
+    print(e)
+    print('\nUnexpected error, shutting down!')
     Settings.MonsterMotors(0, 0)
 # Tell each thread to stop, and wait for them to end
 Settings.running = False
@@ -160,4 +160,4 @@ if not Settings.testMode:
     # Turn the LEDs off to indicate we are done
     TB.SetLedShowBattery(False)
     TB.SetLeds(0,0,0)
-print 'Program terminated.'
+print('Program terminated.')

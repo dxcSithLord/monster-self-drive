@@ -1,6 +1,8 @@
 # MonsterBorg Self-drive
 Easy to understand self-driving example for [MonsterBorg](https://www.piborg.org/monsterborg?ref=selfdrive).
 
+Update for Python3
+
 ![](track-overlay-fpi.PNG?raw=true)
 
 This project is a simple example of how to make our Raspberry Pi based MonsterBorg robot fully autonomous using nothing more than a camera input for making decisions.  The code is entirely written in Python and makes extensive use of OpenCV to access the camera and process the images.  It should work with any Video4Linux capable camera attached to the Pi, but we have tested it with the official Raspberry Pi Camera.

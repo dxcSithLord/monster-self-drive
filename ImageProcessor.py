@@ -11,7 +11,8 @@ import math
 import random
 import Settings
 
-def rgb2bgr((r, g, b)):
+def rgb2bgr(xxx_todo_changeme1):
+    (r, g, b) = xxx_todo_changeme1
     return b, g, r
 
 # PID processing thread
@@ -23,7 +24,7 @@ class ControlLoop(threading.Thread):
         self.terminated = False
         self.eventWait = 2.0 / Settings.frameRate
         self.Reset()
-        print 'Control loop thread started with idle time of %.2fs' % (self.eventWait)
+        print('Control loop thread started with idle time of %.2fs' % (self.eventWait))
         self.start()
 
     def run(self):
@@ -41,7 +42,7 @@ class ControlLoop(threading.Thread):
                 finally:
                     # Reset the event trigger
                     self.event.clear()
-        print 'Control loop thread terminated'
+        print('Control loop thread terminated')
 
     def Reset(self):
         with self.lock:
@@ -102,7 +103,8 @@ class ControlLoop(threading.Thread):
         filteredSteering = numpy.mean(self.firHistorySteering)
         self.SetDrive(filteredSpeed, filteredSteering)
 
-    def RunLoop(self, (isGood, position, change)):
+    def RunLoop(self, xxx_todo_changeme):
+        (isGood, position, change) = xxx_todo_changeme
         with self.lock:
             if isGood:
                 # Position offset loop
@@ -153,7 +155,7 @@ class StreamProcessor(threading.Thread):
             self.resize = True
         else:
             self.resize = False
-        print 'Processor thread %s started with idle time of %.2fs' % (self.name, self.eventWait)
+        print('Processor thread %s started with idle time of %.2fs' % (self.name, self.eventWait))
         self.start()
 
     def run(self):
@@ -178,7 +180,7 @@ class StreamProcessor(threading.Thread):
                     # Return ourselves to the pool at the back
                     with Settings.frameLock:
                         Settings.processorPool.insert(0, self)
-        print 'Processor thread %s terminated' % (self.name)
+        print('Processor thread %s terminated' % (self.name))
     
     # Find sections in a boolean image
     # Returns a list of size and location pairs sorted by largest first
@@ -233,7 +235,7 @@ class StreamProcessor(threading.Thread):
                 if Settings.showFps:
                     fps = Settings.fpsInterval / (frameStamp - Settings.lastFrameStamp)
                     fps = '%.1f FPS' % (fps)
-                    print fps
+                    print(fps)
                 Settings.frameAnnounce = 0
                 Settings.lastFrameStamp = frameStamp
         # Resize if needed
@@ -332,10 +334,10 @@ class ImageCapture(threading.Thread):
                     processor.nextFrame = frame.copy()
                     processor.event.set()
                 else:
-                    print 'Capture stream lost...'
+                    print('Capture stream lost...')
                     Settings.running = False
                     break
             else:
                 # When the pool is starved we wait a while to allow a processor to finish
                 time.sleep(0.01)
-        print 'Streaming terminated.'
+        print('Streaming terminated.')
