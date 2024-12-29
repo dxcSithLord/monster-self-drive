@@ -11,8 +11,8 @@ import math
 import random
 import Settings
 
-def rgb2bgr(xxx_todo_changeme1):
-    (r, g, b) = xxx_todo_changeme1
+def rgb2bgr(colour):
+    (r, g, b) = colour
     return b, g, r
 
 # PID processing thread
@@ -103,8 +103,8 @@ class ControlLoop(threading.Thread):
         filteredSteering = numpy.mean(self.firHistorySteering)
         self.SetDrive(filteredSpeed, filteredSteering)
 
-    def RunLoop(self, xxx_todo_changeme):
-        (isGood, position, change) = xxx_todo_changeme
+    def RunLoop(self, nextVector):
+        (isGood, position, change) = nextVector
         with self.lock:
             if isGood:
                 # Position offset loop
