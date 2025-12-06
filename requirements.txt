@@ -1,0 +1,53 @@
+# MonsterBorg Self-Drive Project Requirements
+# Python 3.11+ (3.12 recommended for development)
+# Target: Raspberry Pi 3B with Raspberry Pi OS / Ubuntu
+
+# Core Dependencies
+numpy>=1.26.0
+opencv-python>=4.9.0
+opencv-contrib-python>=4.9.0  # For extended tracking algorithms
+
+# Raspberry Pi Camera Support
+# Note: picamera is for older camera stack, picamera2 is for libcamera (newer)
+picamera>=1.13; platform_machine=="armv7l" or platform_machine=="aarch64"
+picamera2>=0.3.16; platform_machine=="armv7l" or platform_machine=="aarch64"
+
+# Alternative: For development on non-Pi systems
+# opencv-python will use regular webcam
+
+# Web Server & Communication
+websockets>=12.0  # For real-time WebSocket communication
+aiohttp>=3.9.0  # Async HTTP server (optional, for advanced web features)
+
+# Hardware Interface (I2C for ThunderBorg and IMU)
+smbus2>=0.4.3  # I2C communication (Python 3 compatible)
+
+# Optional: IMU/Sensor Support
+adafruit-circuitpython-mpu6050>=1.2.0  # MPU6050 IMU module
+adafruit-circuitpython-bno055>=1.6.0  # BNO055 IMU (alternative)
+
+# Optional: Machine Learning (TensorFlow Lite for object detection)
+tflite-runtime>=2.14.0; platform_machine=="armv7l" or platform_machine=="aarch64"
+# For x86_64 development:
+tensorflow>=2.15.0; platform_machine=="x86_64"
+
+# Optional: Advanced Object Detection
+onnxruntime>=1.16.0  # ONNX Runtime for efficient inference
+
+# Utilities
+Pillow>=10.2.0  # Image processing utilities
+scipy>=1.12.0  # Scientific computing (for filtering, signal processing)
+
+# Development Dependencies (not needed on Pi)
+pytest>=8.0.0  # Testing framework
+pytest-asyncio>=0.23.0  # Async testing
+black>=24.0.0  # Code formatting
+flake8>=7.0.0  # Linting
+mypy>=1.8.0  # Type checking
+
+# Documentation
+sphinx>=7.2.0  # Documentation generation
+sphinx-rtd-theme>=2.0.0  # Read the Docs theme
+
+# Version Control Helpers
+pre-commit>=3.6.0  # Git hooks for code quality
