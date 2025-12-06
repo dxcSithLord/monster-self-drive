@@ -22,11 +22,11 @@ Each architectural decision should include:
 | ID | Title | Status | Date | Priority |
 |----|-------|--------|------|----------|
 | ADR-001 | WebSocket Library Selection | 🟢 Accepted | 2025-12-06 | P0 |
-| ADR-002 | Configuration Format | 🟡 Proposed | 2025-12-06 | P1 |
-| ADR-003 | Directory Structure | 🟡 Proposed | 2025-12-06 | P1 |
+| ADR-002 | Configuration Format | 🟢 Accepted | 2025-12-06 | P1 |
+| ADR-003 | Directory Structure | 🟢 Accepted | 2025-12-06 | P1 |
 | ADR-004 | Multi-User Control Model | 🟢 Accepted | 2025-12-06 | P0 |
-| ADR-005 | Tracking Algorithm Strategy | 🟡 Proposed | 2025-12-06 | P1 |
-| ADR-006 | IMU Hardware Status | 🟡 Proposed | 2025-12-06 | P3 |
+| ADR-005 | Tracking Algorithm Strategy | 🟢 Accepted | 2025-12-06 | P1 |
+| ADR-006 | IMU Hardware Status | 🟢 Accepted | 2025-12-06 | P3 |
 | ADR-007 | Frame Rate Requirements | 🟡 Proposed | 2025-12-06 | P1 |
 | ADR-008 | Threading Model | 🟡 Proposed | 2025-12-06 | P1 |
 | ADR-009 | Safety System Architecture | 🟡 Proposed | 2025-12-06 | P0 |
@@ -232,9 +232,10 @@ This recommendation was accepted based on:
 
 ## ADR-002: Configuration Format
 
-**Status:** 🟡 PROPOSED
+**Status:** 🟢 ACCEPTED
 **Date:** 2025-12-06
-**Deciders:** [To be assigned]
+**Decision Date:** 2025-12-06
+**Deciders:** Project Lead
 **Priority:** P1 - Resolve before Phase 1
 
 ### Context
@@ -247,7 +248,23 @@ Configuration is currently stored in `Settings.py` (Python module), but document
 
 ### Decision
 
-**[PENDING - To be decided]**
+**ACCEPTED: JSON Configuration with Python Wrapper**
+
+The project will use **JSON** as the primary configuration storage format with a Python wrapper for validation and access.
+
+**Implementation Approach:**
+1. **Configuration Storage:** JSON file containing all settings key-value pairs
+2. **Settings.py Role:** Import and validate JSON configuration at startup
+3. **Web Interface:** Configuration view page to display/confirm current settings
+4. **Migration:** Convert existing Settings.py key-value pairs to JSON format
+
+**Rationale:**
+1. **Industry Standard:** JSON is widely understood and supported
+2. **Schema Validation:** Can implement JSON Schema validation for type safety
+3. **Web Integration:** Easy to serialize/deserialize for web configuration interface
+4. **Editability:** Users can edit JSON file directly or via web interface
+5. **Validation Layer:** Settings.py provides Python validation and default values
+6. **Language Agnostic:** Future tools can read configuration without Python
 
 ### Options Analysis
 
@@ -399,21 +416,36 @@ maxPower = 0.8
 
 ### Recommendation
 
-**Suggested Decision:** **JSON with comments extension** OR **TOML**
+**✅ DECISION ACCEPTED**
 
-**Rationale:**
-1. **JSON** if integration/automation is priority
-2. **TOML** if user experience is priority
-3. Both support validation and hierarchy
-4. Both have good Python support
+**Selected:** JSON Configuration with Python Wrapper (Hybrid of Options 1 & 2)
 
-**Hybrid Approach:**
+**Final Implementation:**
 ```python
-# Support both! Load priority:
-# 1. config.json (if exists)
-# 2. config.toml (if exists)
-# 3. Settings.py (fallback/defaults)
+# Settings.py becomes a loader/validator:
+import json
+import jsonschema
+
+class Settings:
+    def __init__(self):
+        self.load_config()
+
+    def load_config(self):
+        with open('config.json', 'r') as f:
+            config = json.load(f)
+        self.validate(config)
+        # Set attributes from config
+
+    def validate(self, config):
+        # JSON Schema validation
+        # Type checking
+        # Range validation
 ```
+
+**Web Interface Requirement:**
+- Configuration view page in web interface
+- Display all current settings (read-only for MVP)
+- Future: Allow editing through web UI
 
 ### Migration Plan
 
@@ -440,31 +472,37 @@ maxPower = 0.8
 ### Consequences
 
 **Positive:**
-- Clear configuration location
-- User can edit without Python knowledge
-- Validation prevents errors
-- Easier deployment automation
+- Clear configuration location (config.json)
+- User can edit JSON directly or via web interface
+- JSON Schema validation prevents errors
+- Settings.py provides Python-level validation layer
+- Easy to serialize for web interface display
+- Language-agnostic configuration format
 
 **Negative:**
-- Migration effort required
-- Need to document new format
-- Potential for configuration errors
+- Migration effort required (convert Settings.py to JSON)
+- Need to implement JSON Schema
+- Potential for JSON syntax errors (mitigated by web interface)
+- No comments in JSON (can use JSON5 or document separately)
 
 ### Action Items
 
-- [ ] Choose format (JSON or TOML recommended)
-- [ ] Create schema definition
-- [ ] Write migration script
-- [ ] Update documentation
-- [ ] Create example config file
+- [x] Choose format - JSON with Python wrapper selected
+- [ ] Convert current Settings.py key-value pairs to config.json
+- [ ] Refactor Settings.py to load and validate JSON
+- [ ] Create JSON Schema for validation
+- [ ] Implement web UI configuration view page
+- [ ] Update documentation with JSON structure
+- [ ] Create example config.json file
 
 ---
 
 ## ADR-003: Directory Structure
 
-**Status:** 🟡 PROPOSED
+**Status:** 🟢 ACCEPTED
 **Date:** 2025-12-06
-**Deciders:** [To be assigned]
+**Decision Date:** 2025-12-06
+**Deciders:** Project Lead
 **Priority:** P1 - Resolve before Phase 1
 
 ### Context
@@ -473,6 +511,7 @@ Current codebase has flat structure in root directory. CONSTITUTION proposes `sr
 - Migrate to src/ structure OR keep flat
 - When to migrate (before or during development)
 - Import path changes
+- **Requirement:** Separation of source and release components
 
 ### Current Structure
 
@@ -485,28 +524,62 @@ monster-self-drive/
 └── monsterWeb.py
 ```
 
-### Proposed Structure (from CONSTITUTION)
+### Decision
+
+**ACCEPTED: Structured Approach with Source/Release Separation**
+
+The project will migrate to a structured directory layout that separates source code from release/deployment components.
+
+**Rationale:**
+1. **Separation of Concerns:** Source code separated from configuration, documentation, and release artifacts
+2. **Scalability:** Better organization as project grows (currently 5 files, will expand significantly)
+3. **Professional Structure:** Follows Python best practices for larger projects
+4. **Build Process:** Clear separation enables proper build/release workflows
+5. **Testability:** Easier to organize tests alongside source code
+
+**Proposed Structure:**
 
 ```
 monster-self-drive/
-└── src/
-    ├── core/
-    │   ├── __init__.py
-    │   └── monster_auto.py
-    ├── web/
-    │   ├── __init__.py
-    │   └── web_server.py
-    ├── vision/
-    │   ├── __init__.py
-    │   └── image_processor.py
-    └── hardware/
-        ├── __init__.py
-        └── thunderborg.py
+├── src/                    # Source code
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── settings.py     # Config loader/validator
+│   │   └── monster_auto.py
+│   ├── web/
+│   │   ├── __init__.py
+│   │   └── web_server.py   # Flask-SocketIO server
+│   ├── vision/
+│   │   ├── __init__.py
+│   │   ├── image_processor.py
+│   │   └── tracking.py     # Color-based tracking
+│   ├── hardware/
+│   │   ├── __init__.py
+│   │   ├── thunderborg.py
+│   │   └── motors.py
+│   └── safety/
+│       ├── __init__.py
+│       ├── control_manager.py  # Single user control
+│       └── emergency_stop.py
+├── config/                 # Configuration files
+│   ├── config.json         # Runtime configuration
+│   └── config.schema.json  # JSON Schema
+├── docs/                   # Documentation (existing)
+├── tests/                  # Test files
+│   ├── unit/
+│   └── integration/
+├── release/                # Release artifacts (git-ignored)
+│   ├── dist/
+│   └── build/
+├── static/                 # Web UI assets
+│   ├── css/
+│   ├── js/
+│   └── img/
+├── templates/              # Flask templates
+├── requirements.txt
+├── setup.py               # Python package setup
+└── README.md
 ```
-
-### Decision
-
-**[PENDING - To be decided]**
 
 ### Options
 
@@ -550,34 +623,48 @@ monster-self-drive/
 
 ### Recommendation
 
-**Suggested Decision:** **Migrate to src/ structure BEFORE Phase 1**
+**✅ DECISION ACCEPTED**
+
+**Selected:** Structured approach with source/release separation (Enhanced Option 2)
+
+**Migration Timing:** BEFORE Phase 1 implementation begins
 
 **Rationale:**
-1. Project will grow (6+ modules planned)
-2. Better to migrate early (less code to change)
-3. Clearer organization helps new contributors
+1. Project will grow significantly (MVP alone requires 10+ new modules)
+2. Better to migrate early (less code to change now than later)
+3. Clearer organization helps contributors and maintenance
 4. Testing benefits from src/ separation
+5. **Release separation** requirement addressed with dedicated release/ directory
 
 ### Migration Plan
 
 ```bash
-# Step 1: Create structure
-mkdir -p src/{core,web,vision,hardware,utils}
+# Step 1: Create new directory structure
+mkdir -p src/{core,web,vision,hardware,safety}
+mkdir -p config
+mkdir -p tests/{unit,integration}
+mkdir -p release/{dist,build}
+mkdir -p static/{css,js,img}
+mkdir -p templates
 
-# Step 2: Move files
+# Step 2: Move existing files
 mv MonsterAuto.py src/core/monster_auto.py
 mv monsterWeb.py src/web/web_server.py
 mv ImageProcessor.py src/vision/image_processor.py
 mv ThunderBorg.py src/hardware/thunderborg.py
-mv Settings.py src/core/settings.py
+mv Settings.py src/core/settings.py  # Will refactor to JSON loader
 
 # Step 3: Add __init__.py files
 touch src/__init__.py
-touch src/{core,web,vision,hardware,utils}/__init__.py
+touch src/{core,web,vision,hardware,safety}/__init__.py
 
 # Step 4: Update imports in all files
+# Example: from src.core.settings import Settings
 
-# Step 5: Update README and documentation
+# Step 5: Add release/ to .gitignore
+echo "release/" >> .gitignore
+
+# Step 6: Update README and documentation with new structure
 ```
 
 ### Consequences
@@ -595,10 +682,13 @@ touch src/{core,web,vision,hardware,utils}/__init__.py
 
 ### Action Items
 
-- [ ] Approve migration decision
-- [ ] Create migration script
-- [ ] Update all imports
-- [ ] Update documentation
+- [x] Approve migration decision - ACCEPTED: Structured source/release separation
+- [ ] Execute migration plan (create directories, move files)
+- [ ] Update all imports to use src.* paths
+- [ ] Create setup.py for package management
+- [ ] Add release/ to .gitignore
+- [ ] Update README with new structure
+- [ ] Update IMPLEMENTATION_PLAN.md with new paths
 - [ ] Test all modules after migration
 
 ---
@@ -853,41 +943,251 @@ class ControlManager:
 
 ## ADR-005: Tracking Algorithm Strategy
 
-**Status:** 🟡 PROPOSED
+**Status:** 🟢 ACCEPTED
 **Date:** 2025-12-06
+**Decision Date:** 2025-12-06
+**Deciders:** Project Lead
 **Priority:** P1 - Needed before Phase 2
 
 ### Context
 
 Multiple tracking algorithms mentioned (KCF, CSRT, MOSSE, Template, Color) but no clear strategy for which to implement when.
 
+**Constraints:**
+- Must function within Raspberry Pi 3B limitations
+- Limited CPU resources (4-core ARM Cortex-A53 @ 1.2GHz)
+- Limited memory (1GB RAM)
+- Real-time performance required (target 30 fps)
+
 ### Decision
 
-**[PENDING - To be decided]**
+**ACCEPTED: Color-Based Tracking for MVP**
 
-### Proposed Strategy
+The project will implement **color-based tracking** as the primary tracking algorithm for the MVP (Phase 2).
 
-**Phase 2 MVP:** Single algorithm (CSRT recommended)
-**Phase 3:** Add fallback (MOSSE for speed)
-**Phase 4:** True hybrid with algorithm selection
+**Rationale:**
+1. **Performance:** Lightest computational load, suitable for Raspberry Pi 3B
+2. **Simplicity:** Easiest to implement and debug
+3. **Real-time Capable:** Can achieve 30 fps on Pi 3B hardware
+4. **Sufficient for MVP:** Adequate for controlled environment testing
+5. **Foundation:** Provides baseline for future algorithm comparison
 
-**Rationale:** Start simple, add complexity as needed
+**MVP Implementation:**
+- HSV color space tracking (more robust than RGB)
+- Configurable color range via web interface
+- Bounding box detection
+- Centroid calculation for target position
+
+**Future Enhancements (Post-MVP):**
+- Phase 3: Add MOSSE tracker as fallback (fast, lightweight)
+- Phase 4: Consider KCF for improved robustness
+- Phase 5: Hybrid approach with algorithm selection
+
+**Performance Targets:**
+- Target FPS: 30 fps minimum
+- Acceptable FPS: 15 fps (degraded mode)
+- Processing time budget: <33ms per frame
+
+### Algorithm Comparison
+
+| Algorithm | CPU Load | Accuracy | FPS on Pi 3B | Complexity |
+|-----------|----------|----------|--------------|------------|
+| **Color-based** | ⭐ (lowest) | ⭐⭐ | 30+ fps | Low |
+| MOSSE | ⭐⭐ | ⭐⭐⭐ | 25-30 fps | Medium |
+| KCF | ⭐⭐⭐ | ⭐⭐⭐⭐ | 15-20 fps | Medium |
+| CSRT | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | 8-12 fps | High |
+
+**Decision:** Color-based selected for MVP due to lowest CPU load and highest FPS
 
 ### Action Items
 
-- [ ] Prototype CSRT performance on Raspberry Pi
-- [ ] Document algorithm selection in IMPLEMENTATION.md
-
-**Note:** Detailed analysis deferred until Phase 2 planning
+- [x] Choose algorithm for MVP - Color-based tracking selected
+- [ ] Implement HSV color-based tracking in src/vision/tracking.py
+- [ ] Add color range configuration to web UI
+- [ ] Performance test on Raspberry Pi 3B hardware
+- [ ] Document tracking algorithm in IMPLEMENTATION_PLAN.md
+- [ ] Create fallback plan if performance inadequate
 
 ---
 
-## ADR-006 through ADR-010: Placeholder
+## ADR-006: IMU Hardware Status and Inversion Detection
+
+**Status:** 🟢 ACCEPTED
+**Date:** 2025-12-06
+**Decision Date:** 2025-12-06
+**Deciders:** Project Lead
+**Priority:** P3 - Future enhancement
+
+### Context
+
+Documentation shows conflicting information about IMU (Inert
+
+ial Measurement Unit) requirements:
+- REQUIREMENTS lists as "Recommended Additional Hardware" (optional)
+- CONSTITUTION treats as "Integrated module" (required)
+- Need to determine inversion detection method for robot
+
+**Constraint:** Minimize additional hardware requirements for MVP
+
+### Decision
+
+**ACCEPTED: IMU Optional - Image-Based Inversion Detection for MVP**
+
+**MVP Approach (No Additional Hardware):**
+- IMU is **OPTIONAL** for MVP
+- Inversion detection via **image analysis**
+- No additional sensors required initially
+
+**Inversion Detection Algorithm:**
+
+1. **Image Analysis Method:**
+   - Analyze camera image for orientation indicators
+   - Look for expected features (sky, floor, known objects)
+   - Color distribution analysis (floor vs ceiling colors)
+   - Feature detection (if features inverted/upside-down)
+
+2. **Indeterminate Result Handling:**
+   - If image analysis inconclusive → Rotate 360° and re-assess
+   - After rotation: Re-analyze image for orientation
+   - Maximum attempts: 3 rotations/re-assessments
+
+3. **SOS Emergency Mode:**
+   - If still indeterminate after 3 attempts → **STOP VEHICLE**
+   - Flash onboard LED in SOS Morse code pattern
+   - SOS Pattern: `... --- ...` (3 short, 3 long, 3 short)
+   - Timing:
+     - Short flash: 0.2 seconds ON
+     - Long flash: 0.6 seconds ON
+     - Gap between flashes: 0.2 seconds OFF
+     - Gap between pattern repetitions: 2.0 seconds
+   - Repeat SOS pattern until user intervention
+
+**Future Enhancement (Post-MVP):**
+- Phase 5+: Add IMU for reliable orientation detection
+- IMU provides definitive tilt/orientation data
+- Image-based method remains as fallback
+
+### Implementation Specification
+
+**Image-Based Inversion Detection:**
+```python
+def detect_inversion(image):
+    """
+    Analyze image to determine if vehicle is inverted.
+    Returns: 'normal', 'inverted', or 'indeterminate'
+    """
+    # Implementation strategies:
+    # 1. Color histogram analysis (floor vs ceiling)
+    # 2. Edge detection orientation
+    # 3. Feature matching against known upright images
+    # 4. Horizon detection
+    pass
+
+def handle_indeterminate_orientation():
+    """
+    Handle indeterminate orientation detection.
+    """
+    for attempt in range(3):
+        rotate_360_degrees()
+        result = detect_inversion(capture_image())
+        if result != 'indeterminate':
+            return result
+
+    # After 3 failed attempts
+    emergency_stop()
+    flash_sos_pattern()
+```
+
+**SOS LED Flash Pattern:**
+```python
+def flash_sos_pattern():
+    """
+    Flash LED in SOS Morse code pattern.
+    ... --- ... (repeat)
+    """
+    SHORT_FLASH = 0.2  # seconds
+    LONG_FLASH = 0.6   # seconds
+    FLASH_GAP = 0.2    # seconds
+    PATTERN_GAP = 2.0  # seconds
+
+    while True:  # Until user intervention
+        # Three short flashes (S)
+        for _ in range(3):
+            led_on()
+            time.sleep(SHORT_FLASH)
+            led_off()
+            time.sleep(FLASH_GAP)
+
+        # Three long flashes (O)
+        for _ in range(3):
+            led_on()
+            time.sleep(LONG_FLASH)
+            led_off()
+            time.sleep(FLASH_GAP)
+
+        # Three short flashes (S)
+        for _ in range(3):
+            led_on()
+            time.sleep(SHORT_FLASH)
+            led_off()
+            time.sleep(FLASH_GAP)
+
+        time.sleep(PATTERN_GAP)  # Wait before repeating
+```
+
+### Odometry Measurements
+
+**Available Measurements:**
+- Motor rotation counts (encoder ticks)
+- Movement detected in camera (visual odometry)
+- Time duration of motor operation
+
+**No IMU means:**
+- No accelerometer data
+- No gyroscope data
+- No magnetometer data
+- Rely on motor feedback and visual analysis
+
+### Rationale
+
+1. **Cost Effective:** No additional hardware purchase required for MVP
+2. **Sufficient for Testing:** Image-based detection adequate for controlled testing
+3. **Safety Mechanism:** SOS pattern provides clear emergency indicator
+4. **Future Upgrade Path:** Can add IMU later for production reliability
+5. **Creative Solution:** 360° rotation provides additional data points
+
+### Consequences
+
+**Positive:**
+- Lower hardware cost for MVP
+- Simplified initial setup
+- Forces robust image analysis implementation
+- SOS pattern is universally recognizable
+- Can add IMU as enhancement later
+
+**Negative:**
+- Image-based detection less reliable than IMU
+- 360° rotation takes time and may be disruptive
+- SOS mode requires user intervention to reset
+- Limited orientation data for odometry
+
+### Action Items
+
+- [x] Decide IMU status - OPTIONAL for MVP
+- [ ] Implement image-based inversion detection algorithm
+- [ ] Implement 360° rotation procedure
+- [ ] Implement SOS LED flash pattern
+- [ ] Test inversion detection in various lighting conditions
+- [ ] Document SOS recovery procedure in user guide
+- [ ] Consider IMU addition for Phase 5+
+
+---
+
+## ADR-007 through ADR-010: Placeholder
 
 **Status:** 🟡 PROPOSED
 
 Remaining ADRs outlined in CRITICAL_GAPS.md:
-- ADR-006: IMU Hardware Status
 - ADR-007: Frame Rate Requirements
 - ADR-008: Threading Model
 - ADR-009: Safety System Architecture
