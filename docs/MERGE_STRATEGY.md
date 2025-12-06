@@ -21,7 +21,7 @@ Two documentation branches exist with complementary content that need to be merg
 
 ### Branch Inventory
 
-```
+```text
 Repository: monster-self-drive
 Base Branch: master (commit 45aeb7d)
 
@@ -46,7 +46,7 @@ Branches:
 ### Branch Relationship
 
 Both branches diverged from the same point:
-```
+```text
 * daa7027 (select-websocket-library) Add comprehensive documentation structure
 | * 67543e6 (mobile-web-controls) Add some notes
 | * 267098a Add project requirements, constitution, and dependencies
@@ -116,7 +116,7 @@ This branch **references and analyzes** the documents from the mobile-web-contro
 ## The Problem: Split Documentation
 
 ### Current State
-```
+```text
 Documentation is split across two branches:
 
 Branch A (mobile-web-controls):
@@ -412,7 +412,7 @@ git log --oneline --graph --all --decorate -20
 
 ### Final State
 
-```
+```text
 monster-self-drive/
 ├── README.md                          # Project overview (from master)
 ├── requirements.txt                   # Python dependencies (from mobile-web-controls)
@@ -436,7 +436,7 @@ monster-self-drive/
 
 ### Documentation Navigation Flow
 
-```
+```text
 Entry Points:
 ├── README.md (project overview)
 │   └── Link to → docs/README.md
