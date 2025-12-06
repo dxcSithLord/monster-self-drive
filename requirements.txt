@@ -37,7 +37,7 @@ tensorflow>=2.15.0; platform_machine=="x86_64"
 onnxruntime>=1.16.0  # ONNX Runtime for efficient inference
 
 # Utilities
-Pillow>=10.2.0  # Image processing utilities
+Pillow>=10.3.0  # Image processing utilities (CVE-2024-28219 fix)
 scipy>=1.12.0  # Scientific computing (for filtering, signal processing)
 
 # Development Dependencies (not needed on Pi)
