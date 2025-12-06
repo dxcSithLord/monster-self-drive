@@ -21,10 +21,10 @@ Each architectural decision should include:
 
 | ID | Title | Status | Date | Priority |
 |----|-------|--------|------|----------|
-| ADR-001 | WebSocket Library Selection | 🟡 Proposed | 2025-12-06 | P0 |
+| ADR-001 | WebSocket Library Selection | 🟢 Accepted | 2025-12-06 | P0 |
 | ADR-002 | Configuration Format | 🟡 Proposed | 2025-12-06 | P1 |
 | ADR-003 | Directory Structure | 🟡 Proposed | 2025-12-06 | P1 |
-| ADR-004 | Multi-User Control Model | 🟡 Proposed | 2025-12-06 | P0 |
+| ADR-004 | Multi-User Control Model | 🟢 Accepted | 2025-12-06 | P0 |
 | ADR-005 | Tracking Algorithm Strategy | 🟡 Proposed | 2025-12-06 | P1 |
 | ADR-006 | IMU Hardware Status | 🟡 Proposed | 2025-12-06 | P3 |
 | ADR-007 | Frame Rate Requirements | 🟡 Proposed | 2025-12-06 | P1 |
@@ -42,9 +42,10 @@ Each architectural decision should include:
 
 ## ADR-001: WebSocket Library Selection
 
-**Status:** 🟡 PROPOSED (BLOCKER)
+**Status:** 🟢 ACCEPTED
 **Date:** 2025-12-06
-**Deciders:** [To be assigned]
+**Decision Date:** 2025-12-06
+**Deciders:** Project Lead
 **Priority:** P0 - Must resolve before Phase 1
 
 ### Context
@@ -67,7 +68,25 @@ This is a BLOCKING decision because it fundamentally affects:
 
 ### Decision
 
-**[PENDING - To be decided]**
+**ACCEPTED: Flask-SocketIO**
+
+The project will use **Flask-SocketIO** for real-time WebSocket communication.
+
+**Rationale:**
+1. **Framework Compatibility:** Integrates seamlessly with the existing Flask framework currently used in `monsterWeb.py`
+2. **Performance Adequate:** Expected latency (20-30ms) is acceptable given that only one user will have active control at any time
+3. **Multi-User Support:** Supports the planned control model where:
+   - One user has active control
+   - Second user can request to take over control
+   - Second user can access when first user disconnects
+4. **Lower Migration Risk:** Minimal changes required to existing synchronous codebase
+5. **Reliability:** Built-in automatic reconnection is crucial for remote robot control
+
+**Implementation Details:**
+- Library: `Flask-SocketIO >= 3.0`
+- Update `requirements.txt` to include Flask-SocketIO
+- Async mode: Start with threading mode, can upgrade to asyncio if needed
+- Client-side: socket.io-client for JavaScript
 
 ### Options Analysis
 
@@ -167,17 +186,18 @@ def handle_motor_command(data):
 
 ### Recommendation
 
-**[TEAM INPUT NEEDED]**
+**✅ DECISION ACCEPTED**
 
-**Suggested Decision:** Flask-SocketIO
-**Rationale:**
+**Selected:** Flask-SocketIO (Option 2)
+
+This recommendation was accepted based on:
 1. Current codebase uses Flask (easier integration)
 2. Synchronous code can remain mostly unchanged
 3. Automatic reconnection crucial for remote robot control
-4. Latency difference (10-20ms) acceptable for driving application
+4. Latency difference (10-20ms) acceptable for single-user control model
 5. Lower implementation risk
 
-**Alternative:** If performance profiling shows unacceptable latency, migrate to `websockets` in Phase 2.
+**Future Consideration:** If performance profiling shows unacceptable latency after implementation, consider migrating to `websockets` in Phase 2+.
 
 ### Consequences if Accepted
 
@@ -200,12 +220,13 @@ def handle_motor_command(data):
 
 ### Action Items
 
-- [ ] Decision maker assigned
-- [ ] Prototype both options (2-4 hours each)
-- [ ] Measure actual latency on Raspberry Pi
-- [ ] Team review and vote
+- [x] Decision maker assigned
+- [x] Decision made: Flask-SocketIO selected
+- [ ] Update requirements.txt to include Flask-SocketIO
 - [ ] Update REQUIREMENTS.md with chosen library
-- [ ] Update IMPLEMENTATION.md with architecture
+- [ ] Update IMPLEMENTATION_PLAN.md with architecture details
+- [ ] Implement Flask-SocketIO in monsterWeb.py (Phase 1)
+- [ ] Performance testing after implementation
 
 ---
 
@@ -584,9 +605,10 @@ touch src/{core,web,vision,hardware,utils}/__init__.py
 
 ## ADR-004: Multi-User Control Model
 
-**Status:** 🟡 PROPOSED (SAFETY CRITICAL)
+**Status:** 🟢 ACCEPTED (SAFETY CRITICAL)
 **Date:** 2025-12-06
-**Deciders:** [To be assigned]
+**Decision Date:** 2025-12-06
+**Deciders:** Project Lead
 **Priority:** P0 - Safety blocker
 
 ### Context
@@ -598,7 +620,24 @@ REQUIREMENTS specify "3 simultaneous connections" but don't define control arbit
 
 ### Decision
 
-**[PENDING - To be decided]**
+**ACCEPTED: Single Active User Model (Option 1)**
+
+The project will implement a **single active user** control model with the following characteristics:
+
+**Control Model:**
+- Only ONE user has active control at any time
+- Other connected users are in "observer mode" (video feed only, controls disabled)
+- Control handoff mechanisms:
+  - Second user can **request to take over** control
+  - Second user automatically gains access when first user **disconnects**
+  - Optional: Active user can voluntarily **release control**
+
+**Rationale:**
+1. **Safety First:** Eliminates possibility of conflicting commands that could cause dangerous robot behavior
+2. **Clarity:** Always clear who is responsible for robot control
+3. **Simplicity:** Straightforward to implement and understand
+4. **Performance:** Aligns with single-user performance expectations (no latency concerns)
+5. **Emergency Override:** ANY connected user can trigger emergency stop, regardless of control status
 
 ### Safety Scenarios
 
@@ -722,14 +761,17 @@ def handle_command(user_id, command):
 
 ### Recommendation
 
-**Suggested Decision:** **Option 1 - Single Active User**
+**✅ DECISION ACCEPTED**
 
-**Additional Safety Rules:**
-1. **Emergency Stop:** ANY user can trigger (broadcasts to all)
+**Selected:** Option 1 - Single Active User
+
+**Implementation Requirements:**
+1. **Emergency Stop:** ANY user can trigger (broadcasts to all) - CRITICAL SAFETY FEATURE
 2. **Observer Mode:** Non-active users see video but UI disabled
-3. **Control Request:** Queue system for requesting control
-4. **Timeout:** Auto-release control after 5 min inactivity
-5. **Indicator:** Large UI banner showing who has control
+3. **Control Request:** Request/grant system for control takeover
+4. **Automatic Handoff:** Control transfers when active user disconnects
+5. **Timeout:** Optional auto-release control after inactivity period (TBD: 5 min?)
+6. **UI Indicator:** Large UI banner showing who has control
 
 ### UI Design
 
@@ -797,12 +839,15 @@ class ControlManager:
 
 ### Action Items
 
-- [ ] Approve control model
-- [ ] Design UI mockups
-- [ ] Implement ControlManager class
-- [ ] Add control indicators to web UI
+- [x] Approve control model - ACCEPTED: Single Active User
+- [x] Define control handoff mechanisms (request takeover, auto-transfer on disconnect)
+- [ ] Design UI mockups for active/observer modes
+- [ ] Implement ControlManager class in monsterWeb.py
+- [ ] Add control indicators to web UI (banner showing control status)
+- [ ] Implement emergency stop for ANY user
 - [ ] Test control handoff scenarios
-- [ ] Document in user guide
+- [ ] Document control model in user guide
+- [ ] Update REQUIREMENTS.md with control model specification
 
 ---
 

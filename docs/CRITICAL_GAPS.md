@@ -12,35 +12,39 @@ This document identifies critical gaps, inconsistencies, and missing specificati
 
 ### 1. WebSocket Library Choice (Phase 1 Blocker)
 
-**Status:** ⚠️ UNRESOLVED BLOCKER
+**Status:** ✅ RESOLVED
+**Resolution Date:** 2025-12-06
 **Impact:** Completely different architectures, threading models
 **Affected Phases:** Phase 1
 
-**Problem:**
+**Problem:** (RESOLVED)
 - Documentation mentions both `websockets` and `Flask-SocketIO`
 - No decision on which library to use
 - Each choice leads to fundamentally different architectures
 
-**Impact Analysis:**
-- **websockets library:**
-  - Async/await based (asyncio)
-  - Requires async threading model
-  - Lower-level control
-  - Better performance potential
+**RESOLUTION:**
+**Decision: Flask-SocketIO** (See ADR-001 in DECISIONS.md)
 
-- **Flask-SocketIO:**
-  - Synchronous or eventlet/gevent
-  - Integrates with Flask web framework
-  - Higher-level abstractions
-  - Easier Socket.IO client compatibility
+**Rationale:**
+1. Integrates with existing Flask framework in `monsterWeb.py`
+2. Performance adequate for single-user control model (20-30ms latency acceptable)
+3. Automatic reconnection crucial for remote robot control
+4. Lower migration risk (synchronous code remains mostly unchanged)
+5. Rich client-side library ecosystem
 
-**Required Decision:**
-- [ ] Choose one library and document rationale
-- [ ] Update all architecture diagrams
-- [ ] Define threading model based on choice
-- [ ] Update dependency specifications
+**Implementation:**
+- Library: Flask-SocketIO >= 3.0
+- Async mode: Start with threading mode
+- Client-side: socket.io-client for JavaScript
 
-**Recommendation Area:** See `DECISIONS.md` for evaluation criteria
+**Completed Actions:**
+- [x] Choose one library and document rationale - Flask-SocketIO selected
+- [x] Decision documented in ADR-001
+- [ ] Update requirements.txt with Flask-SocketIO
+- [ ] Update IMPLEMENTATION_PLAN.md with architecture details
+- [ ] Implement in monsterWeb.py (Phase 1)
+
+**Reference:** See `docs/DECISIONS.md` ADR-001 for complete analysis
 
 ---
 
@@ -154,35 +158,45 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 
 ### 5. Multi-User Behavior (Phase 1 Safety Issue)
 
-**Status:** ⚠️ SAFETY CRITICAL
+**Status:** ✅ RESOLVED
+**Resolution Date:** 2025-12-06
 **Impact:** Physical safety, robot control conflicts
 **Affected Phases:** Phase 1
 
-**Current Specification:**
+**Problem:** (RESOLVED)
 - REQUIREMENTS mentions "3 simultaneous connections"
 - **NOT SPECIFIED:** Who has control when multiple users connected
 
-**Critical Questions:**
-1. **Control Model:** Single-active-user or last-command-wins?
-2. **Conflict Resolution:** What happens when two users send drive commands?
-3. **Priority System:** Does admin override others?
-4. **Handoff Mechanism:** How does control transfer between users?
-5. **Safety Override:** Can any user trigger emergency stop?
+**RESOLUTION:**
+**Decision: Single Active User Model** (See ADR-004 in DECISIONS.md)
 
-**Safety Scenarios:**
-- User A drives forward, User B drives backward simultaneously → ?
-- User A in autonomous mode, User B switches to manual → ?
-- User A has control, User B presses emergency stop → ?
+**Control Model:**
+1. **One Active User:** Only ONE user has active control at any time
+2. **Observer Mode:** Other connected users see video feed only (controls disabled)
+3. **Control Handoff:**
+   - Second user can request to take over control
+   - Second user automatically gains access when first user disconnects
+   - Optional: Active user can voluntarily release control
+4. **Emergency Stop:** ANY connected user can trigger emergency stop (CRITICAL SAFETY FEATURE)
 
-**Required Decisions:**
-- [ ] Define control arbitration model
-- [ ] Specify command priority rules
-- [ ] Document user role/permission system
-- [ ] Define emergency stop behavior (all users? active user only?)
-- [ ] Create state machine for multi-user interactions
+**Safety Scenarios Resolved:**
+- ✅ User A drives forward, User B drives backward simultaneously → **B has no control, command ignored**
+- ✅ User A in autonomous mode, User B switches to manual → **B must request control first**
+- ✅ User A has control, User B presses emergency stop → **Emergency stop activates for ANY user**
+
+**Completed Actions:**
+- [x] Define control arbitration model - Single Active User
+- [x] Specify command priority rules - Only active user's commands executed
+- [x] Define emergency stop behavior - ANY user can trigger
+- [x] Define control handoff mechanisms
+- [ ] Implement ControlManager class in monsterWeb.py
+- [ ] Design UI mockups for active/observer modes
 - [ ] Add UI indicators showing who has control
+- [ ] Update REQUIREMENTS.md with control model specification
 
-**Safety Requirement:** MUST be resolved before Phase 1 completion
+**Reference:** See `docs/DECISIONS.md` ADR-004 for complete analysis
+
+**Safety Requirement:** ✅ RESOLVED before Phase 1 implementation
 
 ---
 
@@ -658,8 +672,8 @@ How does user perform calibrations?
 ## 📊 Priority Matrix
 
 ### P0 - Blockers (Must Resolve Immediately)
-1. **WebSocket Library Choice** - Cannot start Phase 1 without this
-2. **Multi-User Behavior** - Safety critical
+1. ✅ **WebSocket Library Choice** - RESOLVED: Flask-SocketIO (ADR-001)
+2. ✅ **Multi-User Behavior** - RESOLVED: Single Active User Model (ADR-004)
 3. **GPIO Pin Assignments** - Required for hardware setup
 4. **Safety System Integration** - Safety critical
 
