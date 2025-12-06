@@ -750,15 +750,19 @@ libffi-dev
 #### DP1.1: Raspberry Pi Setup
 ```bash
 # 1. Flash OS (Raspberry Pi OS Lite or Desktop)
-# 2. Enable camera and I2C
+# 2. Enable I2C (camera using linux camera library) 
 sudo raspi-config
 
 # 3. Update system
 sudo apt-get update
 sudo apt-get upgrade -y
 
-# 4. Install system dependencies
-sudo apt-get install -y python3 python3-pip python3-venv \
+# 4. Install system dependencies- TODO update for trixie and camera, assuming lite 64bit base install,
+#    add git, python3, python3-pip and python3-venv are default
+#    libcamera-dev - TODO confirm requirement, if using linux camera library
+# python3-smbus updated to python3-smbus2 (default install)
+# libatlas-base-dev obsolete, if still required, use libopenblas-dev
+sudo apt-get install -y git python3 python3-pip python3-venv \
     libcamera-dev python3-picamera2 \
     i2c-tools python3-smbus \
     libopencv-dev libatlas-base-dev
