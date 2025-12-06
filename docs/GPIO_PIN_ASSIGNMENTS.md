@@ -51,6 +51,81 @@ The MonsterBorg robot requires GPIO pin assignments for various sensors and indi
 
 ---
 
+### ThunderBorg Interface Library (ThunderBorg.py)
+
+**Purpose:** Provides I2C-based interface to ThunderBorg motor controller board
+
+**Key Features from ThunderBorg.py:**
+
+#### Motor Control Functions
+- `SetMotor1(power)` - Set motor 1 power (-1.0 to +1.0)
+- `SetMotor2(power)` - Set motor 2 power (-1.0 to +1.0)
+- `SetMotors(power)` - Set both motors to same power
+- `SetMotor1(0)` / `SetMotor2(0)` - Stop motors
+- `GetMotor1()` / `GetMotor2()` - Read current motor power settings
+
+#### Onboard LED Control (ThunderBorg Board LEDs)
+The ThunderBorg board includes two onboard RGB LEDs controllable via I2C:
+
+- `SetLed1(r, g, b)` - Set ThunderBorg LED (RGB 0.0-1.0)
+- `SetLed2(r, g, b)` - Set ThunderBorg Lid LED (RGB 0.0-1.0)
+- `SetLeds(r, g, b)` - Set both LEDs to same color
+- `GetLed1()` / `GetLed2()` - Read current LED colors
+- `SetLedShowBattery(state)` - Enable/disable battery level display on LEDs
+- `GetLedShowBattery()` - Check if battery display is enabled
+
+**SOS Pattern Note:** The onboard ThunderBorg LEDs can be used for the SOS pattern (ADR-006) as an alternative to external GPIO LEDs, reducing GPIO pin requirements.
+
+#### External LED Control (Optional SK9822/APA102C LEDs)
+- `WriteExternalLedWord(b0, b1, b2, b3)` - Low-level serial LED control
+- `SetExternalLedColours([[r,g,b], ...])` - Set RGB colors for external LED strips
+
+These external LEDs are controlled via I2C commands (not direct GPIO), using the ThunderBorg board as an LED controller.
+
+#### Battery Monitoring
+- `GetBatteryReading()` - Read battery voltage
+- `GetBatteryMonitoringLimits()` - Get min/max voltage thresholds
+- `SetBatteryMonitoringLimits(min, max)` - Set voltage thresholds
+
+#### Board Information
+- `Init([busNumber])` - Initialize I2C communication (bus 1 default for Pi 2/3/4)
+- `ScanForThunderBorg([busNumber])` - Scan I2C bus for ThunderBorg boards
+- `SetNewAddress(newAddress)` - Change I2C address (persists after power cycle)
+- `Help()` - Display all available functions
+
+**I2C Communication Details:**
+- Default I2C Address: `0x15` (configurable via `SetNewAddress`)
+- I2C Bus: Bus 1 (GPIO 2 SDA, GPIO 3 SCL)
+- Maximum I2C packet length: 6 bytes
+- Supports multiple ThunderBorg boards with different addresses
+
+**Implementation Example:**
+```python
+import ThunderBorg
+
+# Initialize ThunderBorg
+TB = ThunderBorg.ThunderBorg()
+TB.Init()  # Uses I2C bus 1, address 0x15
+
+# Motor control
+TB.SetMotor1(0.5)   # 50% forward on motor 1
+TB.SetMotor2(-0.3)  # 30% reverse on motor 2
+
+# Use onboard LEDs for status
+TB.SetLed1(0, 1, 0)  # Green = operational
+TB.SetLed2(1, 0, 0)  # Red = error
+
+# Emergency stop
+TB.SetMotors(0)  # Stop all motors
+
+# Battery check
+voltage = TB.GetBatteryReading()
+if voltage < 10.5:  # Low battery warning
+    TB.SetLeds(1, 1, 0)  # Yellow LEDs
+```
+
+---
+
 ### Emergency Stop Button (MVP - Required)
 
 | Component | GPIO Pin | Configuration | Priority |

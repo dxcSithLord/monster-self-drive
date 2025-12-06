@@ -3,7 +3,7 @@
 **Version**: 1.0
 **Effective Date**: 2025-11-14
 **Project**: MonsterBorg Self-Drive System
-**Repository**: https://github.com/dxcSithLord/monster-self-drive
+**Repository**: <https://github.com/dxcSithLord/monster-self-drive>
 
 ---
 
@@ -1397,9 +1397,9 @@ This constitution draws inspiration from:
 
 ## Contact
 
-**Repository**: https://github.com/dxcSithLord/monster-self-drive
-**Issues**: https://github.com/dxcSithLord/monster-self-drive/issues
-**Discussions**: https://github.com/dxcSithLord/monster-self-drive/discussions
+**Repository**: <https://github.com/dxcSithLord/monster-self-drive>
+**Issues**: <https://github.com/dxcSithLord/monster-self-drive/issues>
+**Discussions**: <https://github.com/dxcSithLord/monster-self-drive/discussions>
 
 ---
 
