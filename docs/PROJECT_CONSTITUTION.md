@@ -401,7 +401,7 @@ isort --profile black .
 
 ### Directory Structure
 
-```
+```text
 monster-self-drive/
 ├── README.md                  # Project overview and quick start
 ├── REQUIREMENTS.md            # Detailed requirements specification
@@ -530,7 +530,7 @@ monster-self-drive/
 
 **Pattern**: Layered Architecture
 
-```
+```text
 ┌─────────────────────────────────────┐
 │  User Interface Layer               │  (Web, CLI)
 ├─────────────────────────────────────┤
@@ -799,7 +799,7 @@ Everyone! Contributions welcome from:
 - `chore`: Build process, dependencies, etc.
 
 **Examples**:
-```
+```text
 feat(tracking): add CSRT tracker as fallback option
 fix(motors): correct inverted motor direction calculation
 docs(readme): add installation instructions for Ubuntu
@@ -832,7 +832,7 @@ chore(deps): update OpenCV to 4.9.0
 
 ### Testing Pyramid
 
-```
+```text
         /\
        /  \    10% - End-to-End Tests (field tests)
       /────\
