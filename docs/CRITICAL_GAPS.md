@@ -729,12 +729,11 @@ How does user perform calibrations?
 
 ## 🔗 Related Documents
 
-- `DECISIONS.md` - Architectural decisions and rationale
-- `REQUIREMENTS.md` - System requirements (needs updates)
-- `CONSTITUTION.md` - Code standards (needs updates)
-- `IMPLEMENTATION.md` - Implementation plan (needs updates)
-- `docs/architecture/` - Detailed architecture diagrams (to be created)
-
+- [DECISIONS.md](./DECISIONS.md) - Architectural decisions and rationale
+- [REQUIREMENTS.md](./REQUIREMENTS.md) - System requirements (needs updates)
+- [PROJECT_CONSTITUTION.md](./PROJECT_CONSTITUTION.md) - Code standards (needs updates)
+- [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) - Implementation plan (needs updates)
+- `architecture/` - Detailed architecture diagrams (to be created)
 ---
 
 **Document Status:** Living document - update as gaps are resolved
