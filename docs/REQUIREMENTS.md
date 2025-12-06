@@ -3,7 +3,7 @@
 **Version**: 2.0
 **Date**: 2025-11-14
 **Target Platform**: Raspberry Pi 3B
-**Python Version**: 3.11+ (3.12 recommended)
+**Python Version**: 3.13.5+ (Debian Trixie default)
 
 ---
 
@@ -90,9 +90,9 @@ This document defines the requirements for Version 2.0, which adds mobile web co
   - ARM architecture support required
 
 #### Python Environment
-- **Python Version**: 3.11 minimum, 3.12+ recommended
-- **Virtual Environment**: Recommended (venv or conda)
-- **Package Manager**: pip 23.0+
+- **Python Version**: 3.13.5+ (Debian Trixie default, recommended)
+- **Virtual Environment**: Required (venv recommended)
+- **Package Manager**: pip 24.0+
 
 #### System Libraries
 ```bash
@@ -103,10 +103,9 @@ python3-picamera2
 
 # OpenCV dependencies
 libopencv-dev
-libatlas-base-dev
-libjasper-dev
-libqt4-test
+libopenblas-dev  # Replaces obsolete libatlas-base-dev
 libhdf5-dev
+# Note: libjasper-dev and libqt4-test are obsolete in Trixie
 
 # I2C tools
 i2c-tools
@@ -757,15 +756,14 @@ sudo raspi-config
 sudo apt-get update
 sudo apt-get upgrade -y
 
-# 4. Install system dependencies- TODO update for trixie and camera, assuming lite 64bit base install,
-#    add git, python3, python3-pip and python3-venv are default
-#    libcamera-dev - TODO confirm requirement, if using linux camera library
-# python3-smbus updated to python3-smbus2 (default install)
-# libatlas-base-dev obsolete, if still required, use libopenblas-dev
+# 4. Install system dependencies (Debian Trixie / Bookworm)
+# libcamera-dev required for picamera2 (new camera stack)
+# python3-smbus2 replaces python3-smbus
+# libopenblas-dev replaces obsolete libatlas-base-dev
 sudo apt-get install -y git python3 python3-pip python3-venv \
-    libcamera-dev python3-picamera2 \
-    i2c-tools python3-smbus \
-    libopencv-dev libatlas-base-dev
+    libcamera-dev libcamera-tools python3-picamera2 \
+    i2c-tools python3-smbus2 \
+    libopencv-dev libopenblas-dev libhdf5-dev
 
 # 5. Clone repository
 git clone https://github.com/dxcSithLord/monster-self-drive.git
