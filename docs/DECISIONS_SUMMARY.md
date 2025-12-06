@@ -146,7 +146,7 @@
 ## 🔧 Technical Specifications
 
 ### Directory Structure (Post-Migration)
-```
+```text
 monster-self-drive/
 ├── src/
 │   ├── core/ (settings, monster_auto)
