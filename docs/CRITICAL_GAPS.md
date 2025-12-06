@@ -84,7 +84,7 @@ This document identifies critical gaps, inconsistencies, and missing specificati
 **Affected Phases:** Phase 1 and beyond
 
 **Current State:**
-```
+```text
 monster-self-drive/
 ├── ImageProcessor.py
 ├── MonsterAuto.py
@@ -94,7 +94,7 @@ monster-self-drive/
 ```
 
 **Proposed State (from CONSTITUTION):**
-```
+```text
 monster-self-drive/
 └── src/
     ├── core/
