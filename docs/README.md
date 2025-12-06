@@ -13,15 +13,13 @@ Welcome to the Monster Self-Drive project documentation. This directory contains
 | [CRITICAL_GAPS.md](./CRITICAL_GAPS.md) | Identifies unresolved issues and inconsistencies | ⚠️ Active | **P0** |
 | [DECISIONS.md](./DECISIONS.md) | Architectural Decision Records (ADRs) | 🟡 In Progress | **P0** |
 
-### 📋 Project Documents (To Be Created)
-
-The following documents are referenced but need to be created/migrated:
+### 📋 Core Project Documents
 
 | Document | Purpose | Status |
 |----------|---------|--------|
-| `REQUIREMENTS.md` | System requirements specification | ❌ Not yet created |
-| `CONSTITUTION.md` | Code standards and guidelines | ❌ Not yet created |
-| `IMPLEMENTATION.md` | Detailed implementation plan | ❌ Not yet created |
+| [REQUIREMENTS.md](./REQUIREMENTS.md) | System requirements specification | ✅ Complete |
+| [PROJECT_CONSTITUTION.md](./PROJECT_CONSTITUTION.md) | Code standards and guidelines | ✅ Complete |
+| [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) | 6-phase implementation plan | ✅ Complete |
 | `ARCHITECTURE.md` | System architecture diagrams | ❌ Not yet created |
 
 ### 🔧 Technical Specifications (Future)
