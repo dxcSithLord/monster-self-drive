@@ -266,64 +266,47 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 
 ### 7. GPIO Pin Assignments
 
-**Status:** ⚠️ COMPLETELY MISSING
+**Status:** ✅ RESOLVED
+**Resolution Date:** 2025-12-07
 **Impact:** Hardware integration, pin conflicts
 **Affected Phases:** Phase 1, 3, 5
 
-**Missing Specifications:**
+**RESOLUTION:**
+**Decision: Document ThunderBorg HAT, Reserve Pins for Future** (See ADR-010 in DECISIONS.md)
 
-#### Ultrasonic Sensors
+**Critical Finding:** MonsterBorg is fully built with ThunderBorg HAT attached. No additional GPIO hardware is being added at this time.
 
-- [ ] Trigger pin(s): BCM pin numbers
-- [ ] Echo pin(s): BCM pin numbers
-- [ ] Number of sensors (1? 3? 5?)
-- [ ] Power requirements (3.3V or 5V logic?)
+**Current Pin Usage:**
 
-#### Emergency Stop Button
+#### I2C Bus (ThunderBorg HAT)
+- **I2C1 SDA:** GPIO 2 (Pin 3)
+- **I2C1 SCL:** GPIO 3 (Pin 5)
+- **I2C Address:** 0x15 (ThunderBorg)
 
-- [ ] GPIO input pin: BCM pin number
-- [ ] Pull-up/pull-down configuration
-- [ ] Debounce strategy (hardware or software?)
-- [ ] Active high or active low?
+**ThunderBorg Onboard Features (No GPIO Required):**
+- 2x Motor outputs
+- 2x RGB LEDs (onboard, I2C controlled via `TB.SetLed1()`, `TB.SetLed2()`)
+- Battery voltage monitoring
+- Motor fault detection
+- Communications failsafe
 
-#### Status LEDs
+**Key Insight:** Use ThunderBorg onboard LEDs instead of external GPIO LEDs - saves GPIO pins!
 
-- [ ] Power LED pin
-- [ ] Status LED pin
-- [ ] Error LED pin
-- [ ] GPIO pin numbers
-- [ ] Current-limiting resistor values
+**Future Pin Reservations (Documented):**
+- Phase 3 (Ultrasonic): GPIO 17, 18, 22, 23, 24, 27
+- Phase 1+ (Emergency button): GPIO 21
+- Phase 5 (Encoders): GPIO 5, 6, 13, 19
+- Phase 5 (IMU): Shares I2C bus with ThunderBorg
 
-#### Wheel Encoders (if used)
+**Completed Actions:**
+- [x] Document ThunderBorg I2C pin usage
+- [x] Identify all available GPIO pins
+- [x] Reserve pins for future phases
+- [x] Document voltage divider requirements for 5V sensors
+- [x] Note ThunderBorg onboard LED usage
+- [ ] Create hardware setup guide
 
-- [ ] Left encoder pin(s)
-- [ ] Right encoder pin(s)
-- [ ] Interrupt-based or polling?
-- [ ] Pulses per revolution
-
-#### I2C Devices
-
-- [ ] I2C bus number (i2c-1 typically)
-- [ ] ThunderBorg address: Currently `0x15` (from code)
-- [ ] IMU address: Not specified
-- [ ] Other I2C devices and potential conflicts
-
-**Required Actions:**
-
-- [ ] Create complete GPIO pin assignment table
-- [ ] Verify no pin conflicts
-- [ ] Document pin configuration in setup guide
-- [ ] Add pin validation to startup sequence
-
-**Example Format Needed:**
-
-```text
-| Component | Pin Type | BCM Pin | Config | Notes |
-|-----------|----------|---------|--------|-------|
-| Ultrasonic Trigger | GPIO Out | 23 | - | 5V tolerant |
-| Ultrasonic Echo | GPIO In | 24 | Pull-down | Voltage divider required |
-| Emergency Stop | GPIO In | 17 | Pull-up | Active low |
-```
+**Reference:** See `docs/DECISIONS.md` ADR-010 for complete pin assignments
 
 ---
 
@@ -390,172 +373,150 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 
 ### 9. Threading Model Details
 
-**Status:** ⚠️ HIGH-LEVEL ONLY
+**Status:** ✅ RESOLVED
+**Resolution Date:** 2025-12-07
 **Impact:** System stability, deadlocks, race conditions
 **Affected Phases:** Phase 1, 2, 4
 
-**Current State:** High-level mention of threading but missing critical details
+**RESOLUTION:**
+**Decision: Priority-Based Threading with Safety-First Architecture** (See ADR-008 in DECISIONS.md)
 
-#### Missing Specifications
+**Thread Priority Hierarchy:**
 
-##### Thread Inventory and Priorities
+**Tier 1 (Highest - Equal Priority):**
+- Motor Control Thread
+- Safety Monitor Thread
 
-- [ ] List all threads with purposes:
-  - Web server thread(s)
-  - WebSocket handler thread(s)
-  - Video streaming thread
-  - Image processing thread
-  - Motor control thread
-  - Sensor reading thread(s)
-  - Safety monitor thread
-- [ ] Priority assignments (if using real-time scheduling)
-- [ ] CPU affinity settings (if multi-core)
+**Tier 2 (Medium Priority):**
+- Video Streaming Thread
+- Image Processing Thread
 
-##### Startup and Shutdown
+**Tier 3 (Lowest Priority):**
+- Web Server Thread
 
-- [ ] Thread startup sequence/order
-- [ ] Dependency chains (which threads depend on others?)
-- [ ] Graceful shutdown procedure
-- [ ] Timeout values for thread joins
-- [ ] Cleanup responsibilities per thread
+**Critical Linkage:** Web server stop button directly signals Safety Monitor Thread
 
-##### Inter-Thread Communication
+**Inter-Thread Communication:**
+- **Control Command Queue:** `queue.Queue(maxsize=10)` - Image Processing & Web Server → Motor Control
+- **Safety Event Flags:** `threading.Event()` - Emergency stop, battery low, comm timeout
+- **Frame Buffer:** Circular buffer (2 frames) with `threading.Lock()` - Video → Image Processing & Web Server
 
-- [ ] Queue types (Queue, LifoQueue, PriorityQueue?)
-- [ ] Queue sizes/bounds
-- [ ] Message protocols/formats
-- [ ] Synchronization primitives:
-  - Locks: Which resources need locking?
-  - Events: Thread coordination
-  - Semaphores: Resource limiting
-- [ ] Timeout strategies
+**Deadlock Prevention:**
+1. Lock ordering: Frame Lock → Command Queue → Event Flags
+2. All queue operations have 100ms timeout
+3. No nested locks (max one lock per thread at a time)
+4. Emergency stop uses lock-free event flag
 
-##### Deadlock Prevention
-
-- [ ] Lock acquisition ordering
-- [ ] Timeout policies
-- [ ] Deadlock detection mechanism?
-- [ ] Recovery procedures
-
-**Required Actions:**
-
+**Completed Actions:**
+- [x] Define thread priority hierarchy
+- [x] Specify inter-thread communication patterns
+- [x] Define deadlock prevention rules
+- [x] Document monitoring requirements
 - [ ] Create threading architecture diagram
-- [ ] Document thread interaction patterns
-- [ ] Define message passing protocols
-- [ ] Specify error handling per thread
-- [ ] Add thread monitoring/health checks
+- [ ] Implement Motor Control Thread
+- [ ] Implement Safety Monitor Thread
+- [ ] Add thread health monitoring
+
+**Reference:** See `docs/DECISIONS.md` ADR-008 for complete threading architecture
 
 ---
 
 ### 10. Safety System Integration
 
-**Status:** ⚠️ REQUIREMENTS LISTED, INTEGRATION UNDEFINED
+**Status:** ✅ RESOLVED
+**Resolution Date:** 2025-12-07
 **Impact:** Physical safety, system reliability
 **Affected Phases:** All (safety-critical)
 
-**Current State:** Safety requirements listed but integration method unclear
+**RESOLUTION:**
+**Decision: Multi-Layer Safety Architecture with Mode-Dependent Behavior** (See ADR-009 in DECISIONS.md)
 
-#### Safety Checks Listed (from REQUIREMENTS)
+**Safety Layers:**
 
+**Layer 1: Hardware (ThunderBorg Board)**
+- Failsafe: Motors off if no command within 250ms
+- Fault detection: Motor overcurrent detection (built-in)
+- Activation: Enabled via `TB.SetCommsFailsafe(True)` at startup
+
+**Layer 2: Watchdog Thread (monsterWeb.py)**
+- Timeout: 1 second of no web activity
+- Action: Calls `TB.MotorsOff()`, sets LED to blue
+- Recovery: Automatic reconnection resets watchdog
+
+**Layer 3: Safety Monitor Thread (New - High Priority)**
 - Battery voltage monitoring
-- Motor overcurrent detection
-- Obstacle detection
-- Emergency stop
-- Tilt detection (if IMU present)
-- Communication timeout
+- Drive fault checking
+- Process emergency stop signals
+- Mode-dependent safety enforcement
+- Polling Rate: 10 Hz (100ms intervals)
 
-#### Missing Integration Details
+**Mode-Dependent Safety:**
 
-##### Execution Location
+**Manual Mode:**
+- Primary safety: Driver responsibility
+- Automatic stops: Communication timeout, hardware failsafe, emergency button
+- Speed limiting: FPS-based (15fps→50%, 30fps→100%)
+- Warnings only: Battery low, motor faults (driver decides)
 
-Where do safety checks run?
+**Autonomous Mode:**
+- Enhanced safety: All checks mandatory
+- Automatic stops: Low battery, motor faults, obstacle detection, tracking loss
+- Speed limiting: Additional limits based on obstacles/confidence
+- Recovery: Requires manual intervention
 
-- [ ] Decorator pattern on all motor commands?
-- [ ] Middleware in web request pipeline?
-- [ ] Dedicated safety monitor thread?
-- [ ] Each module independently?
+**Emergency Stop Propagation:**
+- Trigger sources: Web UI, hardware button (future), safety checks, watchdog
+- Mechanism: `threading.Event()` - lock-free, fast
+- Response time: <100ms
+- ANY user can trigger emergency stop
 
-##### Priority and Order
+**Completed Actions:**
+- [x] Design multi-layer safety architecture
+- [x] Define mode-dependent behavior (manual vs autonomous)
+- [x] Specify emergency stop propagation mechanism
+- [x] Document recovery procedures
+- [x] Leverage existing ThunderBorg safety features
+- [ ] Implement Safety Monitor Thread
+- [ ] Add battery monitoring thresholds to Settings
+- [ ] Create recovery UI
+- [ ] Add safety system to architecture diagrams
 
-- [ ] Which safety check runs first?
-- [ ] Can checks be skipped in emergencies?
-- [ ] Short-circuit evaluation order
-- [ ] Performance budget per check
-
-##### Emergency Stop Propagation
-
-- [ ] How does emergency stop reach all subsystems?
-- [ ] Stop signal mechanism (shared flag? event? queue message?)
-- [ ] Guaranteed stop time requirement
-- [ ] Motor brake vs. coast behavior
-
-##### Recovery Procedures
-
-- [ ] How to clear emergency state?
-- [ ] Required checks before resuming operation
-- [ ] User confirmation needed?
-- [ ] System self-test after recovery
-
-**Required Actions:**
-
-- [ ] Design safety system architecture
-- [ ] Create safety state machine
-- [ ] Define safety check API
-- [ ] Specify emergency stop propagation
-- [ ] Document recovery procedures
-- [ ] Add safety system to all architecture diagrams
+**Reference:** See `docs/DECISIONS.md` ADR-009 for complete safety architecture
 
 ---
 
 ### 11. Frame Rate Conflict
 
-**Status:** ⚠️ CONFLICTING REQUIREMENTS
+**Status:** ✅ RESOLVED
+**Resolution Date:** 2025-12-07
 **Impact:** System performance expectations, hardware selection
 **Affected Phases:** Phase 1, 2
 
-**Conflicting Specifications:**
+**RESOLUTION:**
+**Decision: Adaptive Frame Rate with Speed Limiting** (See ADR-007 in DECISIONS.md)
 
-| Document | Requirement | Section | FPS |
-| ----------- | ----------------------------- | --------- | -------------- |
-| REQUIREMENTS | "30 fps minimum" | TR2.1 | 30 fps |
-| REQUIREMENTS | "30 fps minimum, 60 fps preferred" | PF1 | 30-60 fps |
-| IMPLEMENTATION | "Skip frames if lagging" | 11.2 | ~15 fps effective |
+**Accepted Frame Rate Tiers:**
+- **Minimum:** 15 fps → Maximum robot speed limited to 50%
+- **Target:** 30 fps → 100% maximum speed available
+- **Above Target:** >30 fps → No additional speed benefit
 
-**Analysis:**
+**Policy:** Quality over frame rate - skip frames if needed to maintain processing quality
 
-- **Inconsistent minimums:** Some say 30 fps is minimum, others say
-  preferred is 60
-- **Frame skipping contradiction:** If 30 fps is minimum, frame skipping
-  to 15 is non-compliant
-- **Hardware implications:** 60 fps requires more powerful camera/CPU
-- **Processing budget:** Higher FPS = less time per frame for processing
+**Rationale:**
+1. Current Raspberry Pi + Camera V2 achieves 30fps with OpenCV color following
+2. Safety first: Lower frame rates = lower max speed ensures safety
+3. Processing priority: Better to process fewer frames well than many frames poorly
+4. Graceful degradation: System remains functional at lower frame rates
 
-**Required Decisions:**
+**Completed Actions:**
+- [x] Define FPS tiers and speed limiting logic
+- [x] Specify frame skip policy (quality over quantity)
+- [x] Document in ADR-007
+- [ ] Implement FPS monitoring
+- [ ] Implement speed limiting based on FPS
+- [ ] Add low FPS warning UI
 
-- [ ] Define absolute minimum FPS (hard requirement)
-- [ ] Define target FPS (goal)
-- [ ] Define acceptable FPS (degraded mode)
-- [ ] Specify frame skip policy:
-  - Skip frames to maintain processing quality?
-  - OR reduce processing to maintain frame rate?
-- [ ] Document FPS requirements per phase:
-  - Phase 1 (basic streaming): ? fps
-  - Phase 2 (with tracking): ? fps
-  - Phase 4 (with autonomous): ? fps
-
-**Hardware Considerations:**
-
-- Raspberry Pi Camera V2: 30 fps @ 1080p, 60 fps @ 720p
-- Processing capability limits real-world FPS
-
-**Recommended Resolution:**
-
-```text
-Minimum: 15 fps (degraded mode, warning shown)
-Target: 30 fps (normal operation)
-Preferred: 60 fps (if hardware allows, low processing load)
-Policy: Maintain quality over frame rate (skip frames if needed)
-```
+**Reference:** See `docs/DECISIONS.md` ADR-007 for complete analysis
 
 ---
 
@@ -751,29 +712,29 @@ How does user perform calibrations?
 
 ## 📊 Priority Matrix
 
-### P0 - Blockers (Must Resolve Immediately)
+### P0 - Blockers (Must Resolve Immediately) - ✅ ALL RESOLVED
 
 1. ✅ **WebSocket Library Choice** - RESOLVED: Flask-SocketIO (ADR-001)
 2. ✅ **Multi-User Behavior** - RESOLVED: Single Active User Model (ADR-004)
-3. **GPIO Pin Assignments** - Required for hardware setup
-4. **Safety System Integration** - Safety critical
+3. ✅ **GPIO Pin Assignments** - RESOLVED: ThunderBorg HAT documented (ADR-010)
+4. ✅ **Safety System Integration** - RESOLVED: Multi-Layer Safety Architecture (ADR-009)
 
-### P1 - High Priority (Resolve Before Implementation)
+### P1 - High Priority (Resolve Before Implementation) - ✅ ALL RESOLVED
 
-1. **Configuration Format** - Affects all development
-2. **Directory Structure** - Affects imports and organization
-3. **Threading Model Details** - Affects stability
-4. **Frame Rate Specification** - Affects hardware selection
+1. ✅ **Configuration Format** - RESOLVED: JSON with Python Wrapper (ADR-002)
+2. ✅ **Directory Structure** - RESOLVED: Structured `src/` Layout (ADR-003)
+3. ✅ **Threading Model Details** - RESOLVED: Priority-Based Threading (ADR-008)
+4. ✅ **Frame Rate Specification** - RESOLVED: Adaptive Frame Rate with Speed Limiting (ADR-007)
 
 ### P2 - Medium Priority (Resolve During Phase 1-2)
 
-1. **Tracking Algorithm Priority** - Needed before Phase 2
+1. ✅ **Tracking Algorithm Priority** - RESOLVED: HSV Color-Based MVP (ADR-005)
 2. **Calibration Procedures** - Needed before Phase 1 complete
 3. **Hardware Setup Guide** - Needed for initial setup
 
 ### P3 - Lower Priority (Resolve Before Later Phases)
 
-1. **IMU Status** - Phase 5 concern
+1. ✅ **IMU Status** - RESOLVED: Optional Hardware (ADR-006)
 2. **Deployment & Installation** - Production concern
 3. **Calibration UI/Workflows** - UX improvement
 
