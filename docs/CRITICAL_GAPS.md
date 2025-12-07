@@ -279,11 +279,13 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **Current Pin Usage:**
 
 #### I2C Bus (ThunderBorg HAT)
+
 - **I2C1 SDA:** GPIO 2 (Pin 3)
 - **I2C1 SCL:** GPIO 3 (Pin 5)
 - **I2C Address:** 0x15 (ThunderBorg)
 
 **ThunderBorg Onboard Features (No GPIO Required):**
+
 - 2x Motor outputs
 - 2x RGB LEDs (onboard, I2C controlled via `TB.SetLed1()`, `TB.SetLed2()`)
 - Battery voltage monitoring
@@ -293,12 +295,14 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **Key Insight:** Use ThunderBorg onboard LEDs instead of external GPIO LEDs - saves GPIO pins!
 
 **Future Pin Reservations (Documented):**
+
 - Phase 3 (Ultrasonic): GPIO 17, 18, 22, 23, 24, 27
 - Phase 1+ (Emergency button): GPIO 21
 - Phase 5 (Encoders): GPIO 5, 6, 13, 19
 - Phase 5 (IMU): Shares I2C bus with ThunderBorg
 
 **Completed Actions:**
+
 - [x] Document ThunderBorg I2C pin usage
 - [x] Identify all available GPIO pins
 - [x] Reserve pins for future phases
@@ -384,30 +388,36 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **Thread Priority Hierarchy:**
 
 **Tier 1 (Highest - Equal Priority):**
+
 - Motor Control Thread
 - Safety Monitor Thread
 
 **Tier 2 (Medium Priority):**
+
 - Video Streaming Thread
 - Image Processing Thread
 
 **Tier 3 (Lowest Priority):**
+
 - Web Server Thread
 
 **Critical Linkage:** Web server stop button directly signals Safety Monitor Thread
 
 **Inter-Thread Communication:**
+
 - **Control Command Queue:** `queue.Queue(maxsize=10)` - Image Processing & Web Server → Motor Control
 - **Safety Event Flags:** `threading.Event()` - Emergency stop, battery low, comm timeout
 - **Frame Buffer:** Circular buffer (2 frames) with `threading.Lock()` - Video → Image Processing & Web Server
 
 **Deadlock Prevention:**
+
 1. Lock ordering: Frame Lock → Command Queue → Event Flags
 2. All queue operations have 100ms timeout
 3. No nested locks (max one lock per thread at a time)
 4. Emergency stop uses lock-free event flag
 
 **Completed Actions:**
+
 - [x] Define thread priority hierarchy
 - [x] Specify inter-thread communication patterns
 - [x] Define deadlock prevention rules
@@ -434,16 +444,19 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **Safety Layers:**
 
 **Layer 1: Hardware (ThunderBorg Board)**
+
 - Failsafe: Motors off if no command within 250ms
 - Fault detection: Motor overcurrent detection (built-in)
 - Activation: Enabled via `TB.SetCommsFailsafe(True)` at startup
 
 **Layer 2: Watchdog Thread (monsterWeb.py)**
+
 - Timeout: 1 second of no web activity
 - Action: Calls `TB.MotorsOff()`, sets LED to blue
 - Recovery: Automatic reconnection resets watchdog
 
 **Layer 3: Safety Monitor Thread (New - High Priority)**
+
 - Battery voltage monitoring
 - Drive fault checking
 - Process emergency stop signals
@@ -453,24 +466,28 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **Mode-Dependent Safety:**
 
 **Manual Mode:**
+
 - Primary safety: Driver responsibility
 - Automatic stops: Communication timeout, hardware failsafe, emergency button
 - Speed limiting: FPS-based (15fps→50%, 30fps→100%)
 - Warnings only: Battery low, motor faults (driver decides)
 
 **Autonomous Mode:**
+
 - Enhanced safety: All checks mandatory
 - Automatic stops: Low battery, motor faults, obstacle detection, tracking loss
 - Speed limiting: Additional limits based on obstacles/confidence
 - Recovery: Requires manual intervention
 
 **Emergency Stop Propagation:**
+
 - Trigger sources: Web UI, hardware button (future), safety checks, watchdog
 - Mechanism: `threading.Event()` - lock-free, fast
 - Response time: <100ms
 - ANY user can trigger emergency stop
 
 **Completed Actions:**
+
 - [x] Design multi-layer safety architecture
 - [x] Define mode-dependent behavior (manual vs autonomous)
 - [x] Specify emergency stop propagation mechanism
@@ -496,6 +513,7 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **Decision: Adaptive Frame Rate with Speed Limiting** (See ADR-007 in DECISIONS.md)
 
 **Accepted Frame Rate Tiers:**
+
 - **Minimum:** 15 fps → Maximum robot speed limited to 50%
 - **Target:** 30 fps → 100% maximum speed available
 - **Above Target:** >30 fps → No additional speed benefit
@@ -503,12 +521,14 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **Policy:** Quality over frame rate - skip frames if needed to maintain processing quality
 
 **Rationale:**
+
 1. Current Raspberry Pi + Camera V2 achieves 30fps with OpenCV color following
 2. Safety first: Lower frame rates = lower max speed ensures safety
 3. Processing priority: Better to process fewer frames well than many frames poorly
 4. Graceful degradation: System remains functional at lower frame rates
 
 **Completed Actions:**
+
 - [x] Define FPS tiers and speed limiting logic
 - [x] Specify frame skip policy (quality over quantity)
 - [x] Document in ADR-007

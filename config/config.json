@@ -1,0 +1,66 @@
+{
+  "$schema": "./config.schema.json",
+  "security": {
+    "webBindAddress": "127.0.0.1",
+    "webPort": 8080
+  },
+  "power": {
+    "voltageIn": 12.0,
+    "voltageOut": 11.4,
+    "voltageInComment": "Total battery voltage (1.2V * 10 cells)",
+    "voltageOutComment": "Maximum motor voltage (12.0V * 0.95 for RPi headroom)"
+  },
+  "camera": {
+    "width": 640,
+    "height": 480,
+    "frameRate": 30,
+    "flippedImage": true,
+    "jpegQuality": 80,
+    "displayRate": 10
+  },
+  "processing": {
+    "scaledWidth": 160,
+    "scaledHeight": 120,
+    "processingThreads": 4,
+    "minHuntColour": [80, 0, 0],
+    "maxHuntColour": [255, 100, 100],
+    "erodeSize": 5,
+    "targetY1Ratio": 0.9,
+    "targetY2Ratio": 0.6
+  },
+  "control": {
+    "motorSmoothing": 5,
+    "positionP": 1.0,
+    "positionI": 0.0,
+    "positionD": 0.4,
+    "changeP": 1.0,
+    "changeI": 0.0,
+    "changeD": 0.4,
+    "clipI": 100
+  },
+  "drive": {
+    "steeringGain": 1.0,
+    "steeringClip": 1.0,
+    "steeringOffset": 0.0
+  },
+  "debug": {
+    "showFps": true,
+    "testMode": true,
+    "showImages": true,
+    "overlayOriginal": true,
+    "showPerSecond": 1,
+    "scaleFinalImage": 1.0,
+    "targetLineColour": [0, 255, 255],
+    "targetPointsColour": [255, 255, 0],
+    "targetPointSize": 3
+  },
+  "safety": {
+    "batteryStopVoltage": 10.5,
+    "batteryWarningVoltage": 11.0,
+    "watchdogTimeoutSeconds": 1.0,
+    "emergencyStopEnabled": true
+  },
+  "paths": {
+    "photoDirectory": "~/monster-photos"
+  }
+}

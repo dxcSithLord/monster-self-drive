@@ -173,12 +173,23 @@
 - [x] Threading model defined (ADR-008)
 - [x] Frame rate requirements clarified (ADR-007)
 
-### Pre-Phase 1 Migrations (TO DO)
+### Pre-Phase 1 Migrations (COMPLETE)
 
-- [ ] Migrate to src/ directory structure
-- [ ] Convert Settings.py to JSON loader
-- [ ] Create config.json with all current settings
-- [ ] Create JSON Schema for validation
+- [x] Migrate to src/ directory structure
+- [x] Convert Settings.py to JSON loader
+- [x] Create config.json with all current settings
+- [x] Create JSON Schema for validation
+
+**Files Created:**
+
+- `config/config.json` - Configuration file with all settings
+- `config/config.schema.json` - JSON Schema for validation
+- `src/core/settings.py` - JSON loader with backward compatibility
+- `src/safety/control_manager.py` - Single-user control (ADR-004)
+- `src/safety/emergency_stop.py` - Lock-free emergency stop (ADR-009)
+- `src/safety/safety_monitor.py` - 10Hz safety monitor thread (ADR-009)
+- `tests/test_settings.py` - Settings loader tests
+- `tests/test_safety.py` - Safety module tests
 
 ### Phase 1 Implementation (TO DO)
 
@@ -263,19 +274,22 @@ monster-self-drive/
 
 1. **✅ All architectural decisions complete**
 
-2. **Execute pre-Phase 1 migrations:**
-   - Migrate to src/ directory structure
-   - Convert Settings.py to JSON loader
-   - Create config.json with current settings
-   - Create JSON Schema for validation
+2. **✅ Pre-Phase 1 migrations complete:**
+   - ✅ Migrate to src/ directory structure
+   - ✅ Convert Settings.py to JSON loader
+   - ✅ Create config.json with current settings
+   - ✅ Create JSON Schema for validation
+   - ✅ Implement safety module placeholders
 
 3. **Begin Phase 1 implementation:**
-   - Flask-SocketIO server with threading model
-   - Motor Control and Safety Monitor threads (Tier 1)
-   - Single-user ControlManager
-   - Web UI with control status indicators
-   - Emergency stop button (any user access)
-   - FPS-based speed limiting
+   - Implement Flask-SocketIO server (replace raw socketserver)
+   - Create Motor Control Thread (Tier 1)
+   - Integrate Safety Monitor Thread (Tier 1) - placeholder exists
+   - Integrate ControlManager for single-user control - placeholder exists
+   - Create web UI configuration view page
+   - Add control status indicators to web UI
+   - Integrate emergency stop button (any user access)
+   - Implement FPS-based speed limiting
 
 ---
 

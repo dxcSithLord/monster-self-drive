@@ -561,7 +561,7 @@ Current codebase has flat structure in root directory. CONSTITUTION proposes `sr
 
 ### Current Structure
 
-```
+```text
 monster-self-drive/
 ├── ImageProcessor.py
 ├── MonsterAuto.py
@@ -586,7 +586,7 @@ The project will migrate to a structured directory layout that separates source 
 
 **Proposed Structure:**
 
-```
+```text
 monster-self-drive/
 ├── src/                    # Source code
 │   ├── core/
@@ -946,7 +946,7 @@ def handle_command(user_id, command):
 
 **Active User:**
 
-```
+```text
 ┌─────────────────────────────────────┐
 │ ● YOU HAVE CONTROL                   │
 │ Release Control [Button]             │
@@ -956,7 +956,7 @@ def handle_command(user_id, command):
 
 **Observer:**
 
-```
+```text
 ┌─────────────────────────────────────┐
 │ 👁️ OBSERVER MODE                     │
 │ Alice has control                    │
@@ -1291,11 +1291,13 @@ def flash_sos_pattern():
 ### Context
 
 Frame rate requirements were inconsistent across documentation:
+
 - REQUIREMENTS.md stated "30 fps minimum"
 - REQUIREMENTS.md also stated "60 fps preferred"
 - IMPLEMENTATION_PLAN.md mentioned frame skipping (~15 fps effective)
 
 This inconsistency affected:
+
 - Hardware selection expectations
 - Processing budget allocation
 - Performance testing criteria
@@ -1308,6 +1310,7 @@ This inconsistency affected:
 The system will implement adaptive frame rate requirements tied to robot speed:
 
 **Frame Rate Tiers:**
+
 - **Minimum:** 15 fps → Maximum robot speed limited to 50%
 - **Target:** 30 fps → 100% maximum speed available
 - **Above Target:** >30 fps → No additional speed benefit
@@ -1325,6 +1328,7 @@ The system will implement adaptive frame rate requirements tied to robot speed:
 ### Implementation Details
 
 **Speed Limiting Logic:**
+
 ```python
 if current_fps >= 30:
     max_speed = 1.0  # 100% power available
@@ -1335,6 +1339,7 @@ else:
 ```
 
 **Frame Skip Strategy:**
+
 - Skip frames when processing falls behind
 - Maintain processing quality over quantity
 - Display warning when <15 fps for >5 seconds
@@ -1342,12 +1347,14 @@ else:
 ### Consequences
 
 **Positive:**
+
 - Clear performance expectations
 - Automatic safety limiting
 - Graceful degradation under load
 - Realistic requirements for hardware
 
 **Negative:**
+
 - More complex speed controller logic
 - Need FPS monitoring thread
 - Warning UI needed for low frame rates
@@ -1355,11 +1362,13 @@ else:
 ### Alternatives Considered
 
 **Option A: Fixed 30 fps minimum (rejected)**
+
 - Too strict for variable processing loads
 - Would fail safety tests under load
 - Not achievable with complex tracking algorithms
 
 **Option B: No frame rate requirements (rejected)**
+
 - Unsafe - could operate with very low fps
 - No performance baseline
 - Difficult to test
@@ -1377,12 +1386,14 @@ else:
 ### Context
 
 The system requires multiple concurrent operations:
+
 - Motor control (low latency critical)
 - Safety monitoring (critical)
 - Video streaming and processing
 - Web server request handling
 
 Thread priorities and coordination were undefined, risking:
+
 - Deadlocks
 - Priority inversion
 - Safety delays
@@ -1410,6 +1421,7 @@ Thread priorities and coordination were undefined, risking:
 ### Thread Specifications
 
 #### Motor Control Thread
+
 - **Priority:** Highest (equal with Safety)
 - **Responsibilities:**
   - Execute motor commands from control queue
@@ -1419,6 +1431,7 @@ Thread priorities and coordination were undefined, risking:
 - **Timeout:** 100ms max for queue reads
 
 #### Safety Monitor Thread
+
 - **Priority:** Highest (equal with Motor Control)
 - **Responsibilities:**
   - Monitor battery voltage
@@ -1430,6 +1443,7 @@ Thread priorities and coordination were undefined, risking:
 - **Emergency Stop:** Immediate MotorsOff() call
 
 #### Video Streaming Thread
+
 - **Priority:** Medium
 - **Responsibilities:**
   - Capture frames from camera
@@ -1439,6 +1453,7 @@ Thread priorities and coordination were undefined, risking:
 - **Buffer:** 2-frame circular buffer
 
 #### Image Processing Thread
+
 - **Priority:** Medium
 - **Responsibilities:**
   - Process frames for line/object tracking
@@ -1448,6 +1463,7 @@ Thread priorities and coordination were undefined, risking:
 - **Output:** Sends to control command queue
 
 #### Web Server Thread
+
 - **Priority:** Lowest
 - **Responsibilities:**
   - Handle HTTP requests
@@ -1459,18 +1475,21 @@ Thread priorities and coordination were undefined, risking:
 ### Inter-Thread Communication
 
 **Control Command Queue:**
+
 - Type: `queue.Queue(maxsize=10)`
 - Producers: Image Processing, Web Server
 - Consumer: Motor Control
 - Policy: Newest command on full queue (LIFO behavior)
 
 **Safety Event Flags:**
+
 - Type: `threading.Event()`
 - Emergency Stop: Any thread can set
 - Battery Low: Safety Monitor sets
 - Comm Timeout: Watchdog sets
 
 **Frame Buffer:**
+
 - Type: Circular buffer (2 frames)
 - Lock: `threading.Lock()`
 - Producer: Video Streaming
@@ -1493,12 +1512,14 @@ Thread priorities and coordination were undefined, risking:
 ### Implementation Notes
 
 **Python Threading Limitations:**
+
 - Python GIL prevents true parallel execution
 - Priorities implemented via queue priorities and careful design
 - Real-time guarantees not possible in Python
 - Use `time.sleep()` carefully to allow GIL switching
 
 **Monitoring:**
+
 - Log thread health every 10 seconds
 - Detect deadlocks: threads not progressing >5 seconds
 - Emergency recovery: Full system reset on deadlock
@@ -1506,12 +1527,14 @@ Thread priorities and coordination were undefined, risking:
 ### Consequences
 
 **Positive:**
+
 - Clear thread responsibilities
 - Safety-first architecture
 - Predictable behavior
 - Well-defined communication patterns
 
 **Negative:**
+
 - More complex than single-threaded
 - Debugging multi-threading issues
 - Need thread monitoring code
@@ -1520,11 +1543,13 @@ Thread priorities and coordination were undefined, risking:
 ### Alternatives Considered
 
 **Option A: Single-threaded asyncio (rejected)**
+
 - Wouldn't handle blocking I2C calls well
 - More complex code restructure
 - Existing code is threaded
 
 **Option B: All equal priority (rejected)**
+
 - Safety not guaranteed
 - No predictable behavior under load
 - Emergency stop could be delayed
@@ -1542,6 +1567,7 @@ Thread priorities and coordination were undefined, risking:
 ### Context
 
 Safety requirements were listed but integration architecture was undefined. Critical questions:
+
 - Where do safety checks execute?
 - How does emergency stop propagate?
 - What is the recovery procedure?
@@ -1554,18 +1580,21 @@ Safety requirements were listed but integration architecture was undefined. Crit
 ### Safety Layers
 
 **Layer 1: Hardware (ThunderBorg Board)**
+
 - **Failsafe:** Motors off if no command within 250ms
 - **Fault Detection:** Motor overcurrent detection (built-in)
 - **Activation:** Enabled via `TB.SetCommsFailsafe(True)` at startup
 - **Recovery:** Automatic on next valid command
 
 **Layer 2: Watchdog Thread (monsterWeb.py)**
+
 - **Timeout:** 1 second of no web activity
 - **Action:** Calls `TB.MotorsOff()`, sets LED to blue
 - **Recovery:** Automatic reconnection resets watchdog
 - **Thread:** Existing Watchdog class (independent thread)
 
 **Layer 3: Safety Monitor Thread (New - High Priority)**
+
 - **Responsibilities:**
   - Battery voltage monitoring
   - Drive fault checking
@@ -1577,6 +1606,7 @@ Safety requirements were listed but integration architecture was undefined. Crit
 ### Mode-Dependent Safety
 
 **Manual Mode (Driver Controlled):**
+
 - **Primary Safety:** Driver responsibility
 - **Automatic Stops:**
   - Communication timeout (Watchdog: 1 second)
@@ -1587,6 +1617,7 @@ Safety requirements were listed but integration architecture was undefined. Crit
 - **Motor Faults:** Display warning, don't stop (driver decides)
 
 **Autonomous Mode (Self-Drive):**
+
 - **Enhanced Safety:** All checks mandatory
 - **Automatic Stops:**
   - Low battery (stop and alert)
@@ -1602,6 +1633,7 @@ Safety requirements were listed but integration architecture was undefined. Crit
 **Location:** Dedicated Safety Monitor Thread
 
 **Execution Pattern:**
+
 ```python
 while not terminated:
     # Check battery
@@ -1630,12 +1662,14 @@ while not terminated:
 ### Emergency Stop Propagation
 
 **Trigger Sources:**
+
 1. Web UI stop button → Sets `emergency_stop_event`
 2. Hardware button (future) → GPIO interrupt → Sets `emergency_stop_event`
 3. Safety Monitor checks → Sets `emergency_stop_event`
 4. Watchdog timeout → Directly calls `TB.MotorsOff()`
 
 **Propagation Mechanism:**
+
 - **Signal:** `threading.Event()` - lock-free, fast
 - **Handler:** Safety Monitor Thread
 - **Action:** `TB.MotorsOff()` within 100ms
@@ -1646,11 +1680,13 @@ while not terminated:
 ### Recovery Procedures
 
 **From Communication Timeout:**
+
 - **Automatic:** Reconnection resets watchdog
 - **Manual:** None required
 - **Validation:** Watchdog automatically clears on activity
 
 **From Emergency Stop:**
+
 1. **Clear Condition:** Resolve cause (charge battery, check wiring, etc.)
 2. **User Confirmation:** Click "Reset Emergency Stop" button
 3. **System Check:** Safety Monitor validates:
@@ -1661,6 +1697,7 @@ while not terminated:
 5. **Visual Feedback:** LED returns to normal
 
 **From Motor Fault:**
+
 - **Manual Mode:** Warning only, driver can continue or stop
 - **Autonomous Mode:** Stop required, manual reset needed
 - **Validation:** Fault must clear before reset allowed
@@ -1668,6 +1705,7 @@ while not terminated:
 ### Battery Thresholds
 
 **To be configured in Settings:**
+
 ```python
 BATTERY_MIN = 10.5V      # Autonomous stop threshold
 BATTERY_WARNING = 11.0V  # Warning threshold (manual mode)
@@ -1686,12 +1724,14 @@ BATTERY_MAX = 12.6V      # Fully charged reference
 ### Implementation Priority
 
 **Phase 1 (Immediate):**
+
 - [ ] Enable ThunderBorg hardware failsafe at startup
 - [ ] Ensure watchdog timeout working (already implemented)
 - [ ] Add web UI emergency stop button to Safety Monitor
 - [ ] Implement FPS-based speed limiting
 
 **Phase 2-4 (Autonomous Features):**
+
 - [ ] Implement Safety Monitor Thread
 - [ ] Add battery monitoring
 - [ ] Add motor fault monitoring
@@ -1699,6 +1739,7 @@ BATTERY_MAX = 12.6V      # Fully charged reference
 - [ ] Add recovery UI
 
 **Phase 3+ (Enhanced):**
+
 - [ ] Obstacle detection integration
 - [ ] Tilt detection (if IMU)
 - [ ] Hardware emergency stop button
@@ -1706,6 +1747,7 @@ BATTERY_MAX = 12.6V      # Fully charged reference
 ### Consequences
 
 **Positive:**
+
 - Multiple independent safety layers
 - Fast emergency response
 - Mode-appropriate safety
@@ -1713,6 +1755,7 @@ BATTERY_MAX = 12.6V      # Fully charged reference
 - Clear recovery process
 
 **Negative:**
+
 - More complex than single safety check
 - Mode switching logic needed
 - Recovery UI needed
@@ -1721,16 +1764,19 @@ BATTERY_MAX = 12.6V      # Fully charged reference
 ### Alternatives Considered
 
 **Option A: Single safety check in motor control (rejected)**
+
 - Too slow - motor control busy with commands
 - No independent safety monitoring
 - Single point of failure
 
 **Option B: Same safety for all modes (rejected)**
+
 - Too restrictive for manual mode
 - Driver can't override warnings
 - Poor user experience
 
 **Option C: No automatic stops in manual mode (rejected)**
+
 - Unsafe - battery drain could damage hardware
 - Communication loss must stop robot
 - Doesn't meet safety requirements
@@ -1748,6 +1794,7 @@ BATTERY_MAX = 12.6V      # Fully charged reference
 ### Context
 
 GPIO pin assignments were completely missing from documentation. This created uncertainty about:
+
 - Available pins for future expansion
 - Pin conflicts
 - Hardware setup instructions
@@ -1768,9 +1815,11 @@ GPIO pin assignments were completely missing from documentation. This created un
 | I2C1 SCL | GPIO 3 | Pin 5 | ThunderBorg communication |
 
 **I2C Device Address:**
+
 - ThunderBorg: `0x15` (default, configurable)
 
 **Power Pins (Used by HAT):**
+
 - 3.3V Power: Pin 1
 - 5V Power: Pin 2, Pin 4
 - Ground: Pin 6, Pin 9, Pin 14, Pin 20, Pin 25, Pin 30, Pin 34, Pin 39
@@ -1784,42 +1833,51 @@ All GPIO pins except 2 and 3 are available for future use:
 **Recommended for Future Phases:**
 
 #### Phase 3: Obstacle Detection
+
 - **Ultrasonic Sensor 1:** Trigger GPIO 23, Echo GPIO 24
 - **Ultrasonic Sensor 2:** Trigger GPIO 27, Echo GPIO 22
 - **Ultrasonic Sensor 3:** Trigger GPIO 17, Echo GPIO 18
 
 #### Phase 1+: Hardware Emergency Stop
+
 - **Emergency Button:** GPIO 21 (pull-up, active low)
 
 #### Phase 1+: Status LEDs (if not using ThunderBorg onboard LEDs)
+
 - **Power LED:** GPIO 16 (green)
 - **Status LED:** GPIO 20 (blue)
 - **Error LED:** GPIO 26 (red)
 
 #### Phase 5: IMU (if added)
+
 - **I2C Address:** 0x68 or 0x69 (typical MPU-6050/9250)
 - **Uses same I2C bus:** GPIO 2/3 (shared with ThunderBorg)
 
 #### Phase 5: Wheel Encoders (if added)
+
 - **Left Encoder:** GPIO 5, GPIO 6
 - **Right Encoder:** GPIO 13, GPIO 19
 
 ### Pin Reservation Strategy
 
 **Do NOT Use (Reserved for HAT):**
+
 - GPIO 2, 3 (I2C - actively used)
 - All power and ground pins
 
 **Recommended to Avoid (SPI/Special Functions):**
+
 - GPIO 7-11 (SPI0 - conflicts with HAT if needed)
 - GPIO 14, 15 (UART - used for console)
 
 **Safe to Use:**
+
 - GPIO 4, 5, 6, 12, 13, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27
 
 ### ThunderBorg Onboard Features (No GPIO Required)
 
 **ThunderBorg provides via I2C (no additional GPIO needed):**
+
 - 2x Motor outputs
 - 2x RGB LEDs (onboard, I2C controlled)
 - Battery voltage monitoring
@@ -1827,6 +1885,7 @@ All GPIO pins except 2 and 3 are available for future use:
 - Communications failsafe
 
 **Use ThunderBorg LEDs instead of external GPIO LEDs:**
+
 - `TB.SetLed1(r, g, b)` - ThunderBorg onboard LED
 - `TB.SetLed2(r, g, b)` - ThunderBorg lid LED
 - No GPIO pins required!
@@ -1836,6 +1895,7 @@ All GPIO pins except 2 and 3 are available for future use:
 **ThunderBorg I2C:** 3.3V logic (Raspberry Pi native)
 
 **Future Sensor Considerations:**
+
 - **Ultrasonic sensors (HC-SR04):** 5V logic on echo pin
   - **CRITICAL:** Requires voltage divider (5V → 3.3V) on echo pins
   - Trigger pin: Direct connection (Pi 3.3V is sufficient)
@@ -1853,11 +1913,13 @@ All GPIO pins except 2 and 3 are available for future use:
 ### Implementation Actions
 
 **Immediate (Phase 1):**
+
 - [ ] Document current I2C usage in setup guide
 - [ ] No GPIO changes needed (no additional hardware)
 - [ ] Use ThunderBorg onboard LEDs for status
 
 **Future Phases:**
+
 - [ ] Implement pin assignments when hardware added
 - [ ] Validate no conflicts before adding sensors
 - [ ] Add voltage dividers for 5V sensors
@@ -1866,6 +1928,7 @@ All GPIO pins except 2 and 3 are available for future use:
 ### Consequences
 
 **Positive:**
+
 - Clear documentation of current usage
 - Future expansion planned
 - No pin conflicts
@@ -1873,16 +1936,19 @@ All GPIO pins except 2 and 3 are available for future use:
 - Safety notes for future additions
 
 **Negative:**
+
 - None - this is documentation only
 
 ### Alternatives Considered
 
 **Option A: Assign all pins now (rejected)**
+
 - Premature - no hardware to assign yet
 - Would be speculative
 - Could create conflicts later
 
 **Option B: External GPIO LEDs now (rejected)**
+
 - Unnecessary - ThunderBorg has onboard LEDs
 - Wastes GPIO pins
 - More wiring complexity
