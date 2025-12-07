@@ -9,7 +9,7 @@ TB = ThunderBorg.ThunderBorg()
 TB.Init()
 # User code here, use TB to control the board
 
-Multiple boards can be used when configured with different I�C addresses by creating multiple instances, e.g.
+Multiple boards can be used when configured with different I2C addresses by creating multiple instances, e.g.
 import ThunderBorg
 TB1 = ThunderBorg.ThunderBorg()
 TB2 = ThunderBorg.ThunderBorg()
@@ -90,7 +90,7 @@ def ScanForThunderBorg(busNumber = 1):
     	found (list[int]): A list of detected I2C addresses (each in the range 0x03 to 0x77).
     """
     found = []
-    print('Scanning I�C bus #%d' % (busNumber))
+    print('Scanning I2C bus #%d' % (busNumber))
     bus = ThunderBorg()
     for address in range(0x03, 0x78, 1):
         try:
@@ -106,7 +106,7 @@ def ScanForThunderBorg(busNumber = 1):
                 pass
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             pass
     if len(found) == 0:
         print('No ThunderBorg boards found, is bus #%d correct (should be 0 for Rev 1, 1 for Rev 2)' % (busNumber))
@@ -129,19 +129,19 @@ def SetNewAddress(newAddress, oldAddress = -1, busNumber = 1):
         busNumber (int, optional): I2C bus to use: 0 for revision 1 boards, 1 for revision 2 boards. Default is 1.
     """
     if newAddress < 0x03:
-        print('Error, I�C addresses below 3 (0x03) are reserved, use an address between 3 (0x03) and 119 (0x77)')
+        print('Error, I2C addresses below 3 (0x03) are reserved, use an address between 3 (0x03) and 119 (0x77)')
         return
     elif newAddress > 0x77:
-        print('Error, I�C addresses above 119 (0x77) are reserved, use an address between 3 (0x03) and 119 (0x77)')
+        print('Error, I2C addresses above 119 (0x77) are reserved, use an address between 3 (0x03) and 119 (0x77)')
         return
     if oldAddress < 0x0:
         found = ScanForThunderBorg(busNumber)
         if len(found) < 1:
-            print('No ThunderBorg boards found, cannot set a new I�C address!')
+            print('No ThunderBorg boards found, cannot set a new I2C address!')
             return
         else:
             oldAddress = found[0]
-    print('Changing I�C address from %02X to %02X (bus #%d)' % (oldAddress, newAddress, busNumber))
+    print('Changing I2C address from %02X to %02X (bus #%d)' % (oldAddress, newAddress, busNumber))
     bus = ThunderBorg()
     bus.InitBusOnly(busNumber, oldAddress)
     try:
@@ -184,9 +184,9 @@ def SetNewAddress(newAddress, oldAddress = -1, busNumber = 1):
             foundChip = False
             print('Missing ThunderBorg at %02X' % (newAddress))
     if foundChip:
-        print('New I�C address of %02X set successfully' % (newAddress))
+        print('New I2C address of %02X set successfully' % (newAddress))
     else:
-        print('Failed to set new I�C address...')
+        print('Failed to set new I2C address...')
 
 
 # Class used to control ThunderBorg
@@ -194,16 +194,16 @@ class ThunderBorg:
     """
 This module is designed to communicate with the ThunderBorg
 
-busNumber               I�C bus on which the ThunderBorg is attached (Rev 1 is bus 0, Rev 2 is bus 1)
-bus                     the smbus object used to talk to the I�C bus
-i2cAddress              The I�C address of the ThunderBorg chip to control
+busNumber               I2C bus on which the ThunderBorg is attached (Rev 1 is bus 0, Rev 2 is bus 1)
+bus                     the smbus object used to talk to the I2C bus
+i2cAddress              The I2C address of the ThunderBorg chip to control
 foundChip               True if the ThunderBorg chip can be seen, False otherwise
 printFunction           Function reference to call when printing text, if None "print" is used
     """
 
     # Shared values used by this class
     busNumber               = 1                     # Check here for Rev 1 vs Rev 2 and select the correct bus
-    i2cAddress              = I2C_ID_THUNDERBORG    # I�C address, override for a different address
+    i2cAddress              = I2C_ID_THUNDERBORG    # I2C address, override for a different address
     foundChip               = False
     printFunction           = None
     i2cWrite                = None
@@ -263,7 +263,7 @@ Under most circumstances you should use the appropriate function instead of RawR
         
         Raises:
             TypeError: If `busNumber` or `address` are not integers.
-            ValueError: If `busNumber` is not 0 or 1, or `address` is outside 0x03–0x77.
+            ValueError: If `busNumber` is not 0 or 1, or `address` is outside 0x03-0x77.
             OSError: If opening the I2C device files or setting the slave address via ioctl fails.
         """
         # Security: Validate busNumber to prevent path traversal
