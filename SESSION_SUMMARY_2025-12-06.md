@@ -1,18 +1,22 @@
 # Session Summary: 2025-12-06
-# Branch: claude/select-websocket-library-0152FD9iNnXLLLCRfSwDd5Yi
-# Status: MERGED AND DELETED
+
+**Branch**: claude/select-websocket-library-0152FD9iNnXLLLCRfSwDd5Yi
+
+**Status**: MERGED AND DELETED
 
 ---
 
 ## Session Overview
 
-This session continued previous work on the MonsterBorg self-drive project, focusing on completing security vulnerability verification, fixing markdown linting issues, and documenting the ThunderBorg hardware interface.
+This session continued previous work on the MonsterBorg self-drive project,
+focusing on completing security vulnerability verification, fixing markdown
+linting issues, and documenting the ThunderBorg hardware interface.
 
 ---
 
 ## Work Completed
 
-### 1. CVE-2024-28219 Security Verification ✅
+### 1. CVE-2024-28219 Security Verification
 
 **Completed all verification steps for Pillow security fix:**
 
@@ -35,22 +39,25 @@ This session continued previous work on the MonsterBorg self-drive project, focu
   - Noted test suite status
 
 **Commits:**
+
 - `3ab0eeb`: Add requirements.lock for reproducible builds
 - `b5307c6`: Update SECURITY.md with CVE-2024-28219 verification results
 
 ---
 
-### 2. Markdown Linting Fixes ✅
+### 2. Markdown Linting Fixes
 
 **Fixed MD034 bare URL warnings in docs/PROJECT_CONSTITUTION.md:**
 
 **Lines Fixed:**
+
 - Line 6: Repository URL
 - Line 1400: Repository contact URL
 - Line 1401: Issues URL
 - Line 1402: Discussions URL
 
 **Change Applied:**
+
 ```markdown
 # Before:
 **Repository**: https://github.com/dxcSithLord/monster-self-drive
@@ -60,17 +67,20 @@ This session continued previous work on the MonsterBorg self-drive project, focu
 ```
 
 **Verification:**
+
 - Installed markdownlint-cli globally via npm
 - Ran markdownlint on PROJECT_CONSTITUTION.md
 - Confirmed: Zero MD034 (bare URL) warnings
 
 ---
 
-### 3. ThunderBorg Interface Documentation ✅
+### 3. ThunderBorg Interface Documentation
 
-**Added comprehensive ThunderBorg.py API documentation to docs/GPIO_PIN_ASSIGNMENTS.md:**
+**Added comprehensive ThunderBorg.py API documentation to
+docs/GPIO_PIN_ASSIGNMENTS.md:**
 
 **Motor Control Functions:**
+
 - `SetMotor1(power)` - Set motor 1 power (-1.0 to +1.0)
 - `SetMotor2(power)` - Set motor 2 power (-1.0 to +1.0)
 - `SetMotors(power)` - Set both motors to same power
@@ -78,6 +88,7 @@ This session continued previous work on the MonsterBorg self-drive project, focu
 - Motor stop: `SetMotors(0)`
 
 **Onboard LED Control (I2C-based):**
+
 - `SetLed1(r, g, b)` - ThunderBorg LED (RGB 0.0-1.0)
 - `SetLed2(r, g, b)` - ThunderBorg Lid LED (RGB 0.0-1.0)
 - `SetLeds(r, g, b)` - Both LEDs same color
@@ -86,25 +97,32 @@ This session continued previous work on the MonsterBorg self-drive project, focu
 - `GetLedShowBattery()` - Check battery display status
 
 **Key Finding:**
-> **The ThunderBorg board's onboard RGB LEDs can be used for the SOS pattern (ADR-006), potentially eliminating the need for external GPIO LEDs and reducing GPIO pin requirements.**
+
+> **The ThunderBorg board's onboard RGB LEDs can be used for the SOS
+> pattern (ADR-006), potentially eliminating the need for external GPIO
+> LEDs and reducing GPIO pin requirements.**
 
 **External LED Control:**
+
 - `WriteExternalLedWord(b0, b1, b2, b3)` - Low-level LED control
 - `SetExternalLedColours([[r,g,b], ...])` - SK9822/APA102C LED strips
 - Note: External LEDs controlled via I2C (not direct GPIO)
 
 **Battery Monitoring:**
+
 - `GetBatteryReading()` - Read battery voltage
 - `GetBatteryMonitoringLimits()` - Get voltage thresholds
 - `SetBatteryMonitoringLimits(min, max)` - Set voltage thresholds
 
 **I2C Communication Details:**
+
 - Default I2C Address: `0x15` (configurable via `SetNewAddress`)
 - I2C Bus: Bus 1 (GPIO 2 SDA, GPIO 3 SCL)
 - Maximum I2C packet length: 6 bytes
 - Supports multiple ThunderBorg boards with different addresses
 
 **Implementation Example Added:**
+
 ```python
 import ThunderBorg
 
@@ -130,16 +148,19 @@ if voltage < 10.5:  # Low battery warning
 ```
 
 **Commit:**
+
 - `a13cd16`: Fix markdown linting and document ThunderBorg interface
 
 ---
 
 ## Files Modified
 
-### Created:
+### Created
+
 - `requirements.lock` (323 pinned dependencies, 6.6KB)
 
-### Modified:
+### Modified
+
 - `docs/SECURITY.md` - Added CVE verification results
 - `docs/PROJECT_CONSTITUTION.md` - Fixed 4 bare URLs
 - `docs/GPIO_PIN_ASSIGNMENTS.md` - Added ThunderBorg API documentation
@@ -151,10 +172,12 @@ if voltage < 10.5:  # Low battery warning
 **Branch:** claude/select-websocket-library-0152FD9iNnXLLLCRfSwDd5Yi
 
 **Commits Made (in order):**
+
 1. `a077aa9` - Security: Fix CVE-2024-28219 in Pillow dependency
-2. `3ab0eeb` - Add requirements.lock for reproducible builds
-3. `b5307c6` - Update SECURITY.md with CVE-2024-28219 verification results
-4. `a13cd16` - Fix markdown linting and document ThunderBorg interface
+1. `3ab0eeb` - Add requirements.lock for reproducible builds
+1. `b5307c6` - Update SECURITY.md with CVE-2024-28219 verification
+   results
+1. `a13cd16` - Fix markdown linting and document ThunderBorg interface
 
 **Final Status:** Branch merged and deleted (confirmed by user)
 
@@ -168,21 +191,25 @@ if voltage < 10.5:  # Low battery warning
 
 ---
 
-## Key Insights & Findings
+## Key Insights and Findings
 
 ### 1. Security Status
+
 - ✅ CVE-2024-28219 fully resolved and verified
 - ✅ No known vulnerabilities in dependency tree
 - ✅ Reproducible builds enabled via requirements.lock
 - ⚠️ No test suite currently exists (pytest configured but unused)
 
 ### 2. Hardware Interface Discovery
-- **ThunderBorg onboard LEDs** can replace external GPIO LEDs for status indicators
+
+- **ThunderBorg onboard LEDs** can replace external GPIO LEDs for
+  status indicators
 - This reduces GPIO pin requirements significantly
 - All LED control is I2C-based, not direct GPIO
 - Battery monitoring built into ThunderBorg interface
 
 ### 3. Documentation Quality
+
 - All markdown now compliant with standards
 - Comprehensive API reference available for ThunderBorg
 - Clear distinction between I2C-based control vs GPIO access
@@ -193,24 +220,30 @@ if voltage < 10.5:  # Low battery warning
 
 These tasks were documented in previous sessions but not completed here:
 
-### Critical (From User's Direct Instructions):
-1. **Validate GPIO pin assignments** against MonsterBorg hardware documentation
-   - Website blocked (403): https://www.piborg.org/blog/build/monsterborg-build
+### Critical (From User's Direct Instructions)
+
+1. **Validate GPIO pin assignments** against MonsterBorg hardware
+   documentation
+   - Website blocked (403):
+     [MonsterBorg Build Guide](https://www.piborg.org/blog/build/monsterborg-build)
    - Requires manual validation
 
-2. **Convert Settings.py to JSON configuration** (Critical Gap 2 decision)
+1. **Convert Settings.py to JSON configuration**
+   (Critical Gap 2 decision)
 
-3. **Create web UI configuration view page** to display/confirm settings
+1. **Create web UI configuration view page** to display/confirm settings
 
-### From ADR Action Items:
-4. Execute directory structure migration (ADR-003)
-5. Implement Flask-SocketIO in monsterWeb.py (ADR-001)
-6. Implement ControlManager class for single-user control (ADR-004)
-7. Implement HSV color-based tracking (ADR-005)
-8. Implement image-based inversion detection with SOS pattern (ADR-006)
+### From ADR Action Items
 
-### Remaining P0 Blocker:
-9. Design and document Safety System Architecture (ADR-009)
+1. Execute directory structure migration (ADR-003)
+1. Implement Flask-SocketIO in monsterWeb.py (ADR-001)
+1. Implement ControlManager class for single-user control (ADR-004)
+1. Implement HSV color-based tracking (ADR-005)
+1. Implement image-based inversion detection with SOS pattern (ADR-006)
+
+### Remaining P0 Blocker
+
+1. Design and document Safety System Architecture (ADR-009)
 
 ---
 
@@ -219,6 +252,7 @@ These tasks were documented in previous sessions but not completed here:
 **From Previous Sessions:**
 
 **Accepted (6 of 10):**
+
 - ✅ ADR-001: Flask-SocketIO for WebSocket communication
 - ✅ ADR-002: JSON Configuration format
 - ✅ ADR-003: Structured directory layout
@@ -227,6 +261,7 @@ These tasks were documented in previous sessions but not completed here:
 - ✅ ADR-006: Image-based inversion detection with SOS pattern
 
 **Proposed (4 of 10):**
+
 - 🟡 ADR-007: Remaining proposed decisions
 - 🟡 ADR-008: (details in DECISIONS.md)
 - 🟡 ADR-009: Safety System Architecture (P0 blocker)
@@ -240,7 +275,8 @@ These tasks were documented in previous sessions but not completed here:
 - **Duration:** Full session (continued from previous)
 - **Commits:** 4 total (all successfully pushed)
 - **Files Created:** 1 (requirements.lock)
-- **Files Modified:** 3 (SECURITY.md, PROJECT_CONSTITUTION.md, GPIO_PIN_ASSIGNMENTS.md)
+- **Files Modified:** 3 (SECURITY.md, PROJECT_CONSTITUTION.md,
+  GPIO_PIN_ASSIGNMENTS.md)
 - **Lines Added:** ~400+ (documentation and lock file)
 - **Security Scans:** 1 (pip-audit - clean result)
 - **Markdown Linting:** All MD034 warnings resolved
@@ -252,30 +288,34 @@ These tasks were documented in previous sessions but not completed here:
 **For Next Session:**
 
 1. **Start fresh** - This branch has been merged and deleted
-2. **Check main/master branch** - All this work should now be in the main codebase
-3. **Priority work** based on pending tasks:
+1. **Check main/master branch** - All this work should now be in the main
+   codebase
+1. **Priority work** based on pending tasks:
    - Consider implementing Flask-SocketIO (ADR-001)
    - Consider JSON configuration conversion (ADR-002)
    - Consider Safety System Architecture (ADR-009 - P0 blocker)
 
-4. **Documentation is current** - All docs updated and merged
-5. **Security is clean** - No vulnerabilities, lock file in place
+1. **Documentation is current** - All docs updated and merged
+1. **Security is clean** - No vulnerabilities, lock file in place
 
 ---
 
 ## Technical Context Preserved
 
-### Python Environment:
+### Python Environment
+
 - Python 3.11
 - pip 24.0
 - All dependencies pinned in requirements.lock
 
-### Git Configuration:
+### Git Configuration
+
 - Repository: monster-self-drive
 - Working directory: /home/user/monster-self-drive
 - Platform: linux (Kernel 4.4.0)
 
-### Hardware Platform:
+### Hardware Platform
+
 - Target: Raspberry Pi 3B
 - Motor Controller: ThunderBorg (I2C address 0x15)
 - I2C Bus: Bus 1 (GPIO 2 SDA, GPIO 3 SCL)
@@ -283,6 +323,8 @@ These tasks were documented in previous sessions but not completed here:
 
 ---
 
-**End of Session Summary**
+## End of Session Summary
+
 **Branch Status:** MERGED AND DELETED ✅
+
 **Next Action:** Start new session with fresh branch from main/master

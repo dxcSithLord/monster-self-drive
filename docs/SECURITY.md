@@ -14,6 +14,7 @@
 **Fixed Version:** Pillow >= 10.3.0
 
 **Action Taken:**
+
 - Updated `requirements.txt` line 40: `Pillow>=10.2.0` → `Pillow>=10.3.0`
 - Added comment noting CVE fix
 - Generated `requirements.lock` with pinned dependencies
@@ -21,12 +22,14 @@
 
 **Verification Results:**
 ✅ **Confirmed on 2025-12-06:**
+
 - pip-audit scan: No known vulnerabilities found
 - requirements.lock: Pillow pinned to version 12.0.0
 - CVE-2024-28219 fully resolved
 - Test suite: No existing tests (project currently has no test suite)
 
 **Verification Steps (for future updates):**
+
 ```bash
 # 1. Install/upgrade dependencies
 pip install -r requirements.txt --upgrade
@@ -42,8 +45,9 @@ pytest tests/
 ```
 
 **References:**
-- CVE-2024-28219: https://nvd.nist.gov/vuln/detail/CVE-2024-28219
-- Pillow Security: https://pillow.readthedocs.io/en/stable/releasenotes/
+
+- CVE-2024-28219: <https://nvd.nist.gov/vuln/detail/CVE-2024-28219>
+- Pillow Security: <https://pillow.readthedocs.io/en/stable/releasenotes/>
 
 ---
 
@@ -54,6 +58,7 @@ pytest tests/
 **Recommended Tools:**
 
 1. **pip-audit** (Python-specific)
+
    ```bash
    # Install
    pip install pip-audit
@@ -66,6 +71,7 @@ pytest tests/
    ```
 
 2. **safety** (Python vulnerabilities database)
+
    ```bash
    # Install
    pip install safety
@@ -83,6 +89,7 @@ pytest tests/
    - Configuration: `.github/dependabot.yml`
 
 4. **Snyk** (Multi-language support)
+
    ```bash
    # Install
    npm install -g snyk
@@ -97,6 +104,7 @@ pytest tests/
 ### CI/CD Integration
 
 **GitHub Actions Example:**
+
 ```yaml
 # .github/workflows/security-scan.yml
 name: Security Scan
@@ -130,6 +138,7 @@ jobs:
 ### Pre-commit Hook
 
 **Add to `.pre-commit-config.yaml`:**
+
 ```yaml
 repos:
   - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
@@ -145,6 +154,7 @@ repos:
 ### 1. Regular Updates
 
 **Monthly Schedule:**
+
 - First week: Review security advisories
 - Second week: Update non-critical dependencies
 - Third week: Update critical/security fixes
@@ -155,11 +165,13 @@ repos:
 **Current Strategy:** Minimum version constraints (`>=`)
 
 **Considerations:**
+
 - **Pros:** Automatically gets security fixes
 - **Cons:** May introduce breaking changes
 - **Recommendation:** Use lock files for production
 
 **Lock File Generation:**
+
 ```bash
 # Using pip-tools
 pip install pip-tools
@@ -175,6 +187,7 @@ pip freeze > requirements.lock
 ### 3. Testing After Updates
 
 **Validation Checklist:**
+
 - [ ] Install updated dependencies
 - [ ] Run full test suite
 - [ ] Run security scan
@@ -186,29 +199,33 @@ pip freeze > requirements.lock
 
 ## Known Vulnerabilities Log
 
-| Date | CVE | Package | Fixed Version | Status |
-|------|-----|---------|---------------|--------|
-| 2025-12-06 | CVE-2024-28219 | Pillow | 10.3.0 | ✅ Fixed |
+| Date       | CVE            | Package | Fixed Version | Status    |
+|------------|----------------|---------|---------------|-----------|
+| 2025-12-06 | CVE-2024-28219 | Pillow  | 10.3.0        | ✅ Fixed  |
 
 ---
 
 ## Security Review Schedule
 
 **Weekly:**
+
 - [ ] Check GitHub Security Advisories
 - [ ] Review Dependabot PRs (if enabled)
 
 **Monthly:**
+
 - [ ] Run `pip-audit` or `safety check`
 - [ ] Update dependencies to latest secure versions
 - [ ] Review and update this document
 
 **Quarterly:**
+
 - [ ] Full security audit
 - [ ] Review all dependencies for necessity
 - [ ] Remove unused dependencies
 
 **Annually:**
+
 - [ ] Comprehensive security review
 - [ ] Update security policies
 - [ ] Review and update CI/CD security practices
@@ -225,6 +242,7 @@ When a critical vulnerability is discovered:
    - Is there an active exploit?
 
 2. **Immediate Actions:**
+
    ```bash
    # Update the specific package
    pip install <package>==<safe-version>
@@ -252,13 +270,15 @@ When a critical vulnerability is discovered:
 ## Security Contacts
 
 **For reporting security vulnerabilities:**
+
 - Create private security advisory on GitHub
 - Email: [To be configured]
 
 **Resources:**
-- Python Security: https://www.python.org/dev/security/
-- PyPI Security: https://pypi.org/security/
-- NVD Database: https://nvd.nist.gov/
+
+- Python Security: <https://www.python.org/dev/security/>
+- PyPI Security: <https://pypi.org/security/>
+- NVD Database: <https://nvd.nist.gov/>
 
 ---
 

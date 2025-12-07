@@ -13,6 +13,7 @@ This document summarizes the Phase 1 critical and high-priority security fixes a
 ### Impact Summary
 
 **Vulnerabilities Fixed**: 10
+
 - **Critical**: 3 (Command Injection, Path Traversal, Information Disclosure)
 - **High**: 4 (Deprecated Code, Exception Handling, Input Validation)
 - **Medium**: 3 (Path manipulation, Bare except clauses)
@@ -30,11 +31,13 @@ This document summarizes the Phase 1 critical and high-priority security fixes a
 #### 1.1 Fixed Command Injection (VULN-002) - CRITICAL
 
 **Before** (Line 89):
+
 ```python
 os.system('sudo modprobe bcm2835-v4l2')
 ```
 
 **After** (Lines 91-102):
+
 ```python
 # Security: Use subprocess instead of os.system to prevent command injection
 try:
@@ -59,6 +62,7 @@ except subprocess.TimeoutExpired:
 #### 1.2 Fixed Deprecated OpenCV Constants - HIGH
 
 **Before** (Lines 91-93):
+
 ```python
 Settings.capture.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, Settings.cameraWidth);
 Settings.capture.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, Settings.cameraHeight);
@@ -66,6 +70,7 @@ Settings.capture.set(cv2.cv.CV_CAP_PROP_FPS, Settings.frameRate);
 ```
 
 **After** (Lines 106-108):
+
 ```python
 # Fix: Use Python 3 OpenCV constants (removed cv2.cv. prefix)
 Settings.capture.set(cv2.CAP_PROP_FRAME_WIDTH, Settings.cameraWidth)
@@ -82,11 +87,13 @@ Settings.capture.set(cv2.CAP_PROP_FPS, Settings.frameRate)
 #### 1.3 Fixed Path Traversal via sys.argv[0] - MEDIUM
 
 **Before** (Line 30):
+
 ```python
 scriptDir = os.path.dirname(sys.argv[0])
 ```
 
 **After** (Lines 31-32):
+
 ```python
 # Security: Use __file__ instead of sys.argv[0] to prevent path manipulation
 scriptDir = os.path.dirname(os.path.abspath(__file__))
@@ -101,6 +108,7 @@ scriptDir = os.path.dirname(os.path.abspath(__file__))
 #### 1.4 Fixed Bare Exception Clause - MEDIUM
 
 **Before** (Lines 138-144):
+
 ```python
 except:
     # Unexpected error, shut down!
@@ -111,6 +119,7 @@ except:
 ```
 
 **After** (Lines 153-158):
+
 ```python
 except Exception as e:
     # Unexpected error, shut down!
@@ -129,6 +138,7 @@ except Exception as e:
 #### 1.5 Added subprocess Import
 
 **Added** (Line 12):
+
 ```python
 import subprocess
 ```
@@ -143,6 +153,7 @@ import subprocess
 #### 2.1 Added Bus Number Validation (VULN-005) - HIGH
 
 **Added to InitBusOnly()** (Lines 258-268):
+
 ```python
 # Security: Validate busNumber to prevent path traversal
 if not isinstance(busNumber, int):
@@ -166,6 +177,7 @@ if address < 0x03 or address > 0x77:
 #### 2.2 Added Validation to Init() Method - HIGH
 
 **Added to Init()** (Lines 310-314):
+
 ```python
 # Security: Validate busNumber before using it
 if not isinstance(self.busNumber, int):
@@ -183,6 +195,7 @@ if self.busNumber < 0 or self.busNumber > 1:
 #### 2.3 Fixed Bare Exception Clause - MEDIUM
 
 **Before** (Line 321):
+
 ```python
 except:
     self.foundChip = False
@@ -190,6 +203,7 @@ except:
 ```
 
 **After** (Lines 339-342):
+
 ```python
 except (IOError, OSError) as e:
     # Security: Use specific exception types instead of bare except
@@ -208,11 +222,13 @@ except (IOError, OSError) as e:
 #### 3.1 Fixed Information Disclosure (VULN-008) - CRITICAL
 
 **Before** (Line 22):
+
 ```python
 photoDirectory = '/home/pisith'             # Directory to save photos to
 ```
 
 **After** (Lines 25-26):
+
 ```python
 # Security: Use expanduser instead of hardcoded username path
 photoDirectory = os.path.expanduser('~/monster-photos')  # Directory to save photos to
@@ -227,11 +243,13 @@ photoDirectory = os.path.expanduser('~/monster-photos')  # Directory to save pho
 #### 3.2 Restricted Network Binding (VULN-003) - CRITICAL
 
 **Before** (Line 383):
+
 ```python
 httpServer = socketserver.TCPServer(("0.0.0.0", webPort), WebServer)
 ```
 
 **After** (Lines 397-402):
+
 ```python
 # Security: Bind to configured address (default localhost for security)
 print('Starting web server on %s:%d' % (webBindAddress, webPort))
@@ -242,6 +260,7 @@ httpServer = socketserver.TCPServer((webBindAddress, webPort), WebServer)
 ```
 
 **Added** (Line 20):
+
 ```python
 webBindAddress = '127.0.0.1'            # Security: Bind to localhost only
 ```
@@ -255,6 +274,7 @@ webBindAddress = '127.0.0.1'            # Security: Bind to localhost only
 #### 3.3 Fixed Path Traversal in Photo Save (VULN-006) - HIGH
 
 **Before** (Lines 233-240):
+
 ```python
 photoName = '%s/Photo %s.jpg' % (photoDirectory, datetime.datetime.utcnow())
 try:
@@ -267,6 +287,7 @@ except:
 ```
 
 **After** (Lines 236-254):
+
 ```python
 # Security: Create safe photo path and ensure directory exists
 try:
@@ -298,12 +319,14 @@ except (IOError, OSError, ValueError) as e:
 #### 3.4 Fixed Bare Exception Clause - MEDIUM
 
 **Before** (Line 384):
+
 ```python
 except:
     print('Failed to open port %d' % (webPort))
 ```
 
 **After** (Lines 403-413):
+
 ```python
 except (OSError, IOError) as e:
     # Security: Use specific exceptions instead of bare except
@@ -325,6 +348,7 @@ except (OSError, IOError) as e:
 #### 3.5 Added OS Import
 
 **Added** (Line 10):
+
 ```python
 import os
 ```
@@ -339,6 +363,7 @@ import os
 #### 4.1 Added Security Settings Section
 
 **Added** (Lines 8-15):
+
 ```python
 # SECURITY NOTICE: This file contains configuration for robot control
 # Review all settings carefully before deployment
@@ -375,9 +400,10 @@ webBindAddress = '127.0.0.1'            # Network binding: '127.0.0.1' = localho
 ## Security Improvements Summary
 
 ### ✅ Fixed (10 issues)
+
 1. Command injection via os.system() → subprocess.run()
 2. Deprecated OpenCV constants for Python 3.13.5
-3. Path traversal via sys.argv[0] → __file__
+3. Path traversal via sys.argv[0] → **file**
 4. Bare exception clauses → specific exceptions (3 instances)
 5. I2C bus number validation added
 6. I2C address validation added
@@ -387,6 +413,7 @@ webBindAddress = '127.0.0.1'            # Network binding: '127.0.0.1' = localho
 10. Photo directory auto-creation with validation
 
 ### ⚠️ Deferred to Phase 2
+
 1. Authentication implementation (VULN-001)
 2. HTTPS/TLS encryption (VULN-004)
 3. CSRF protection
@@ -401,12 +428,14 @@ webBindAddress = '127.0.0.1'            # Network binding: '127.0.0.1' = localho
 ### Automated Tests (via GitHub Actions)
 
 **Security Scanning**:
+
 - ✅ Bandit (static security analysis)
 - ✅ pip-audit (dependency vulnerabilities)
 - ✅ Safety check (dependency vulnerabilities)
 - ✅ Semgrep (SAST)
 
 **Code Quality**:
+
 - ✅ Flake8 (linting)
 - ✅ Black (formatting check)
 - ✅ MyPy (type checking)
@@ -447,6 +476,7 @@ webBindAddress = '0.0.0.0'  # ❌ Dangerous - exposes to network
 ```
 
 **If you must expose to network**:
+
 1. Implement authentication first (Phase 2)
 2. Use HTTPS/TLS encryption
 3. Use firewall rules to restrict access
@@ -458,6 +488,7 @@ webBindAddress = '0.0.0.0'  # ❌ Dangerous - exposes to network
 ## Code Quality Metrics
 
 ### Before Phase 1
+
 - Python 2/3 compatibility issues: 4
 - Security vulnerabilities (Critical/High): 7
 - Bare except clauses: 4
@@ -465,6 +496,7 @@ webBindAddress = '0.0.0.0'  # ❌ Dangerous - exposes to network
 - Input validation: None
 
 ### After Phase 1
+
 - Python 2/3 compatibility issues: 0 ✅
 - Security vulnerabilities (Critical/High): 2 (deferred to Phase 2)
 - Bare except clauses: 0 ✅
@@ -472,6 +504,7 @@ webBindAddress = '0.0.0.0'  # ❌ Dangerous - exposes to network
 - Input validation: Comprehensive ✅
 
 ### Lines Changed
+
 - MonsterAuto.py: +15 lines, -6 lines
 - ThunderBorg.py: +27 lines, -3 lines
 - monsterWeb.py: +25 lines, -10 lines
@@ -483,6 +516,7 @@ webBindAddress = '0.0.0.0'  # ❌ Dangerous - exposes to network
 ## Compatibility Verification
 
 ### Python 3.13.5 (Debian Trixie)
+
 - ✅ All deprecated OpenCV constants updated
 - ✅ subprocess.run() with timeout parameter
 - ✅ os.path operations compatible
@@ -490,6 +524,7 @@ webBindAddress = '0.0.0.0'  # ❌ Dangerous - exposes to network
 - ✅ Type checking compatible
 
 ### Dependencies
+
 - ✅ OpenCV 4.9+ (no cv2.cv. prefix)
 - ✅ subprocess module (Python 3+)
 - ✅ os.path operations (standard library)
@@ -500,6 +535,7 @@ webBindAddress = '0.0.0.0'  # ❌ Dangerous - exposes to network
 ## Next Steps (Phase 2)
 
 ### Critical Remaining Issues
+
 1. **Implement Authentication** (VULN-001)
    - HTTP Basic Auth minimum
    - Token-based auth recommended
@@ -513,16 +549,18 @@ webBindAddress = '0.0.0.0'  # ❌ Dangerous - exposes to network
    - Estimated effort: 1-2 days
 
 ### High Priority
+
 3. Add CSRF protection
-4. Implement rate limiting
-5. Add security logging
-6. Create security audit trail
+2. Implement rate limiting
+3. Add security logging
+4. Create security audit trail
 
 ### Medium Priority
+
 7. Add HTTP security headers
-8. Implement connection monitoring
-9. Add battery/thermal monitoring
-10. Create admin dashboard
+2. Implement connection monitoring
+3. Add battery/thermal monitoring
+4. Create admin dashboard
 
 ---
 
@@ -540,6 +578,7 @@ webBindAddress = '0.0.0.0'  # ❌ Dangerous - exposes to network
 **Phase 1 Status**: ✅ **COMPLETED**
 
 **Security Posture**:
+
 - **Before**: NOT PRODUCTION READY (Critical vulnerabilities)
 - **After**: HARDENED FOR LOCAL USE (localhost only, authentication pending)
 

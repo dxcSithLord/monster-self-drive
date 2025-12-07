@@ -4,7 +4,10 @@
 **Last Updated:** 2025-12-06
 **Priority:** BLOCKER
 
-This document identifies critical gaps, inconsistencies, and missing specifications discovered across the project documentation (REQUIREMENTS, CONSTITUTION, IMPLEMENTATION). These must be resolved before proceeding with development.
+This document identifies critical gaps, inconsistencies, and missing
+specifications discovered across the project documentation (REQUIREMENTS,
+CONSTITUTION, IMPLEMENTATION). These must be resolved before proceeding with
+development.
 
 ---
 
@@ -18,6 +21,7 @@ This document identifies critical gaps, inconsistencies, and missing specificati
 **Affected Phases:** Phase 1
 
 **Problem:** (RESOLVED)
+
 - Documentation mentions both `websockets` and `Flask-SocketIO`
 - No decision on which library to use
 - Each choice leads to fundamentally different architectures
@@ -26,6 +30,7 @@ This document identifies critical gaps, inconsistencies, and missing specificati
 **Decision: Flask-SocketIO** (See ADR-001 in DECISIONS.md)
 
 **Rationale:**
+
 1. Integrates with existing Flask framework in `monsterWeb.py`
 2. Performance adequate for single-user control model (20-30ms latency acceptable)
 3. Automatic reconnection crucial for remote robot control
@@ -33,11 +38,13 @@ This document identifies critical gaps, inconsistencies, and missing specificati
 5. Rich client-side library ecosystem
 
 **Implementation:**
+
 - Library: Flask-SocketIO >= 3.0
 - Async mode: Start with threading mode
 - Client-side: socket.io-client for JavaScript
 
 **Completed Actions:**
+
 - [x] Choose one library and document rationale - Flask-SocketIO selected
 - [x] Decision documented in ADR-001
 - [ ] Update requirements.txt with Flask-SocketIO
@@ -55,18 +62,21 @@ This document identifies critical gaps, inconsistencies, and missing specificati
 **Affected Phases:** All
 
 **Inconsistencies Found:**
+
 | Document | Specified Format | Location |
-|----------|-----------------|----------|
+| --------- | ---------------------- | ----------------------- |
 | REQUIREMENTS | "JSON or INI" | Configuration section |
 | Current Code | `Settings.py` (Python module) | Root directory |
 | IMPLEMENTATION | Python format | Configuration examples |
 
 **Problem:**
+
 - No single source of truth for configuration format
 - Migration path unclear if format changes
 - Validation/schema undefined
 
 **Required Decisions:**
+
 - [ ] Choose ONE format: JSON, INI, or Python module
 - [ ] Document migration plan if changing from current `Settings.py`
 - [ ] Define configuration schema/validation
@@ -84,6 +94,7 @@ This document identifies critical gaps, inconsistencies, and missing specificati
 **Affected Phases:** Phase 1 and beyond
 
 **Current State:**
+
 ```text
 monster-self-drive/
 ├── ImageProcessor.py
@@ -94,6 +105,7 @@ monster-self-drive/
 ```
 
 **Proposed State (from CONSTITUTION):**
+
 ```text
 monster-self-drive/
 └── src/
@@ -104,12 +116,14 @@ monster-self-drive/
 ```
 
 **Gaps:**
+
 - No migration plan documented
 - Import path changes not addressed
 - Backwards compatibility not considered
 - Deployment impact not analyzed
 
 **Required Decisions:**
+
 - [ ] Decide: Migrate to `src/` structure OR keep flat structure
 - [ ] If migrating: Define migration timeline (before Phase 1 or during?)
 - [ ] Document import path changes
@@ -126,6 +140,7 @@ monster-self-drive/
 **Affected Phases:** Phase 2
 
 **Listed Algorithms:**
+
 1. KCF (Kernelized Correlation Filter)
 2. CSRT (Channel and Spatial Reliability Tracker)
 3. MOSSE (Minimum Output Sum of Squared Error)
@@ -135,6 +150,7 @@ monster-self-drive/
 **Current Specification:** "Hybrid approach" (undefined)
 
 **Gaps:**
+
 - Which algorithm for MVP?
 - What does "hybrid" mean exactly?
 - Fallback order not specified
@@ -142,6 +158,7 @@ monster-self-drive/
 - Algorithm selection criteria undefined
 
 **Required Decisions:**
+
 - [ ] Define MVP algorithm (single algorithm for Phase 2)
 - [ ] Specify "hybrid approach" in detail:
   - Which algorithms run in parallel?
@@ -164,6 +181,7 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **Affected Phases:** Phase 1
 
 **Problem:** (RESOLVED)
+
 - REQUIREMENTS mentions "3 simultaneous connections"
 - **NOT SPECIFIED:** Who has control when multiple users connected
 
@@ -171,20 +189,27 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **Decision: Single Active User Model** (See ADR-004 in DECISIONS.md)
 
 **Control Model:**
+
 1. **One Active User:** Only ONE user has active control at any time
 2. **Observer Mode:** Other connected users see video feed only (controls disabled)
 3. **Control Handoff:**
    - Second user can request to take over control
    - Second user automatically gains access when first user disconnects
    - Optional: Active user can voluntarily release control
-4. **Emergency Stop:** ANY connected user can trigger emergency stop (CRITICAL SAFETY FEATURE)
+4. **Emergency Stop:** ANY connected user can trigger emergency stop
+   (CRITICAL SAFETY FEATURE)
 
 **Safety Scenarios Resolved:**
-- ✅ User A drives forward, User B drives backward simultaneously → **B has no control, command ignored**
-- ✅ User A in autonomous mode, User B switches to manual → **B must request control first**
-- ✅ User A has control, User B presses emergency stop → **Emergency stop activates for ANY user**
+
+- ✅ User A drives forward, User B drives backward simultaneously →
+  **B has no control, command ignored**
+- ✅ User A in autonomous mode, User B switches to manual →
+  **B must request control first**
+- ✅ User A has control, User B presses emergency stop →
+  **Emergency stop activates for ANY user**
 
 **Completed Actions:**
+
 - [x] Define control arbitration model - Single Active User
 - [x] Specify command priority rules - Only active user's commands executed
 - [x] Define emergency stop behavior - ANY user can trigger
@@ -207,19 +232,22 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **Affected Phases:** Phase 5
 
 **Conflicting Specifications:**
+
 | Document | IMU Status | Implication |
-|----------|-----------|-------------|
+| --------- | -------------------------------- | ----------------------- |
 | REQUIREMENTS | "Recommended Additional Hardware" | Optional component |
 | CONSTITUTION | "Integrated module" | Required component |
 | IMPLEMENTATION | "Source and install IMU" | Required for Phase 5 |
 
 **Gaps:**
+
 - Is IMU required or optional?
 - What happens if IMU not present?
 - Fallback odometry methods undefined
 - Calibration requirements unclear
 
 **Required Decisions:**
+
 - [ ] Clarify: Required vs. Optional vs. Recommended
 - [ ] If optional: Define fallback behavior without IMU
 - [ ] If required: Update REQUIREMENTS to reflect this
@@ -228,6 +256,7 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 - [ ] Document degraded operation mode without IMU
 
 **Impact on Phases:**
+
 - If required: Must be specified in Phase 1 hardware setup
 - If optional: Need graceful degradation strategy
 
@@ -244,18 +273,21 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **Missing Specifications:**
 
 #### Ultrasonic Sensors
+
 - [ ] Trigger pin(s): BCM pin numbers
 - [ ] Echo pin(s): BCM pin numbers
 - [ ] Number of sensors (1? 3? 5?)
 - [ ] Power requirements (3.3V or 5V logic?)
 
 #### Emergency Stop Button
+
 - [ ] GPIO input pin: BCM pin number
 - [ ] Pull-up/pull-down configuration
 - [ ] Debounce strategy (hardware or software?)
 - [ ] Active high or active low?
 
 #### Status LEDs
+
 - [ ] Power LED pin
 - [ ] Status LED pin
 - [ ] Error LED pin
@@ -263,25 +295,29 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 - [ ] Current-limiting resistor values
 
 #### Wheel Encoders (if used)
+
 - [ ] Left encoder pin(s)
 - [ ] Right encoder pin(s)
 - [ ] Interrupt-based or polling?
 - [ ] Pulses per revolution
 
 #### I2C Devices
+
 - [ ] I2C bus number (i2c-1 typically)
 - [ ] ThunderBorg address: Currently `0x15` (from code)
 - [ ] IMU address: Not specified
 - [ ] Other I2C devices and potential conflicts
 
 **Required Actions:**
+
 - [ ] Create complete GPIO pin assignment table
 - [ ] Verify no pin conflicts
 - [ ] Document pin configuration in setup guide
 - [ ] Add pin validation to startup sequence
 
 **Example Format Needed:**
-```
+
+```text
 | Component | Pin Type | BCM Pin | Config | Notes |
 |-----------|----------|---------|--------|-------|
 | Ultrasonic Trigger | GPIO Out | 23 | - | 5V tolerant |
@@ -300,7 +336,9 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **Current State:** Mentioned in requirements but no procedures defined
 
 #### Distance Calibration (Phase 1)
+
 **Missing:**
+
 - [ ] Step-by-step user procedure
 - [ ] UI/UX flow (web wizard? CLI tool?)
 - [ ] Calibration data format and storage location
@@ -308,7 +346,8 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 - [ ] Recalibration triggers (when needed?)
 
 **Example Needed:**
-```
+
+```text
 1. User places robot 50cm from wall
 2. User clicks "Calibrate Distance" in web UI
 3. System takes 10 measurements
@@ -318,7 +357,9 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 ```
 
 #### Odometry Calibration (Phase 5)
+
 **Missing:**
+
 - [ ] Measurement procedure (straight line? square pattern?)
 - [ ] Required measurement distance/accuracy
 - [ ] Wheel circumference calculation method
@@ -326,9 +367,11 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 - [ ] Storage format for calibration constants
 
 #### IMU Calibration
+
 **Status:** Not mentioned at all
 
 **Required if IMU used:**
+
 - [ ] Magnetometer calibration (hard/soft iron)
 - [ ] Accelerometer calibration
 - [ ] Gyroscope bias calibration
@@ -336,6 +379,7 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 - [ ] Validation tests
 
 **Required Actions:**
+
 - [ ] Document complete calibration workflow for each sensor
 - [ ] Create web UI mockups for calibration wizards
 - [ ] Define calibration data schema
@@ -352,9 +396,10 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 
 **Current State:** High-level mention of threading but missing critical details
 
-#### Missing Specifications:
+#### Missing Specifications
 
 ##### Thread Inventory and Priorities
+
 - [ ] List all threads with purposes:
   - Web server thread(s)
   - WebSocket handler thread(s)
@@ -367,6 +412,7 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 - [ ] CPU affinity settings (if multi-core)
 
 ##### Startup and Shutdown
+
 - [ ] Thread startup sequence/order
 - [ ] Dependency chains (which threads depend on others?)
 - [ ] Graceful shutdown procedure
@@ -374,6 +420,7 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 - [ ] Cleanup responsibilities per thread
 
 ##### Inter-Thread Communication
+
 - [ ] Queue types (Queue, LifoQueue, PriorityQueue?)
 - [ ] Queue sizes/bounds
 - [ ] Message protocols/formats
@@ -384,12 +431,14 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 - [ ] Timeout strategies
 
 ##### Deadlock Prevention
+
 - [ ] Lock acquisition ordering
 - [ ] Timeout policies
 - [ ] Deadlock detection mechanism?
 - [ ] Recovery procedures
 
 **Required Actions:**
+
 - [ ] Create threading architecture diagram
 - [ ] Document thread interaction patterns
 - [ ] Define message passing protocols
@@ -406,7 +455,8 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 
 **Current State:** Safety requirements listed but integration method unclear
 
-#### Safety Checks Listed (from REQUIREMENTS):
+#### Safety Checks Listed (from REQUIREMENTS)
+
 - Battery voltage monitoring
 - Motor overcurrent detection
 - Obstacle detection
@@ -414,34 +464,40 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 - Tilt detection (if IMU present)
 - Communication timeout
 
-#### Missing Integration Details:
+#### Missing Integration Details
 
 ##### Execution Location
+
 Where do safety checks run?
+
 - [ ] Decorator pattern on all motor commands?
 - [ ] Middleware in web request pipeline?
 - [ ] Dedicated safety monitor thread?
 - [ ] Each module independently?
 
 ##### Priority and Order
+
 - [ ] Which safety check runs first?
 - [ ] Can checks be skipped in emergencies?
 - [ ] Short-circuit evaluation order
 - [ ] Performance budget per check
 
 ##### Emergency Stop Propagation
+
 - [ ] How does emergency stop reach all subsystems?
 - [ ] Stop signal mechanism (shared flag? event? queue message?)
 - [ ] Guaranteed stop time requirement
 - [ ] Motor brake vs. coast behavior
 
 ##### Recovery Procedures
+
 - [ ] How to clear emergency state?
 - [ ] Required checks before resuming operation
 - [ ] User confirmation needed?
 - [ ] System self-test after recovery
 
 **Required Actions:**
+
 - [ ] Design safety system architecture
 - [ ] Create safety state machine
 - [ ] Define safety check API
@@ -458,19 +514,24 @@ Where do safety checks run?
 **Affected Phases:** Phase 1, 2
 
 **Conflicting Specifications:**
-| Document | Requirement | Section | FPS Value |
-|----------|------------|---------|-----------|
+
+| Document | Requirement | Section | FPS |
+| ----------- | ----------------------------- | --------- | -------------- |
 | REQUIREMENTS | "30 fps minimum" | TR2.1 | 30 fps |
 | REQUIREMENTS | "30 fps minimum, 60 fps preferred" | PF1 | 30-60 fps |
 | IMPLEMENTATION | "Skip frames if lagging" | 11.2 | ~15 fps effective |
 
 **Analysis:**
-- **Inconsistent minimums:** Some say 30 fps is minimum, others say preferred is 60
-- **Frame skipping contradiction:** If 30 fps is minimum, frame skipping to 15 is non-compliant
+
+- **Inconsistent minimums:** Some say 30 fps is minimum, others say
+  preferred is 60
+- **Frame skipping contradiction:** If 30 fps is minimum, frame skipping
+  to 15 is non-compliant
 - **Hardware implications:** 60 fps requires more powerful camera/CPU
 - **Processing budget:** Higher FPS = less time per frame for processing
 
 **Required Decisions:**
+
 - [ ] Define absolute minimum FPS (hard requirement)
 - [ ] Define target FPS (goal)
 - [ ] Define acceptable FPS (degraded mode)
@@ -483,11 +544,13 @@ Where do safety checks run?
   - Phase 4 (with autonomous): ? fps
 
 **Hardware Considerations:**
+
 - Raspberry Pi Camera V2: 30 fps @ 1080p, 60 fps @ 720p
 - Processing capability limits real-world FPS
 
 **Recommended Resolution:**
-```
+
+```text
 Minimum: 15 fps (degraded mode, warning shown)
 Target: 30 fps (normal operation)
 Preferred: 60 fps (if hardware allows, low processing load)
@@ -507,16 +570,19 @@ Policy: Maintain quality over frame rate (skip frames if needed)
 **Missing Specifications:**
 
 #### UI Method
+
 How does user perform calibrations?
+
 - [ ] Web interface wizard (step-by-step)
 - [ ] CLI tool (command-line)
 - [ ] Manual JSON/config file editing
 - [ ] Combination of above
 
-#### Workflow Examples Needed:
+#### Workflow Examples Needed
 
 **Distance Calibration Workflow:**
-```
+
+```text
 [UNDEFINED - Need to specify:
  - UI mockup
  - Step-by-step instructions
@@ -526,7 +592,8 @@ How does user perform calibrations?
 ```
 
 **Odometry Calibration Workflow:**
-```
+
+```text
 [UNDEFINED - Need to specify:
  - Measurement procedure UI
  - Real-time feedback
@@ -535,12 +602,14 @@ How does user perform calibrations?
 ```
 
 #### Validation Procedures
+
 - [ ] How does user know calibration succeeded?
 - [ ] Visual indicators (green checkmark? percentage?)
 - [ ] Measurement comparison (expected vs. actual)
 - [ ] Recalibration triggers (out of spec?)
 
 **Required Actions:**
+
 - [ ] Create UI mockups for each calibration type
 - [ ] Document step-by-step user procedures
 - [ ] Define validation criteria and feedback
@@ -560,6 +629,7 @@ How does user perform calibrations?
 **Missing Documentation:**
 
 #### Connection Diagrams
+
 - [ ] Wiring diagram for ThunderBorg to Pi
 - [ ] Camera connection diagram
 - [ ] Ultrasonic sensor wiring (including voltage divider if needed)
@@ -568,6 +638,7 @@ How does user perform calibrations?
 - [ ] Complete system diagram
 
 #### Power Budget
+
 - [ ] Raspberry Pi power consumption
 - [ ] ThunderBorg + motors power consumption
 - [ ] Camera power consumption
@@ -577,12 +648,14 @@ How does user perform calibrations?
 - [ ] Runtime calculations
 
 #### Hardware Detection
+
 - [ ] How to verify ThunderBorg is detected
 - [ ] I2C detection commands (`i2cdetect -y 1`)
 - [ ] Camera detection (`vcgencmd get_camera`)
 - [ ] GPIO verification procedures
 
 #### Troubleshooting Guide
+
 - [ ] ThunderBorg not detected (I2C issues)
 - [ ] Camera not working
 - [ ] GPIO permissions
@@ -590,6 +663,7 @@ How does user perform calibrations?
 - [ ] Motor not responding
 
 **Required Actions:**
+
 - [ ] Create detailed wiring diagrams
 - [ ] Calculate and document power budget
 - [ ] Write hardware verification procedures
@@ -609,6 +683,7 @@ How does user perform calibrations?
 **Missing Critical Information:**
 
 #### Network Security
+
 - [ ] Authentication mechanism (basic auth? token? OAuth?)
 - [ ] HTTPS setup procedure (Let's Encrypt? self-signed?)
 - [ ] Certificate management
@@ -616,18 +691,21 @@ How does user perform calibrations?
 - [ ] Password/token storage (how? where?)
 
 #### Firewall Configuration
+
 - [ ] Required ports to open
 - [ ] iptables rules example
 - [ ] UFW configuration example
 - [ ] Port forwarding for remote access
 
 #### Remote Access
+
 - [ ] VPN setup (recommended method)
 - [ ] Dynamic DNS configuration
 - [ ] Port forwarding security considerations
 - [ ] Reverse proxy setup (nginx?)
 
 #### Backup & Restore
+
 - [ ] What to backup:
   - Configuration files
   - Calibration data
@@ -637,12 +715,14 @@ How does user perform calibrations?
 - [ ] Configuration export/import
 
 #### Auto-Start Configuration
+
 - [ ] systemd service file example
 - [ ] Auto-start on boot
 - [ ] Automatic restart on failure
 - [ ] Logging configuration
 
 **Required Actions:**
+
 - [ ] Create security hardening guide
 - [ ] Document network setup procedures
 - [ ] Write backup/restore procedures
@@ -656,48 +736,52 @@ How does user perform calibrations?
 ### Summary Table
 
 | Issue | REQUIREMENTS | CONSTITUTION | IMPLEMENTATION | Resolution Needed |
-|-------|--------------|--------------|----------------|-------------------|
-| **Config Format** | JSON or INI | Not specified | Settings.py (Python) | ✅ Choose ONE format |
-| **Directory Structure** | Not mentioned | `src/` structure | Not mentioned | ✅ Decide migrate or stay flat |
-| **Type Hints** | Recommended | Required | Not mentioned | ✅ Clarify requirement level |
-| **IMU Status** | Optional ("Recommended") | Integrated module | Required ("Source and install") | ✅ Clarify required vs optional |
-| **Tracking Algorithms** | 4 listed (KCF, CSRT, MOSSE, Template) | Not specified | 5 listed (+ Color-based) | ✅ Define MVP + roadmap |
-| **WebSocket Library** | Both mentioned | Not specified | Not specified | ✅ Choose one library |
-| **Frame Rate** | 30 fps min | Not specified | Skip frames (~15 fps) | ✅ Define min/target/preferred |
-| **Multi-User** | "3 connections" supported | Not specified | Not specified | ✅ Define control model |
-| **Safety Integration** | Checks listed | Not specified | Not specified | ✅ Define architecture |
+| ---- | ---- | ---- | ---- | ---- |
+| **Config Format** | JSON/INI | Unspecified | Settings.py | Choose format |
+| **Directory** | Unmentioned | `src/` | Unmentioned | Migrate or stay |
+| **Type Hints** | Recommended | Required | Unmentioned | Clarify requirement |
+| **IMU Status** | Optional | Required | Required | Clarify status |
+| **Tracking Algo** | 4 types | Unspecified | 5 types | Define MVP |
+| **WebSocket Lib** | Both | Unspecified | Unspecified | Choose library |
+| **Frame Rate** | 30 fps min | Unspecified | ~15 fps | Define rates |
+| **Multi-User** | 3 connections | Unspecified | Unspecified | Define control |
+| **Safety** | Listed | Unspecified | Unspecified | Define arch |
 
 ---
 
 ## 📊 Priority Matrix
 
 ### P0 - Blockers (Must Resolve Immediately)
+
 1. ✅ **WebSocket Library Choice** - RESOLVED: Flask-SocketIO (ADR-001)
 2. ✅ **Multi-User Behavior** - RESOLVED: Single Active User Model (ADR-004)
 3. **GPIO Pin Assignments** - Required for hardware setup
 4. **Safety System Integration** - Safety critical
 
 ### P1 - High Priority (Resolve Before Implementation)
-5. **Configuration Format** - Affects all development
-6. **Directory Structure** - Affects imports and organization
-7. **Threading Model Details** - Affects stability
-8. **Frame Rate Specification** - Affects hardware selection
+
+1. **Configuration Format** - Affects all development
+2. **Directory Structure** - Affects imports and organization
+3. **Threading Model Details** - Affects stability
+4. **Frame Rate Specification** - Affects hardware selection
 
 ### P2 - Medium Priority (Resolve During Phase 1-2)
-9. **Tracking Algorithm Priority** - Needed before Phase 2
-10. **Calibration Procedures** - Needed before Phase 1 complete
-11. **Hardware Setup Guide** - Needed for initial setup
+
+1. **Tracking Algorithm Priority** - Needed before Phase 2
+2. **Calibration Procedures** - Needed before Phase 1 complete
+3. **Hardware Setup Guide** - Needed for initial setup
 
 ### P3 - Lower Priority (Resolve Before Later Phases)
-12. **IMU Status** - Phase 5 concern
-13. **Deployment & Installation** - Production concern
-14. **Calibration UI/Workflows** - UX improvement
+
+1. **IMU Status** - Phase 5 concern
+2. **Deployment & Installation** - Production concern
+3. **Calibration UI/Workflows** - UX improvement
 
 ---
 
 ## ✅ Resolution Process
 
-### For Each Gap:
+### For Each Gap
 
 1. **Research & Analysis**
    - Review existing code
@@ -723,7 +807,7 @@ How does user perform calibrations?
 
 ## 📝 Next Steps
 
-### Immediate Actions Required:
+### Immediate Actions Required
 
 1. **Create `DECISIONS.md`** to track architectural decisions
 2. **Prioritize P0 gaps** for immediate resolution
@@ -732,7 +816,7 @@ How does user perform calibrations?
 5. **Review existing code** to understand current state
 6. **Update project timeline** based on resolution time
 
-### Documentation Improvements:
+### Documentation Improvements
 
 - [ ] Create master glossary for consistent terminology
 - [ ] Add cross-references between documents
@@ -743,11 +827,12 @@ How does user perform calibrations?
 
 ## 🔗 Related Documents
 
-- [DECISIONS.md](./DECISIONS.md) - Architectural decisions and rationale
-- [REQUIREMENTS.md](./REQUIREMENTS.md) - System requirements (needs updates)
-- [PROJECT_CONSTITUTION.md](./PROJECT_CONSTITUTION.md) - Code standards (needs updates)
-- [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) - Implementation plan (needs updates)
-- `architecture/` - Detailed architecture diagrams (to be created)
+- [DECISIONS.md](./DECISIONS.md) - Architectural decisions
+- [REQUIREMENTS.md](./REQUIREMENTS.md) - System requirements
+- [PROJECT_CONSTITUTION.md](./PROJECT_CONSTITUTION.md) - Code standards
+- [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) - Implementation plan
+- `architecture/` - Architecture diagrams (to be created)
+
 ---
 
 **Document Status:** Living document - update as gaps are resolved

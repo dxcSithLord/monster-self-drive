@@ -27,11 +27,15 @@
 
 ## Preamble
 
-This constitution establishes the foundational principles, standards, and practices for the MonsterBorg Self-Drive Project. It serves as a living document to guide all contributors in maintaining code quality, ensuring safety, and fostering a collaborative development environment.
+This constitution establishes the foundational principles, standards, and
+practices for the MonsterBorg Self-Drive Project. It serves as a living
+document to guide all contributors in maintaining code quality, ensuring
+safety, and fostering a collaborative development environment.
 
 ### Project Mission
 
 To create an open-source, educational robotics platform that demonstrates:
+
 - Autonomous navigation and object tracking
 - Mobile-first web interfaces
 - Real-time computer vision processing
@@ -40,14 +44,17 @@ To create an open-source, educational robotics platform that demonstrates:
 
 ### Project Vision
 
-Empower hobbyists, students, and robotics enthusiasts to learn and experiment with autonomous systems through accessible, well-documented, and production-quality code.
+Empower hobbyists, students, and robotics enthusiasts to learn and experiment
+with autonomous systems through accessible, well-documented, and
+production-quality code.
 
 ### Project Values
 
 1. **Safety First**: Robot operation must never endanger people, animals, or property
 2. **Educational Focus**: Code should be readable, well-commented, and instructive
 3. **Robustness**: Systems should handle errors gracefully and recover when possible
-4. **Accessibility**: Interfaces should be usable by everyone, regardless of device or ability
+4. **Accessibility**: Interfaces should be usable by everyone, regardless of
+   device or ability
 5. **Open Collaboration**: Welcome contributions from all skill levels
 6. **Performance Awareness**: Optimize for constrained hardware (Raspberry Pi 3B)
 
@@ -60,6 +67,7 @@ Empower hobbyists, students, and robotics enthusiasts to learn and experiment wi
 **Principle**: The safety of users, bystanders, and property is the highest priority.
 
 **Implementation**:
+
 - Emergency stop functionality must be accessible at all times
 - Motors must stop immediately on connection loss
 - Collision avoidance is mandatory, not optional
@@ -67,6 +75,7 @@ Empower hobbyists, students, and robotics enthusiasts to learn and experiment wi
 - All autonomous behaviors must have failsafes
 
 **Code Requirements**:
+
 ```python
 # Example: Every motor control function must include timeout
 def set_motors(left_speed, right_speed, timeout=2.0):
@@ -87,6 +96,7 @@ def set_motors(left_speed, right_speed, timeout=2.0):
 **Principle**: Code should be obvious and maintainable, not compact or clever.
 
 **Example**:
+
 ```python
 # GOOD: Clear and explicit
 def calculate_distance_from_bbox(bbox_height, reference_height, reference_distance):
@@ -102,9 +112,11 @@ def dist(h): return RH*RD/h if h>0 else None
 
 ### 3. Fail Safely, Recover Gracefully
 
-**Principle**: When errors occur, default to safe state (motors off) and attempt recovery.
+**Principle**: When errors occur, default to safe state (motors off) and
+attempt recovery.
 
 **Pattern**:
+
 ```python
 def critical_operation():
     try:
@@ -129,12 +141,14 @@ def critical_operation():
 **Principle**: Code should be structured to enable automated testing.
 
 **Practices**:
+
 - Dependency injection (pass dependencies as parameters)
 - Pure functions where possible (no side effects)
 - Mockable hardware interfaces
 - Separate business logic from I/O
 
 **Example**:
+
 ```python
 # GOOD: Testable design
 class ObjectTracker:
@@ -159,12 +173,14 @@ class ObjectTracker:
 **Principle**: Optimize where it matters, prioritize clarity elsewhere.
 
 **Guidelines**:
+
 - Profile before optimizing (use `cProfile`, `line_profiler`)
 - Optimize hot paths (image processing, control loops)
 - Accept slower code for infrequent operations (setup, configuration)
 - Document why optimizations are necessary
 
 **Example**:
+
 ```python
 # Hot path: Called 30 times per second
 def process_frame_fast(frame):
@@ -192,6 +208,7 @@ def load_configuration(filepath):
 **Principle**: Documentation is as important as implementation.
 
 **Requirements**:
+
 - Every public function/class has a docstring
 - Complex algorithms have inline comments
 - README explains setup and usage
@@ -202,6 +219,7 @@ def load_configuration(filepath):
 **Principle**: Breaking changes require major version bump and migration guide.
 
 **Rules**:
+
 - Deprecate before removing (minimum 1 minor version)
 - Provide migration scripts where possible
 - Document breaking changes in CHANGELOG
@@ -217,23 +235,28 @@ def load_configuration(filepath):
 **Target**: Python 3.12 (recommended for development)
 **Compatibility**: Must run on Python 3.11 (Raspberry Pi OS Bookworm)
 
-**Rationale**: Python 3.11 is the current stable version on Raspberry Pi OS. Python 3.12 offers performance improvements and better typing support for development.
+**Rationale**: Python 3.11 is the current stable version on Raspberry Pi OS.
+Python 3.12 offers performance improvements and better typing support for
+development.
 
 ### Code Style
 
 **Standard**: PEP 8 (enforced via `black` and `flake8`)
 
 **Formatter**: Black (line length: 100)
+
 ```bash
 black --line-length 100 .
 ```
 
 **Linter**: Flake8
+
 ```bash
 flake8 --max-line-length 100 --extend-ignore E203,W503
 ```
 
 **Type Checking**: MyPy (enforced for new code)
+
 ```bash
 mypy --strict .
 ```
@@ -241,6 +264,7 @@ mypy --strict .
 ### Naming Conventions
 
 **Modules**: `lowercase_with_underscores.py`
+
 ```python
 # GOOD
 object_tracker.py
@@ -252,6 +276,7 @@ distanceEstimator.py
 ```
 
 **Classes**: `PascalCase`
+
 ```python
 class ObjectTracker:
     pass
@@ -261,6 +286,7 @@ class ReacquisitionStateMachine:
 ```
 
 **Functions/Methods**: `lowercase_with_underscores`
+
 ```python
 def calculate_distance(bbox):
     pass
@@ -270,6 +296,7 @@ def estimate_velocity(prev_pos, current_pos, time_delta):
 ```
 
 **Constants**: `UPPERCASE_WITH_UNDERSCORES`
+
 ```python
 TARGET_DISTANCE = 1.5  # meters
 SAFE_MIN_DISTANCE = 0.5  # meters
@@ -277,6 +304,7 @@ MAX_TRACKING_TIMEOUT = 30  # seconds
 ```
 
 **Private Members**: `_leading_underscore`
+
 ```python
 class Tracker:
     def __init__(self):
@@ -291,6 +319,7 @@ class Tracker:
 **Requirement**: All new code must use type hints
 
 **Example**:
+
 ```python
 from typing import Optional, Tuple, List
 import numpy as np
@@ -334,6 +363,7 @@ def detect_objects(frame: np.ndarray) -> List[Tuple[int, int, int, int]]:
 **Standard**: Google Style
 
 **Template**:
+
 ```python
 def function_name(param1: Type1, param2: Type2) -> ReturnType:
     """
@@ -367,6 +397,7 @@ def function_name(param1: Type1, param2: Type2) -> ReturnType:
 ### Import Organization
 
 **Order**:
+
 1. Standard library imports
 2. Third-party imports
 3. Local application imports
@@ -374,6 +405,7 @@ def function_name(param1: Type1, param2: Type2) -> ReturnType:
 **Format**: Sorted alphabetically within each group
 
 **Example**:
+
 ```python
 # Standard library
 import math
@@ -391,6 +423,7 @@ from motor_controller import MotorController
 ```
 
 **Tool**: `isort` (compatible with Black)
+
 ```bash
 isort --profile black .
 ```
@@ -501,26 +534,26 @@ monster-self-drive/
 
 **Principle**: Single Responsibility - each module has one clear purpose
 
-| Module | Responsibility |
-|--------|----------------|
-| `web/server.py` | HTTP/WebSocket server, request routing |
-| `web/websocket.py` | Real-time communication with clients |
-| `vision/camera.py` | Camera initialization, frame capture |
-| `vision/image_processor.py` | Image processing pipeline |
-| `vision/object_tracker.py` | Object detection and tracking |
-| `vision/distance_estimator.py` | Distance calculation from visual cues |
-| `control/motor_controller.py` | Low-level motor commands (ThunderBorg) |
-| `control/inverted_controller.py` | Orientation detection, motor inversion |
-| `control/odometry.py` | Position/heading estimation |
-| `control/pid_controller.py` | PID control implementation |
-| `navigation/line_follower.py` | Line-following behavior |
-| `navigation/object_follower.py` | Object-following behavior |
-| `navigation/reacquisition.py` | Object search and recovery |
-| `sensors/imu.py` | IMU data acquisition |
-| `utils/logger.py` | Logging setup and utilities |
-| `utils/config.py` | Configuration loading/saving |
-| `utils/safety.py` | Safety checks and failsafes |
-| `main.py` | Application entry point, mode coordination |
+|Module|Responsibility|
+|------|----------------|
+|`web/server.py`|HTTP/WebSocket server, request routing|
+|`web/websocket.py`|Real-time communication with clients|
+|`vision/camera.py`|Camera initialization, frame capture|
+|`vision/image_processor.py`|Image processing pipeline|
+|`vision/object_tracker.py`|Object detection and tracking|
+|`vision/distance_estimator.py`|Distance calculation from visual cues|
+|`control/motor_controller.py`|Low-level motor commands (ThunderBorg)|
+|`control/inverted_controller.py`|Orientation detection, motor inversion|
+|`control/odometry.py`|Position/heading estimation|
+|`control/pid_controller.py`|PID control implementation|
+|`navigation/line_follower.py`|Line-following behavior|
+|`navigation/object_follower.py`|Object-following behavior|
+|`navigation/reacquisition.py`|Object search and recovery|
+|`sensors/imu.py`|IMU data acquisition|
+|`utils/logger.py`|Logging setup and utilities|
+|`utils/config.py`|Configuration loading/saving|
+|`utils/safety.py`|Safety checks and failsafes|
+|`main.py`|Application entry point, mode coordination|
 
 ---
 
@@ -545,6 +578,7 @@ monster-self-drive/
 ```
 
 **Rules**:
+
 - Upper layers depend on lower layers (not vice versa)
 - Each layer has well-defined interfaces
 - Hardware details hidden behind abstractions
@@ -555,6 +589,7 @@ monster-self-drive/
 **Principle**: Pass dependencies rather than creating them internally
 
 **Example**:
+
 ```python
 # GOOD: Dependencies injected
 class ObjectFollower:
@@ -588,6 +623,7 @@ class ObjectFollower:
 **Principle**: All tunable parameters must be configurable
 
 **Pattern**:
+
 ```python
 # config/default.json
 {
@@ -623,12 +659,14 @@ pid_p = config['pid']['distance']['P']
 ### Event-Driven Architecture (where appropriate)
 
 **Use Cases**:
+
 - User input handling
 - Mode changes
 - Emergency stops
 - Object detection events
 
 **Pattern**:
+
 ```python
 from typing import Callable, Dict, List
 
@@ -668,12 +706,14 @@ event_bus.publish('object_detected', {'bbox': (100, 100, 50, 50)})
 **Principle**: System continues to function with reduced features if components fail
 
 **Examples**:
+
 - If IMU unavailable, use manual orientation toggle
 - If WebSocket fails, fall back to HTTP polling
 - If object tracking fails, allow manual control
 - If distance estimation uncertain, use conservative speed
 
 **Implementation**:
+
 ```python
 def initialize_imu():
     """Initialize IMU with graceful fallback."""
@@ -733,6 +773,7 @@ Every release must verify:
 ### Responsible Testing
 
 **Rules**:
+
 - Test in controlled environments first (indoor, clear area)
 - Use safety tether during initial autonomous tests
 - Start with low speeds, increase gradually
@@ -748,6 +789,7 @@ Every release must verify:
 ### Who Can Contribute
 
 Everyone! Contributions welcome from:
+
 - Beginners (documentation, simple fixes)
 - Students (features, experiments)
 - Experienced developers (architecture, optimization)
@@ -768,6 +810,7 @@ Everyone! Contributions welcome from:
 ### Pull Request Requirements
 
 **Must Include**:
+
 - [ ] Description of changes and motivation
 - [ ] Tests for new functionality (unit and/or integration)
 - [ ] Documentation updates (code and user-facing)
@@ -776,6 +819,7 @@ Everyone! Contributions welcome from:
 - [ ] All CI checks passing (linting, tests, type checking)
 
 **Reviewers Will Check**:
+
 - Code quality (readability, style compliance)
 - Test coverage (aim for >70%)
 - Performance impact (especially on Pi 3B)
@@ -789,6 +833,7 @@ Everyone! Contributions welcome from:
 **Format**: `<type>(<scope>): <description>`
 
 **Types**:
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation only
@@ -799,6 +844,7 @@ Everyone! Contributions welcome from:
 - `chore`: Build process, dependencies, etc.
 
 **Examples**:
+
 ```text
 feat(tracking): add CSRT tracker as fallback option
 fix(motors): correct inverted motor direction calculation
@@ -812,6 +858,7 @@ chore(deps): update OpenCV to 4.9.0
 ### Code Review Guidelines
 
 **Reviewers Should**:
+
 - Be constructive and respectful
 - Explain reasoning behind suggestions
 - Prioritize safety and correctness
@@ -820,6 +867,7 @@ chore(deps): update OpenCV to 4.9.0
 - Verify tests are meaningful
 
 **Authors Should**:
+
 - Respond to all comments
 - Not take criticism personally
 - Ask questions if unclear
@@ -848,6 +896,7 @@ chore(deps): update OpenCV to 4.9.0
 **Critical Modules**: 90% (safety, motor control, tracking)
 
 **Tools**:
+
 ```bash
 pytest --cov=src --cov-report=html
 # View coverage report in htmlcov/index.html
@@ -858,6 +907,7 @@ pytest --cov=src --cov-report=html
 **Framework**: pytest
 
 **Structure**:
+
 ```python
 # tests/unit/test_distance_estimator.py
 
@@ -907,6 +957,7 @@ class TestDistanceEstimator:
 **Purpose**: Test component interactions
 
 **Example**:
+
 ```python
 # tests/integration/test_tracking_pipeline.py
 
@@ -962,6 +1013,7 @@ Before each field test session:
 - [ ] Backup plan if robot fails
 
 During testing:
+
 - [ ] Start with manual control, verify all directions
 - [ ] Test emergency stop before autonomous modes
 - [ ] Monitor battery voltage
@@ -970,6 +1022,7 @@ During testing:
 - [ ] Capture video for analysis (optional)
 
 After testing:
+
 - [ ] Log test results
 - [ ] Note any issues or improvements needed
 - [ ] Clean robot (dirt, debris)
@@ -1008,6 +1061,7 @@ After testing:
 ### README Requirements
 
 **Must Include**:
+
 - Project description (1-2 paragraphs)
 - Features list
 - Hardware requirements
@@ -1018,6 +1072,7 @@ After testing:
 - Screenshots/GIFs of robot in action
 
 **Template**:
+
 ```markdown
 # MonsterBorg Self-Drive
 
@@ -1054,6 +1109,7 @@ See [CONTRIBUTION_GUIDELINES.md](CONTRIBUTION_GUIDELINES.md)
 ### Inline Comments
 
 **When to Comment**:
+
 - Complex algorithms (explain approach)
 - Non-obvious optimizations (explain why)
 - Workarounds for bugs (link to issue)
@@ -1061,10 +1117,12 @@ See [CONTRIBUTION_GUIDELINES.md](CONTRIBUTION_GUIDELINES.md)
 - Business logic (explain reasoning)
 
 **When NOT to Comment**:
+
 - Obvious code (name already explains it)
 - Restating what code does (use better names instead)
 
 **Examples**:
+
 ```python
 # GOOD: Explains WHY
 # Use smaller resolution for processing to achieve 30 fps on Pi 3B
@@ -1099,6 +1157,7 @@ for item in items:
 **Model**: GitHub Flow (simplified Git Flow)
 
 **Branches**:
+
 - `main`: Production-ready code (always stable)
 - `feature/feature-name`: New features
 - `fix/bug-name`: Bug fixes
@@ -1106,6 +1165,7 @@ for item in items:
 - `refactor/component`: Code refactoring
 
 **Rules**:
+
 - Never commit directly to `main`
 - Always work in feature branches
 - Merge via Pull Request with review
@@ -1117,6 +1177,7 @@ for item in items:
 **Atomic Commits**: Each commit should be a single logical change
 
 **Good Example**:
+
 ```bash
 git commit -m "feat(tracking): add KCF tracker implementation"
 git commit -m "test(tracking): add unit tests for KCF tracker"
@@ -1124,6 +1185,7 @@ git commit -m "docs(tracking): document KCF tracker usage"
 ```
 
 **Bad Example** (too large, multiple changes):
+
 ```bash
 git commit -m "add tracking, fix bugs, update docs"
 ```
@@ -1131,6 +1193,7 @@ git commit -m "add tracking, fix bugs, update docs"
 ### Commit Hygiene
 
 Before committing:
+
 ```bash
 # 1. Run formatter
 black .
@@ -1156,6 +1219,7 @@ git commit -m "type(scope): description"
 **Tool**: `pre-commit`
 
 **Configuration** (`.pre-commit-config.yaml`):
+
 ```yaml
 repos:
   - repo: https://github.com/psf/black
@@ -1184,6 +1248,7 @@ repos:
 ```
 
 **Install**:
+
 ```bash
 pip install pre-commit
 pre-commit install
@@ -1206,6 +1271,7 @@ Now quality checks run automatically before each commit.
 - **PATCH**: Bug fixes (backwards compatible)
 
 **Examples**:
+
 - `1.0.0`: Initial stable release
 - `1.1.0`: Add object tracking feature
 - `1.1.1`: Fix distance calculation bug
@@ -1222,6 +1288,7 @@ Now quality checks run automatically before each commit.
    - In `setup.py` (if used)
 
 3. **Create Git Tag**
+
    ```bash
    git tag -a v1.1.0 -m "Release version 1.1.0"
    git push origin v1.1.0
@@ -1243,6 +1310,7 @@ Now quality checks run automatically before each commit.
 **File**: `CHANGELOG.md`
 
 **Example**:
+
 ```markdown
 # Changelog
 
@@ -1292,6 +1360,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Maintainer**: dxcSithLord (repository owner)
 
 **Responsibilities**:
+
 - Final decision on major architectural changes
 - Release approval
 - Merge pull requests
@@ -1300,16 +1369,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Decision Making
 
 **Process**:
+
 1. **Propose**: Open issue describing proposal
 2. **Discuss**: Community provides feedback
 3. **Decide**: Maintainer makes final call (usually consensus)
 4. **Document**: Decision recorded in issue/ADR
 
 **For Major Changes**:
+
 - Requires discussion and approval
 - Examples: Architecture changes, breaking changes, new dependencies
 
 **For Minor Changes**:
+
 - Can be merged with single review approval
 - Examples: Bug fixes, documentation, small features
 
@@ -1320,6 +1392,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Location**: `docs/adr/`
 
 **Format**:
+
 ```markdown
 # ADR 001: Use OpenCV for Object Tracking
 
@@ -1378,15 +1451,16 @@ This constitution is a living document. To propose changes:
 
 ### Revision History
 
-| Version | Date       | Author | Changes |
-|---------|------------|--------|---------|
-| 1.0     | 2025-11-14 | Claude | Initial constitution |
+|Version|Date|Author|Changes|
+|------|------|--------|--------|
+|1.0|2025-11-14|Claude|Initial constitution|
 
 ---
 
 ## Acknowledgments
 
 This constitution draws inspiration from:
+
 - Python Enhancement Proposals (PEPs)
 - Linux Kernel Coding Style
 - Google Style Guides
@@ -1407,4 +1481,4 @@ This constitution draws inspiration from:
 
 ---
 
-*End of Project Constitution*
+## End of Project Constitution

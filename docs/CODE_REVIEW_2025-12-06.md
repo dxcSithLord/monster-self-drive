@@ -1,8 +1,7 @@
-# Comprehensive Code Review and Security Analysis
-# MonsterBorg Self-Drive Project
+# Comprehensive Code Review and Security Analysis - MonsterBorg Self-Drive Project
 
 **Date**: 2025-12-06
-**Python Version Updated**: 3.13.5 (Debian Trixie default)
+**Python Version**: 3.13.5 (Debian Trixie default)
 **Reviewer**: Claude Code
 **Review Scope**: Full codebase security and requirement mapping
 
@@ -25,16 +24,21 @@
 ## Executive Summary
 
 ### Overview
-This comprehensive review analyzes the MonsterBorg Self-Drive Project for security vulnerabilities, code quality, requirement compliance, and identifies obsolete dependencies that need updating for Debian Trixie (Python 3.13.5).
+
+This comprehensive review analyzes the MonsterBorg Self-Drive Project for
+security vulnerabilities, code quality, requirement compliance, and identifies
+obsolete dependencies that need updating for Debian Trixie (Python 3.13.5).
 
 ### Key Findings
 
 **Critical Issues**: 3
+
 - No authentication on web interface (allows unauthorized robot control)
 - Command injection vulnerability via `os.system()`
 - Insecure network binding (0.0.0.0 exposes to all interfaces)
 
 **High Priority Issues**: 4
+
 - No HTTPS/TLS encryption
 - Path traversal vulnerabilities
 - Insufficient input validation
@@ -44,12 +48,15 @@ This comprehensive review analyzes the MonsterBorg Self-Drive Project for securi
 **Low Priority Issues**: 7
 
 **Obsolete Libraries**: 3
+
 - `libatlas-base-dev` → Replace with `libopenblas-dev`
 - `libjasper-dev` → Obsolete in Trixie
 - `libqt4-test` → Obsolete in Trixie
 
 ### Recommendation
-**DO NOT deploy this code to production without addressing Critical and High severity issues.**
+
+**DO NOT deploy** this code to production without addressing Critical and
+High severity issues.
 
 ---
 
@@ -93,13 +100,13 @@ graph TD
 
 ### File Analysis
 
-| File | Lines | Purpose | Security Risk | Code Quality |
-|------|-------|---------|---------------|--------------|
-| `MonsterAuto.py` | 164 | Main entry point, thread management | Medium | Fair |
-| `ImageProcessor.py` | ~400 | Computer vision processing | Low | Good |
-| `monsterWeb.py` | 397 | HTTP server for control | **Critical** | Poor |
-| `ThunderBorg.py` | 907 | I2C motor controller driver | High | Fair |
-| `Settings.py` | 78 | Global configuration | Medium | Fair |
+| File              | Lines | Purpose          | Risk     | Quality |
+|-------------------|-------|------------------|----------|---------|
+| `MonsterAuto.py`  | 164   | Thread mgmt      | Medium   | Fair    |
+| `ImageProcessor.py` | ~400 | Computer vision  | Low      | Good    |
+| `monsterWeb.py`   | 397   | HTTP server      | Critical | Poor    |
+| `ThunderBorg.py`  | 907   | Motor driver     | High     | Fair    |
+| `Settings.py`     | 78    | Configuration    | Medium   | Fair    |
 
 ### Architecture Diagram
 
@@ -131,51 +138,51 @@ graph LR
 
 #### ✅ Implemented Requirements
 
-| Requirement ID | Description | Implementation | File | Status |
-|---------------|-------------|----------------|------|--------|
-| FR1.1 | Responsive Design | Basic HTML layout | monsterWeb.py:159-357 | Partial |
-| FR1.2 | Touch Controls | Not implemented | - | ❌ Missing |
-| FR1.4 | Connection Management | Basic HTTP server | monsterWeb.py:383-397 | Minimal |
-| FR2.2 | Tracking Algorithms | Color-based only | ImageProcessor.py | Partial |
-| FR6.1 | Operating Modes | LINE_FOLLOW implemented | ImageProcessor.py | ✅ Complete |
-| TR1.1 | Modularity | Separate modules exist | Multiple files | ✅ Good |
-| TR1.2 | Threading Model | Multi-threaded | MonsterAuto.py | ✅ Complete |
-| SF5 | Emergency Stop | Via blocking camera | MonsterAuto.py:119-128 | Partial |
+| ID      | Description     | Implementation  | File               | Status   |
+|---------|-----------------|-----------------|-------------------|----------|
+| FR1.1   | Responsive      | HTML layout     | monsterWeb.py     | Partial  |
+| FR1.2   | Touch Controls  | Not impl        | -                 | Missing  |
+| FR1.4   | Connection      | HTTP server     | monsterWeb.py     | Minimal  |
+| FR2.2   | Tracking        | Color-based     | ImageProcessor.py | Partial  |
+| FR6.1   | Operating Modes | LINE_FOLLOW     | ImageProcessor.py | Complete |
+| TR1.1   | Modularity      | Separate        | Multiple files    | Good     |
+| TR1.2   | Threading       | Multi-threaded  | MonsterAuto.py    | Complete |
+| SF5     | Emergency Stop  | Via camera      | MonsterAuto.py    | Partial  |
 
 #### ❌ Missing Requirements
 
-| Requirement ID | Description | Priority | Impact |
-|---------------|-------------|----------|--------|
-| FR1.2 | Touch Controls | High | Mobile UX poor |
-| FR1.3 | Virtual Joystick | Medium | User experience |
-| FR1.4 | WebSocket Communication | High | Latency issues |
-| FR1.5 | Real-time Telemetry | High | No status feedback |
-| FR2.1 | Object Selection UI | High | Core feature missing |
-| FR2.2 | KCF/CSRT Trackers | High | Limited tracking |
-| FR2.3 | Tracking Confidence | Medium | Reliability |
-| FR3.1-FR3.4 | Distance Estimation | High | Safety critical |
-| FR4.1-FR4.5 | Re-acquisition | Medium | Feature missing |
-| FR5.1-FR5.4 | Inverted Operation | Low | Enhancement |
-| SF1 | Collision Avoidance | **Critical** | Safety |
-| SF2 | Connection Failsafe | **Critical** | Safety |
-| SF3 | Battery Protection | **Critical** | Safety |
-| SF4 | Thermal Protection | High | Hardware protection |
+| ID     | Description       | Priority | Impact       |
+|--------|-------------------|----------|--------------|
+| FR1.2  | Touch Controls    | High     | UX poor      |
+| FR1.3  | Virtual Joystick  | Medium   | UX           |
+| FR1.4  | WebSocket         | High     | Latency      |
+| FR1.5  | Telemetry         | High     | No feedback  |
+| FR2.1  | Object Selection  | High     | Core missing |
+| FR2.2  | KCF/CSRT          | High     | Limited      |
+| FR2.3  | Confidence        | Medium   | Reliability  |
+| FR3.1+ | Distance          | High     | Safety       |
+| FR4.1+ | Re-acq            | Medium   | Missing      |
+| FR5.1+ | Inverted          | Low      | Enhancement  |
+| SF1    | Collision         | Critical | Safety       |
+| SF2    | Failsafe          | Critical | Safety       |
+| SF3    | Battery           | Critical | Safety       |
+| SF4    | Thermal           | High     | Hardware     |
 
 #### 🔶 Security Requirements Gap
 
-| Security Requirement | Status | Severity |
-|---------------------|--------|----------|
-| Authentication | ❌ Not implemented | Critical |
-| HTTPS/TLS | ❌ Not implemented | Critical |
-| Input Validation | ⚠️ Minimal | High |
-| Rate Limiting | ❌ Not implemented | Medium |
-| CSRF Protection | ❌ Not implemented | Medium |
-| Security Headers | ❌ Not implemented | Low |
-| Audit Logging | ❌ Not implemented | Medium |
+| Requirement        | Status  | Severity  |
+|--------------------|---------|-----------|
+| Authentication     | Missing | Critical  |
+| HTTPS/TLS          | Missing | Critical  |
+| Input Validation   | Minimal | High      |
+| Rate Limiting      | Missing | Medium    |
+| CSRF Protection    | Missing | Medium    |
+| Security Headers   | Missing | Low       |
+| Audit Logging      | Missing | Medium    |
 
 ### Requirements Compliance Score
 
-```
+```text
 Total Requirements: 60
 Implemented (Complete): 12 (20%)
 Implemented (Partial): 8 (13%)
@@ -184,7 +191,8 @@ Not Implemented: 40 (67%)
 Overall Compliance: 33%
 ```
 
-**Recommendation**: This is a prototype/proof-of-concept, not production-ready code. Major feature development and security hardening required.
+**Recommendation**: This is a prototype/proof-of-concept. Major feature
+development and security hardening required before production deployment.
 
 ---
 
@@ -194,16 +202,26 @@ Overall Compliance: 33%
 
 #### 1. libatlas-base-dev ❌ OBSOLETE
 
-**Status**: Removed from Debian Trixie
-**Replacement**: `libopenblas-dev`
-**Reason**: OpenBLAS provides better performance and active maintenance
+##### Status
 
-**Impact**:
+Removed from Debian Trixie
+
+##### Replacement
+
+`libopenblas-dev`
+
+##### Reason
+
+OpenBLAS provides better performance and active maintenance
+
+##### Impact
+
 - `REQUIREMENTS.md` line 106: Currently specifies `libatlas-base-dev`
 - Installation will fail on Debian Trixie
 - OpenCV and NumPy will fail to build/install
 
-**Fix Applied**:
+##### Fix Applied
+
 ```bash
 # OLD (will fail):
 sudo apt-get install libatlas-base-dev
@@ -212,53 +230,76 @@ sudo apt-get install libatlas-base-dev
 sudo apt-get install libopenblas-dev
 ```
 
-**Files Updated**:
-- ✅ `docs/REQUIREMENTS.md` lines 106, 762-766
-- ✅ `requirements.txt` header comment
+##### Files Updated
+
+- `docs/REQUIREMENTS.md` lines 106, 762-766
+- `requirements.txt` header comment
 
 ---
 
 #### 2. libjasper-dev ❌ OBSOLETE
 
-**Status**: Removed from Debian Bullseye onwards
-**Replacement**: None needed (OpenCV 4.x doesn't require it)
-**Reason**: JPEG-2000 support now handled by OpenJPEG
+##### Status
 
-**Impact**:
+Removed from Debian Bullseye onwards
+
+##### Replacement
+
+None needed (OpenCV 4.x doesn't require it)
+
+##### Reason
+
+JPEG-2000 support now handled by OpenJPEG
+
+##### Impact
+
 - `REQUIREMENTS.md` line 107: Currently specifies `libjasper-dev`
 - Will cause installation warnings on newer systems
 - Not actually required for OpenCV 4.9+
 
-**Fix Applied**:
+##### Fix Applied
+
 ```bash
 # Removed from system dependencies list
 # libjasper-dev  # OBSOLETE - removed
 ```
 
-**Files Updated**:
-- ✅ `docs/REQUIREMENTS.md` line 108 (added comment)
+##### Files Updated
+
+- `docs/REQUIREMENTS.md` line 108 (added comment)
 
 ---
 
 #### 3. libqt4-test ❌ OBSOLETE
 
-**Status**: Removed from Debian Buster onwards
-**Replacement**: `libqt5core5a` (if needed) or none
-**Reason**: Qt4 EOL, replaced by Qt5/Qt6
+##### Status
 
-**Impact**:
+Removed from Debian Buster onwards
+
+##### Replacement
+
+`libqt5core5a` (if needed) or none
+
+##### Reason
+
+Qt4 EOL, replaced by Qt5/Qt6
+
+##### Impact
+
 - `REQUIREMENTS.md` line 108: Currently specifies `libqt4-test`
 - Will cause installation failures
-- Only needed if using OpenCV highgui with Qt backend (rarely used on Pi)
+- Only needed if using OpenCV highgui with Qt backend
 
-**Fix Applied**:
+##### Fix Applied
+
 ```bash
 # Removed from system dependencies
 # OpenCV on Pi typically uses GTK backend, not Qt
 ```
 
-**Files Updated**:
-- ✅ `docs/REQUIREMENTS.md` line 108 (added comment)
+##### Files Updated
+
+- `docs/REQUIREMENTS.md` line 108 (added comment)
 
 ---
 
@@ -266,21 +307,40 @@ sudo apt-get install libopenblas-dev
 
 #### 4. smbus → smbus2 ⚠️ DEPRECATED
 
-**Status**: `smbus` works but deprecated
-**Current Usage**: `requirements.txt` line 25 specifies `smbus2>=0.4.3` ✅ CORRECT
-**Code Usage**: `ThunderBorg.py` imports work with both
+##### Status
 
-**Action**: None needed, already using correct library
+`smbus` works but deprecated
+
+##### Current Usage
+
+`requirements.txt` line 25 specifies `smbus2>=0.4.3` (CORRECT)
+
+##### Code Usage
+
+`ThunderBorg.py` imports work with both
+
+##### Action
+
+None needed, already using correct library
 
 ---
 
 #### 5. picamera vs picamera2 ⚠️ TRANSITION
 
-**Status**: `picamera` is legacy camera stack, `picamera2` is new libcamera-based
-**Current Usage**: `requirements.txt` lines 12-13 includes both
-**Code Usage**: `MonsterAuto.py` uses OpenCV VideoCapture (compatible with both)
+##### Status
 
-**Recommendation**:
+`picamera` is legacy camera stack, `picamera2` is new libcamera-based
+
+##### Current Usage
+
+`requirements.txt` lines 12-13 includes both
+
+##### Code Usage
+
+`MonsterAuto.py` uses OpenCV VideoCapture (compatible with both)
+
+##### Recommendation
+
 ```python
 # Current code uses cv2.VideoCapture(0) which works with both
 # No code changes needed, but document which camera stack to use
@@ -292,7 +352,9 @@ config = picam2.create_still_configuration()
 picam2.configure(config)
 ```
 
-**Action**: Documentation updated to recommend picamera2
+##### Action
+
+Documentation updated to recommend picamera2
 
 ---
 
@@ -300,47 +362,72 @@ picam2.configure(config)
 
 #### 6. Python 2 OpenCV Constants ❌ DEPRECATED
 
-**File**: `MonsterAuto.py` lines 91-93
-**Issue**: Uses `cv2.cv.CV_CAP_PROP_*` (Python 2 style)
+##### File
+
+`MonsterAuto.py` lines 91-93
+
+##### Issue
+
+Uses `cv2.cv.CV_CAP_PROP_*` (Python 2 style)
 
 ```python
 # CURRENT (Python 2 style - DEPRECATED):
-Settings.capture.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, Settings.cameraWidth)
-Settings.capture.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, Settings.cameraHeight)
+Settings.capture.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH,
+                     Settings.cameraWidth)
+Settings.capture.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT,
+                     Settings.cameraHeight)
 Settings.capture.set(cv2.cv.CV_CAP_PROP_FPS, Settings.frameRate)
 
 # SHOULD BE (Python 3 style):
-Settings.capture.set(cv2.CAP_PROP_FRAME_WIDTH, Settings.cameraWidth)
-Settings.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, Settings.cameraHeight)
+Settings.capture.set(cv2.CAP_PROP_FRAME_WIDTH,
+                     Settings.cameraWidth)
+Settings.capture.set(cv2.CAP_PROP_FRAME_HEIGHT,
+                     Settings.cameraHeight)
 Settings.capture.set(cv2.CAP_PROP_FPS, Settings.frameRate)
 ```
 
-**Impact**: Will fail on OpenCV 4.x with Python 3.13.5
-**Priority**: High
-**Fix**: Update to Python 3 constants
+##### Impact
+
+Will fail on OpenCV 4.x with Python 3.13.5
+
+##### Priority
+
+High
+
+##### Fix
+
+Update to Python 3 constants
 
 ---
 
 #### 7. Threading module usage ✅ OK
 
-**Current**: Uses `threading` module correctly
-**Python 3.13.5 Changes**: No breaking changes
-**Status**: No action needed
+##### Current
+
+Uses `threading` module correctly
+
+##### Python 3.13.5 Changes
+
+No breaking changes
+
+##### Status
+
+No action needed
 
 ---
 
 ### Summary of Obsolete Dependencies
 
-| Dependency | Type | Status | Action | Priority |
-|-----------|------|--------|--------|----------|
-| libatlas-base-dev | System | ❌ Obsolete | Replace with libopenblas-dev | Critical |
-| libjasper-dev | System | ❌ Obsolete | Remove (not needed) | Medium |
-| libqt4-test | System | ❌ Obsolete | Remove (not needed) | Medium |
-| smbus | Python | ⚠️ Deprecated | Already using smbus2 ✅ | None |
-| cv2.cv.* constants | Code | ❌ Deprecated | Update code | High |
-| picamera | Python | ⚠️ Legacy | Keep for compatibility | Low |
+| Dependency      | Type   | Status     | Action         | Priority |
+|-----------------|--------|-----------|----------------|----------|
+| libatlas        | System | Obsolete  | Replace        | Critical |
+| libjasper-dev   | System | Obsolete  | Remove         | Medium   |
+| libqt4-test     | System | Obsolete  | Remove         | Medium   |
+| smbus           | Python | Deprecated| Using smbus2   | None     |
+| cv2.cv.*        | Code   | Deprecated| Update         | High     |
+| picamera        | Python | Legacy    | Keep           | Low      |
 
-**All system library updates have been applied to documentation ✅**
+System library updates applied to documentation
 
 ---
 
@@ -350,32 +437,46 @@ Settings.capture.set(cv2.CAP_PROP_FPS, Settings.frameRate)
 
 #### VULN-001: No Authentication on Web Interface
 
-**Severity**: 🔴 Critical (CVSS 9.8)
-**File**: `monsterWeb.py` lines 159-357
-**CWE**: CWE-306 (Missing Authentication for Critical Function)
+##### Severity
 
-**Description**:
-The web server has zero authentication. Anyone who can reach the network interface can:
+Critical (CVSS 9.8)
+
+##### File
+
+`monsterWeb.py` lines 159-357
+
+##### CWE
+
+CWE-306 (Missing Authentication for Critical Function)
+
+##### Description
+
+The web server has zero authentication. Anyone who can reach the
+network interface can:
+
 - Control the robot motors (drive it anywhere)
 - View the camera feed
 - Capture and save photos
 - Potentially damage hardware through malicious commands
 
-**Proof of Concept**:
+##### Proof of Concept
+
 ```bash
 # Anyone can control the robot:
 curl http://192.168.1.100:8080/set/0.5/0.5  # Drive forward
-curl http://192.168.1.100:8080/set/-1.0/1.0  # Spin left at max speed
+curl http://192.168.1.100:8080/set/-1.0/1.0  # Spin left
 curl http://192.168.1.100:8080/photo  # Take photos
 ```
 
-**Impact**:
+##### Impact
+
 - Unauthorized access to robot control
 - Privacy violation (unauthorized camera access)
 - Potential physical damage or harm
 - Regulatory compliance issues (GDPR for camera data)
 
-**Fix**:
+##### Fix
+
 ```python
 # Add HTTP Basic Authentication (minimum):
 import base64
@@ -383,8 +484,9 @@ from functools import wraps
 
 def check_auth(username, password):
     """Check if username/password is valid."""
-    # In production, use hashed passwords from config file
-    return username == 'admin' and password == 'secure_password_here'
+    # In production, use hashed passwords
+    return (username == 'admin' and
+            password == 'secure_password_here')
 
 def authenticate():
     """Send 401 response for authentication."""
@@ -395,7 +497,8 @@ def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         auth = request.authorization
-        if not auth or not check_auth(auth.username, auth.password):
+        if not auth or not check_auth(auth.username,
+                                       auth.password):
             return authenticate()
         return f(*args, **kwargs)
     return decorated
@@ -407,33 +510,50 @@ def set_motors(driveLeft, driveRight):
     # ... existing code
 ```
 
-**Better Fix**: Implement token-based authentication with session management
+##### Better Fix
 
-**Priority**: Fix before any deployment
+Implement token-based authentication with session management
+
+##### Priority
+
+Fix before any deployment
 
 ---
 
 #### VULN-002: Command Injection
 
-**Severity**: 🔴 Critical (CVSS 9.1)
-**File**: `MonsterAuto.py` line 89
-**CWE**: CWE-78 (OS Command Injection)
+##### Severity
 
-**Description**:
+Critical (CVSS 9.1)
+
+##### File
+
+`MonsterAuto.py` line 89
+
+##### CWE
+
+CWE-78 (OS Command Injection)
+
+##### Description
+
 Uses `os.system()` with sudo, which is inherently dangerous:
 
 ```python
 os.system('sudo modprobe bcm2835-v4l2')
 ```
 
-While currently hardcoded, this pattern could be exploited if the code is modified. `os.system()` also passes through shell, making it vulnerable to injection if any variables were added.
+While currently hardcoded, this pattern could be exploited if the code is
+modified. `os.system()` also passes through shell, making it vulnerable to
+injection if any variables were added.
 
-**Impact**:
+##### Impact
+
 - Potential for arbitrary command execution with sudo privileges
 - Attack surface if code is modified in the future
 - Violates secure coding practices
 
-**Fix**:
+##### Fix
+
 ```python
 # Replace with subprocess:
 import subprocess
@@ -451,17 +571,29 @@ except subprocess.TimeoutExpired:
     sys.exit(1)
 ```
 
-**Priority**: Fix in Phase 1
+##### Priority
+
+Fix in Phase 1
 
 ---
 
 #### VULN-003: Insecure Network Binding
 
-**Severity**: 🔴 Critical (CVSS 8.6)
-**File**: `monsterWeb.py` line 383
-**CWE**: CWE-923 (Improper Restriction of Communication Channel to Intended Endpoints)
+##### Severity
 
-**Description**:
+Critical (CVSS 8.6)
+
+##### File
+
+`monsterWeb.py` line 383
+
+##### CWE
+
+CWE-923 (Improper Restriction of Communication Channel to Intended
+Endpoints)
+
+##### Description
+
 Server binds to `0.0.0.0` (all network interfaces):
 
 ```python
@@ -469,30 +601,39 @@ socketserver.TCPServer(("0.0.0.0", webPort), WebServer)
 ```
 
 This exposes the control interface to:
+
 - All network interfaces (WiFi, Ethernet, etc.)
 - Potentially the internet if port forwarding is enabled
 - All devices on the local network
 
-**Impact**:
+##### Impact
+
 - Increases attack surface massively
 - Allows attackers on any connected network to access robot
 - Violates principle of least privilege
 
-**Fix**:
+##### Fix
+
 ```python
 # Bind to localhost only by default:
-bind_address = Settings.webBindAddress if hasattr(Settings, 'webBindAddress') else '127.0.0.1'
+bind_address = (Settings.webBindAddress
+                if hasattr(Settings, 'webBindAddress')
+                else '127.0.0.1')
 socketserver.TCPServer((bind_address, webPort), WebServer)
 
 # In Settings.py, add:
 webBindAddress = '127.0.0.1'  # localhost only
 # Or for specific interface:
-# webBindAddress = '192.168.1.100'  # specific interface only
+# webBindAddress = '192.168.1.100'
 ```
 
-**Alternative**: Use firewall rules to restrict access, but still prefer specific binding
+##### Alternative
 
-**Priority**: Fix immediately
+Use firewall rules to restrict access, but still prefer specific binding
+
+##### Priority
+
+Fix immediately
 
 ---
 
@@ -500,101 +641,151 @@ webBindAddress = '127.0.0.1'  # localhost only
 
 #### VULN-004: No HTTPS/TLS Encryption
 
-**Severity**: 🟠 High (CVSS 7.5)
-**File**: `monsterWeb.py` lines 383-397
-**CWE**: CWE-319 (Cleartext Transmission of Sensitive Information)
+##### Severity
 
-**Description**:
-All traffic (including camera feed and motor commands) sent in cleartext over HTTP.
+High (CVSS 7.5)
 
-**Impact**:
+##### File
+
+`monsterWeb.py` lines 383-397
+
+##### CWE
+
+CWE-319 (Cleartext Transmission of Sensitive Information)
+
+##### Description
+
+All traffic (including camera feed and motor commands) sent in cleartext
+over HTTP.
+
+##### Impact
+
 - Man-in-the-middle attacks possible
 - Camera feed can be intercepted
 - Control commands can be intercepted and replayed
 - Credentials (if added) sent in cleartext
 
-**Fix**:
+##### Fix
+
 ```python
 import ssl
 
 # Create SSL context
 ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-ssl_context.load_cert_chain('/path/to/cert.pem', '/path/to/key.pem')
+ssl_context.load_cert_chain('/path/to/cert.pem',
+                            '/path/to/key.pem')
 
 # Wrap server socket
-httpd = socketserver.TCPServer(("127.0.0.1", webPort), WebServer)
-httpd.socket = ssl_context.wrap_socket(httpd.socket, server_side=True)
+httpd = socketserver.TCPServer(("127.0.0.1", webPort),
+                               WebServer)
+httpd.socket = ssl_context.wrap_socket(httpd.socket,
+                                        server_side=True)
 httpd.serve_forever()
 ```
 
-**Self-Signed Certificate Generation**:
+##### Self-Signed Certificate Generation
+
 ```bash
-openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
+openssl req -x509 -newkey rsa:4096 -keyout key.pem \
+  -out cert.pem -days 365 -nodes
 ```
 
-**Priority**: Phase 1 security hardening
+##### Priority
+
+Phase 1 security hardening
 
 ---
 
 #### VULN-005: Path Traversal in I2C Access
 
-**Severity**: 🟠 High (CVSS 7.1)
-**File**: `ThunderBorg.py` lines 260, 262, 301, 303
-**CWE**: CWE-22 (Path Traversal)
+##### Severity
 
-**Description**:
+High (CVSS 7.1)
+
+##### File
+
+`ThunderBorg.py` lines 260, 262, 301, 303
+
+##### CWE
+
+CWE-22 (Path Traversal)
+
+##### Description
+
 Constructs device paths without validating `busNumber`:
 
 ```python
-io.open("/dev/i2c-" + str(self.busNumber), "rb", buffering=0)
+io.open("/dev/i2c-" + str(self.busNumber), "rb",
+        buffering=0)
 ```
 
-If `busNumber` is user-controlled or maliciously set, could access arbitrary devices.
+If `busNumber` is user-controlled or maliciously set, could access
+arbitrary devices.
 
-**Impact**:
+##### Impact
+
 - Potential access to unintended device files
 - Read/write to wrong hardware devices
 - System instability
 
-**Fix**:
+##### Fix
+
 ```python
 def Init(self, busNumber=ThunderBorg.DEFAULT_BUS_NUM):
     # Validate bus number
     if not isinstance(busNumber, int):
-        raise TypeError(f"Bus number must be integer, got {type(busNumber)}")
+        raise TypeError(f"Bus number must be integer, \
+got {type(busNumber)}")
     if busNumber < 0 or busNumber > 1:
-        raise ValueError(f"Bus number must be 0 or 1, got {busNumber}")
+        raise ValueError(f"Bus number must be 0 or 1, \
+got {busNumber}")
 
     self.busNumber = busNumber
     # Rest of init code...
 ```
 
-**Priority**: Phase 1 code hardening
+##### Priority
+
+Phase 1 code hardening
 
 ---
 
 #### VULN-006: Unsafe File Write
 
-**Severity**: 🟠 High (CVSS 6.5)
-**File**: `monsterWeb.py` lines 233-237
-**CWE**: CWE-73 (External Control of File Name or Path)
+##### Severity
 
-**Description**:
+High (CVSS 6.5)
+
+##### File
+
+`monsterWeb.py` lines 233-237
+
+##### CWE
+
+CWE-73 (External Control of File Name or Path)
+
+##### Description
+
 Photo save path constructed from datetime without sanitization:
 
 ```python
-photoName = photoDirectory + '/Photo_' + datetime.datetime.utcnow().strftime("%Y%m%d_%H%M%S") + '.jpg'
+photoName = (photoDirectory + '/Photo_' +
+             datetime.datetime.utcnow().strftime("%Y%m%d_%H%M%S") +
+             '.jpg')
 cv2.imwrite(photoName, cameraFrame)
 ```
 
-While currently safe, if `photoDirectory` ever becomes user-controlled, this enables path traversal.
+While currently safe, if `photoDirectory` ever becomes user-controlled,
+this enables path traversal.
 
-**Impact**:
+##### Impact
+
 - Potential for writing files outside intended directory
 - Disk space exhaustion attack
 - Overwriting system files (if run as root)
 
-**Fix**:
+##### Fix
+
 ```python
 import os
 
@@ -607,21 +798,25 @@ filename = f"Photo_{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.jpg"
 photoName = os.path.join(photoDirectory, filename)
 
 # Validate the final path is within allowed directory
-if not os.path.abspath(photoName).startswith(photoDirectory):
+if not os.path.abspath(photoName).startswith(
+        photoDirectory):
     raise ValueError("Invalid photo path")
 
 cv2.imwrite(photoName, cameraFrame)
 ```
 
-**Priority**: Phase 1 code hardening
+##### Priority
+
+Phase 1 code hardening
 
 ---
 
 ### Medium Severity
 
-*(See detailed security report for 9 medium severity issues)*
+See detailed security report for 9 medium severity issues.
 
 Key medium issues include:
+
 - Information disclosure (hardcoded username)
 - Missing CSRF protection
 - Overly broad exception handling (masks errors)
@@ -630,9 +825,10 @@ Key medium issues include:
 
 ### Low Severity
 
-*(See detailed security report for 7 low severity issues)*
+See detailed security report for 7 low severity issues.
 
 Key low issues include:
+
 - No rate limiting
 - Missing HTTP security headers
 - Deprecated Python 2 code
@@ -646,18 +842,35 @@ Key low issues include:
 
 #### CVE-2024-28219: Pillow Vulnerability ✅ FIXED
 
-**Status**: ✅ Resolved
-**Package**: Pillow (Python Imaging Library)
-**Severity**: High
-**Affected Versions**: Pillow < 10.3.0
-**Fixed Version**: Pillow >= 10.3.0
+##### Status
 
-**Fix Applied**:
+Resolved
+
+##### Package
+
+Pillow (Python Imaging Library)
+
+##### Severity
+
+High
+
+##### Affected Versions
+
+Pillow < 10.3.0
+
+##### Fixed Version
+
+Pillow >= 10.3.0
+
+##### Fix Applied
+
 - `requirements.txt` line 40: Updated to `Pillow>=10.3.0`
 - `requirements.lock`: Pinned to Pillow 12.0.0
 - Verified with pip-audit: No vulnerabilities found
 
-**Reference**: Session summary 2025-12-06
+##### Reference
+
+Session summary 2025-12-06
 
 ---
 
@@ -665,12 +878,24 @@ Key low issues include:
 
 #### CVE-LIKE-001: Sudo without Authentication
 
-**Pattern**: `os.system('sudo ...')` without password
-**File**: MonsterAuto.py:89
-**Risk**: Assumes passwordless sudo configured
-**Similar to**: CVE-2019-14287 (sudo vulnerability)
+##### Pattern
 
-**Mitigation**:
+`os.system('sudo ...')` without password
+
+##### File
+
+MonsterAuto.py:89
+
+##### Risk
+
+Assumes passwordless sudo configured
+
+##### Similar to
+
+CVE-2019-14287 (sudo vulnerability)
+
+##### Mitigation
+
 - Avoid using sudo in application code
 - Use setuid binaries or systemd capabilities
 - Run as dedicated user with minimal permissions
@@ -679,12 +904,24 @@ Key low issues include:
 
 #### CVE-LIKE-002: Unauthenticated Camera Access
 
-**Pattern**: Unrestricted camera access via web
-**File**: monsterWeb.py:263-271
-**Risk**: Privacy violation, surveillance
-**Similar to**: Various IoT camera CVEs (e.g., CVE-2021-36260)
+##### Pattern
 
-**Mitigation**:
+Unrestricted camera access via web
+
+##### File
+
+monsterWeb.py:263-271
+
+##### Risk
+
+Privacy violation, surveillance
+
+##### Similar to
+
+Various IoT camera CVEs (e.g., CVE-2021-36260)
+
+##### Mitigation
+
 - Implement authentication
 - Add camera access logging
 - Provide visual/audible indicator when camera active
@@ -694,8 +931,10 @@ Key low issues include:
 ### Dependency Vulnerability Scan Results
 
 **Scan Date**: 2025-12-06
+
 **Tool**: pip-audit
-**Result**: ✅ No known vulnerabilities
+
+**Result**: No known vulnerabilities
 
 ```bash
 $ pip-audit
@@ -703,10 +942,11 @@ No known vulnerabilities found
 ```
 
 **Pinned Versions** (from requirements.lock):
+
 - Flask 3.1.0
 - opencv-python 4.11.0.86
 - numpy 2.2.1
-- Pillow 12.0.0 ✅
+- Pillow 12.0.0
 - All other dependencies up to date
 
 **Recommendation**: Enable automated dependency scanning in CI/CD
@@ -717,98 +957,99 @@ No known vulnerabilities found
 
 ### Authentication & Authorization
 
-- [ ] No authentication mechanism implemented
-- [ ] No role-based access control
-- [ ] No session management
-- [ ] No password hashing/storage
-- [ ] No audit logging for access
+- No authentication mechanism implemented
+- No role-based access control
+- No session management
+- No password hashing/storage
+- No audit logging for access
 
-**Priority**: Critical
+Priority: Critical
 
 ---
 
 ### Network Security
 
-- [ ] No HTTPS/TLS encryption
-- [ ] No certificate management
-- [ ] Binds to all interfaces (0.0.0.0)
-- [ ] No firewall configuration documented
-- [ ] No network segmentation guidance
+- No HTTPS/TLS encryption
+- No certificate management
+- Binds to all interfaces (0.0.0.0)
+- No firewall configuration documented
+- No network segmentation guidance
 
-**Priority**: Critical
+Priority: Critical
 
 ---
 
 ### Input Validation
 
-- [ ] Minimal validation on motor speed values
-- [ ] No validation on URL paths
-- [ ] No validation on I2C bus numbers
-- [ ] No sanitization of user input
-- [ ] Missing type checking on critical parameters
+- Minimal validation on motor speed values
+- No validation on URL paths
+- No validation on I2C bus numbers
+- No sanitization of user input
+- Missing type checking on critical parameters
 
-**Priority**: High
+Priority: High
 
 ---
 
 ### Error Handling
 
-- [ ] Broad `except:` blocks mask errors
-- [ ] Stack traces exposed to users
-- [ ] No structured error logging
-- [ ] Errors don't trigger alerts
-- [ ] No error recovery mechanisms
+- Broad `except:` blocks mask errors
+- Stack traces exposed to users
+- No structured error logging
+- Errors don't trigger alerts
+- No error recovery mechanisms
 
-**Priority**: Medium
+Priority: Medium
 
 ---
 
 ### Security Headers
 
 Missing HTTP security headers:
-- [ ] X-Frame-Options (prevents clickjacking)
-- [ ] X-Content-Type-Options (prevents MIME sniffing)
-- [ ] Content-Security-Policy (XSS protection)
-- [ ] Strict-Transport-Security (HSTS)
-- [ ] X-XSS-Protection (XSS filter)
 
-**Priority**: Medium
+- X-Frame-Options (prevents clickjacking)
+- X-Content-Type-Options (prevents MIME sniffing)
+- Content-Security-Policy (XSS protection)
+- Strict-Transport-Security (HSTS)
+- X-XSS-Protection (XSS filter)
+
+Priority: Medium
 
 ---
 
 ### Secure Coding
 
-- [ ] Uses deprecated `os.system()` instead of subprocess
-- [ ] Runs with sudo privileges unnecessarily
-- [ ] No input sanitization functions
-- [ ] Hardcoded paths (e.g., `/home/pisith`)
-- [ ] No use of Python type hints for safety
+- Uses deprecated `os.system()` instead of subprocess
+- Runs with sudo privileges unnecessarily
+- No input sanitization functions
+- Hardcoded paths (e.g., `/home/pisith`)
+- No use of Python type hints for safety
 
-**Priority**: High
+Priority: High
 
 ---
 
 ### Monitoring & Logging
 
-- [ ] No security event logging
-- [ ] No intrusion detection
-- [ ] No rate limiting on requests
-- [ ] No monitoring of failed auth attempts
-- [ ] No alerts for suspicious activity
+- No security event logging
+- No intrusion detection
+- No rate limiting on requests
+- No monitoring of failed auth attempts
+- No alerts for suspicious activity
 
-**Priority**: Medium
+Priority: Medium
 
 ---
 
 ### Dependency Management
 
-- [x] requirements.txt exists ✅
-- [x] requirements.lock exists ✅
-- [ ] No automated vulnerability scanning in CI
-- [ ] No dependency pinning policy documented
-- [ ] No SBOM (Software Bill of Materials)
+- requirements.txt exists
+- requirements.lock exists
+- No automated vulnerability scanning in CI
+- No dependency pinning policy documented
+- No SBOM (Software Bill of Materials)
 
-**Priority**: Low
+Priority: Low
 
 ---
 
@@ -818,17 +1059,28 @@ Missing HTTP security headers:
 
 #### 1. Add Authentication ⚡ BLOCKER
 
-**Issue**: VULN-001 - No authentication
-**Impact**: Anyone can control robot
-**Effort**: Medium (2-3 days)
-**Tasks**:
-- [ ] Implement HTTP Basic Auth
-- [ ] Add secure password storage (hashed)
-- [ ] Create configuration for credentials
-- [ ] Add session management
-- [ ] Test authentication bypass attempts
+##### Issue
 
-**Files to Modify**:
+VULN-001 - No authentication
+
+##### Impact
+
+Anyone can control robot
+
+##### Effort
+
+Medium (2-3 days)
+
+##### Tasks
+
+- Implement HTTP Basic Auth
+- Add secure password storage (hashed)
+- Create configuration for credentials
+- Add session management
+- Test authentication bypass attempts
+
+##### Files to Modify
+
 - `monsterWeb.py`: Add auth decorator
 - `Settings.py`: Add credential configuration
 - `docs/REQUIREMENTS.md`: Document auth setup
@@ -837,32 +1089,54 @@ Missing HTTP security headers:
 
 #### 2. Fix Command Injection ⚡ BLOCKER
 
-**Issue**: VULN-002 - `os.system()` vulnerability
-**Impact**: Potential arbitrary command execution
-**Effort**: Low (2 hours)
-**Tasks**:
-- [ ] Replace `os.system()` with `subprocess.run()`
-- [ ] Add timeout and error handling
-- [ ] Test camera module loading
-- [ ] Update error messages
+##### Issue
 
-**Files to Modify**:
+VULN-002 - `os.system()` vulnerability
+
+##### Impact
+
+Potential arbitrary command execution
+
+##### Effort
+
+Low (2 hours)
+
+##### Tasks
+
+- Replace `os.system()` with `subprocess.run()`
+- Add timeout and error handling
+- Test camera module loading
+- Update error messages
+
+##### Files to Modify
+
 - `MonsterAuto.py` line 89
 
 ---
 
 #### 3. Restrict Network Binding ⚡ BLOCKER
 
-**Issue**: VULN-003 - Binds to 0.0.0.0
-**Impact**: Exposed to all network interfaces
-**Effort**: Low (1 hour)
-**Tasks**:
-- [ ] Change bind address to localhost
-- [ ] Add configuration option for bind address
-- [ ] Document network security in docs
-- [ ] Add firewall configuration guide
+##### Issue
 
-**Files to Modify**:
+VULN-003 - Binds to 0.0.0.0
+
+##### Impact
+
+Exposed to all network interfaces
+
+##### Effort
+
+Low (1 hour)
+
+##### Tasks
+
+- Change bind address to localhost
+- Add configuration option for bind address
+- Document network security in docs
+- Add firewall configuration guide
+
+##### Files to Modify
+
 - `monsterWeb.py` line 383
 - `Settings.py`: Add `webBindAddress` setting
 - `docs/DEPLOYMENT.md`: Add security section
@@ -873,53 +1147,95 @@ Missing HTTP security headers:
 
 #### 4. Implement HTTPS/TLS
 
-**Issue**: VULN-004 - No encryption
-**Impact**: Traffic can be intercepted
-**Effort**: Medium (1 day)
-**Tasks**:
-- [ ] Generate self-signed certificates
-- [ ] Wrap server socket with SSL
-- [ ] Document certificate management
-- [ ] Test HTTPS connections
-- [ ] Update all documentation URLs
+##### Issue
+
+VULN-004 - No encryption
+
+##### Impact
+
+Traffic can be intercepted
+
+##### Effort
+
+Medium (1 day)
+
+##### Tasks
+
+- Generate self-signed certificates
+- Wrap server socket with SSL
+- Document certificate management
+- Test HTTPS connections
+- Update all documentation URLs
 
 ---
 
 #### 5. Add Input Validation
 
-**Issues**: VULN-005, VULN-006, and others
-**Impact**: Multiple injection vulnerabilities
-**Effort**: Medium (2 days)
-**Tasks**:
-- [ ] Validate I2C bus numbers
-- [ ] Validate motor speed inputs
-- [ ] Sanitize file paths
-- [ ] Add type checking
-- [ ] Create validation utility functions
+##### Issues
+
+VULN-005, VULN-006, and others
+
+##### Impact
+
+Multiple injection vulnerabilities
+
+##### Effort
+
+Medium (2 days)
+
+##### Tasks
+
+- Validate I2C bus numbers
+- Validate motor speed inputs
+- Sanitize file paths
+- Add type checking
+- Create validation utility functions
 
 ---
 
 #### 6. Fix Deprecated Code
 
-**Issue**: Python 2 OpenCV constants
-**Impact**: Code will fail on Python 3.13.5
-**Effort**: Low (2 hours)
-**Tasks**:
-- [ ] Update OpenCV constants (cv2.cv.* → cv2.*)
-- [ ] Test camera initialization
-- [ ] Update documentation
+##### Issue
 
-**Files to Modify**:
+Python 2 OpenCV constants
+
+##### Impact
+
+Code will fail on Python 3.13.5
+
+##### Effort
+
+Low (2 hours)
+
+##### Tasks
+
+- Update OpenCV constants (cv2.cv.* to cv2.*)
+- Test camera initialization
+- Update documentation
+
+##### Files to Modify
+
 - `MonsterAuto.py` lines 91-93
 
 ---
 
 #### 7. Update Obsolete Dependencies
 
-**Issues**: libatlas, libjasper, libqt4
-**Impact**: Installation fails on Debian Trixie
-**Effort**: Low (completed ✅)
-**Status**: Documentation updated, testing required
+##### Issues
+
+libatlas, libjasper, libqt4
+
+##### Impact
+
+Installation fails on Debian Trixie
+
+##### Effort
+
+Low (completed)
+
+##### Status
+
+Documentation updated, testing required
 
 ---
 
@@ -927,39 +1243,57 @@ Missing HTTP security headers:
 
 #### 8. Implement Security Logging
 
-**Effort**: Medium (1 day)
-**Tasks**:
-- [ ] Add Python logging module
-- [ ] Log all HTTP requests
-- [ ] Log motor commands
-- [ ] Log authentication attempts
-- [ ] Configure log rotation
-- [ ] Add log monitoring
+##### Effort
+
+Medium (1 day)
+
+##### Tasks
+
+- Add Python logging module
+- Log all HTTP requests
+- Log motor commands
+- Log authentication attempts
+- Configure log rotation
+- Add log monitoring
 
 ---
 
 #### 9. Add CSRF Protection
 
-**Issue**: Missing CSRF tokens
-**Effort**: Medium (1 day)
-**Tasks**:
-- [ ] Generate CSRF tokens
-- [ ] Validate tokens on POST requests
-- [ ] Add tokens to HTML forms
-- [ ] Test CSRF attack prevention
+##### Issue
+
+Missing CSRF tokens
+
+##### Effort
+
+Medium (1 day)
+
+##### Tasks
+
+- Generate CSRF tokens
+- Validate tokens on POST requests
+- Add tokens to HTML forms
+- Test CSRF attack prevention
 
 ---
 
 #### 10. Implement Safety Failsafes
 
-**Issues**: Missing safety requirements SF1-SF5
-**Effort**: High (3-4 days)
-**Tasks**:
-- [ ] Add connection watchdog (SF2)
-- [ ] Implement battery monitoring (SF3)
-- [ ] Add thermal monitoring (SF4)
-- [ ] Create emergency stop mechanism (SF5)
-- [ ] Test all safety features
+##### Issues
+
+Missing safety requirements SF1-SF5
+
+##### Effort
+
+High (3-4 days)
+
+##### Tasks
+
+- Add connection watchdog (SF2)
+- Implement battery monitoring (SF3)
+- Add thermal monitoring (SF4)
+- Create emergency stop mechanism (SF5)
+- Test all safety features
 
 ---
 
@@ -988,7 +1322,8 @@ on:
   pull_request:
     branches: [ main, master ]
   schedule:
-    - cron: '0 0 * * 0'  # Weekly on Sunday at midnight
+    # Weekly on Sunday at midnight
+    - cron: '0 0 * * 0'
 
 jobs:
   dependency-scan:
@@ -1052,12 +1387,15 @@ jobs:
 
       - name: Run Flake8 (Linting)
         run: |
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          flake8 . --count --select=E9,F63,F7,F82 \
+            --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 \
+            --max-line-length=127 --statistics
 
       - name: Run MyPy (Type Checking)
         run: |
-          mypy --ignore-missing-imports --strict-optional *.py || true
+          mypy --ignore-missing-imports --strict-optional \
+            *.py || true
 
       - name: Upload scan reports
         if: always()
@@ -1285,35 +1623,40 @@ For critical issues, please email security@[domain] instead.
 
 ## Summary and Recommendations
 
-### Current Security Posture: ⚠️ **NOT PRODUCTION READY**
+### Current Security Posture
 
-The codebase represents a functional prototype but has **critical security vulnerabilities** that must be addressed before any deployment.
+**NOT PRODUCTION READY** ⚠️
+
+The codebase represents a functional prototype but has critical security
+vulnerabilities that must be addressed before any deployment.
 
 ### Immediate Actions Required
 
-1. **DO NOT deploy** this code to any public-facing network
-2. **Implement authentication** before allowing any network access
-3. **Fix command injection** vulnerability
-4. **Restrict network binding** to localhost or specific interface
-5. **Update obsolete dependencies** (documentation completed ✅)
+1. DO NOT deploy this code to any public-facing network
+2. Implement authentication before allowing any network access
+3. Fix command injection vulnerability
+4. Restrict network binding to localhost or specific interface
+5. Update obsolete dependencies (documentation completed)
 
 ### Phase 1 Security Hardening Checklist
 
-- [ ] Add authentication mechanism (HTTP Basic Auth minimum)
-- [ ] Implement HTTPS/TLS encryption
-- [ ] Fix command injection (replace os.system)
-- [ ] Restrict network binding
-- [ ] Add input validation
-- [ ] Fix deprecated OpenCV code
-- [ ] Implement security logging
-- [ ] Add CSRF protection
-- [ ] Implement safety failsafes (battery, thermal, emergency stop)
-- [ ] Create GitHub Actions for security scanning
+- Add authentication mechanism (HTTP Basic Auth minimum)
+- Implement HTTPS/TLS encryption
+- Fix command injection (replace os.system)
+- Restrict network binding
+- Add input validation
+- Fix deprecated OpenCV code
+- Implement security logging
+- Add CSRF protection
+- Implement safety failsafes (battery, thermal, emergency stop)
+- Create GitHub Actions for security scanning
 
 ### Estimated Effort
 
 **Security Hardening**: 2-3 weeks for Phase 1 critical issues
+
 **Feature Completion**: 6-8 weeks for full requirements compliance
+
 **Total to Production**: 8-12 weeks
 
 ### Next Steps
@@ -1327,7 +1670,10 @@ The codebase represents a functional prototype but has **critical security vulne
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2025-12-06
-**Next Review**: Before Phase 1 implementation begins
-**Owner**: Project Security Team
+Document Version: 1.0
+
+Last Updated: 2025-12-06
+
+Next Review: Before Phase 1 implementation begins
+
+Owner: Project Security Team
