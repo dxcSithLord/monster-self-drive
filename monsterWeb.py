@@ -122,7 +122,7 @@ class StreamProcessor(threading.Thread):
         
         While `self.terminated` is False, waits up to one second for `self.event` to be set. When set, reads the current frame from `self.stream`, optionally flips it according to `flippedCamera`, encodes it to JPEG with `jpegQuality`, and replaces the module-global `lastFrame` while holding `lockFrame`. After processing, resets the stream and clears the event.
         """
-        global lastFrame  # Assigned on line 124
+        global lastFrame  # Assigned on line 140
         # This method runs in a separate thread
         while not self.terminated:
             # Wait for an image to be written to the stream
