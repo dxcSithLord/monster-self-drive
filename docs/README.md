@@ -1,6 +1,9 @@
 # Monster Self-Drive Documentation
 
-Welcome to the Monster Self-Drive project documentation. This directory contains all technical documentation, architectural decisions, and project planning materials.
+Welcome to the Monster Self-Drive project documentation.
+
+This directory contains all technical documentation, architectural
+decisions, and project planning materials.
 
 ---
 
@@ -51,6 +54,7 @@ Before starting Phase 1 implementation, the following **P0 blockers** must be re
 4. ⏳ Safety System Integration (See ADR-009)
 
 **Legend:**
+
 - ✅ = Proposed decision documented, awaiting approval
 - ⏳ = Not yet documented
 - ❌ = Blocker, urgent attention needed
@@ -139,7 +143,7 @@ graph TD
 
 ## 📁 Directory Structure
 
-```
+```text
 docs/
 ├── README.md                  # This file - documentation overview
 ├── CRITICAL_GAPS.md           # Unresolved issues and blockers
@@ -174,12 +178,14 @@ docs/
 ## 🔗 Related Resources
 
 ### External Documentation
+
 - [ThunderBorg Documentation](https://www.piborg.org/motors-1135/thunderborg)
 - [OpenCV Tracking Algorithms](https://docs.opencv.org/4.x/d9/df8/group__tracking.html)
 - [Flask-SocketIO Documentation](https://flask-socketio.readthedocs.io/)
 - [Raspberry Pi GPIO Documentation](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html)
 
 ### Internal Resources
+
 - Main [README.md](../README.md) - Project overview
 - [Settings.py](../Settings.py) - Current configuration
 - [ImageProcessor.py](../ImageProcessor.py) - Image processing code
@@ -200,6 +206,7 @@ docs/
 ### ADR Format
 
 Follow the format in DECISIONS.md:
+
 1. Context (problem statement)
 2. Decision (what we chose)
 3. Status (Proposed/Accepted/Deprecated/Superseded)
@@ -209,6 +216,7 @@ Follow the format in DECISIONS.md:
 ### Code Examples
 
 Include code examples in documentation:
+
 ```python
 # Good: Include context and explanation
 def example_function():

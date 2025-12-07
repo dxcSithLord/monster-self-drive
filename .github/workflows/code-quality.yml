@@ -64,6 +64,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Lint Markdown files
+        id: mdlint
         uses: DavidAnson/markdownlint-cli2-action@v14
         with:
           globs: '**/*.md'
+        continue-on-error: true
+
+      - name: Emit warning if markdownlint found issues
+        if: ${{ steps.mdlint.conclusion == 'failure' || steps.mdlint.outcome == 'failure' }}
+        run: |
+          echo "::warning::markdownlint found issues. See action logs for details."

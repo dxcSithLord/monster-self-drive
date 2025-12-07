@@ -9,6 +9,7 @@
 ## How to Use This Document
 
 Each architectural decision should include:
+
 1. **Context** - The issue motivating this decision
 2. **Decision** - The change that we're proposing or have agreed to
 3. **Status** - Proposed, Accepted, Deprecated, Superseded
@@ -33,6 +34,7 @@ Each architectural decision should include:
 | ADR-010 | GPIO Pin Assignments | 🟡 Proposed | 2025-12-06 | P0 |
 
 **Status Legend:**
+
 - 🟡 Proposed - Under consideration
 - 🟢 Accepted - Decision made and documented
 - 🔴 Deprecated - No longer valid
@@ -51,16 +53,19 @@ Each architectural decision should include:
 ### Context
 
 The system requires bidirectional real-time communication between web clients and the Raspberry Pi for:
+
 - Motor control commands (low latency critical)
 - Video streaming
 - Sensor data updates
 - Status information
 
 Two libraries mentioned in documentation:
+
 1. **websockets** (asyncio-based)
 2. **Flask-SocketIO** (Socket.IO protocol)
 
 This is a BLOCKING decision because it fundamentally affects:
+
 - Threading model (async vs. sync/gevent)
 - Architecture patterns
 - Client-side implementation
@@ -73,6 +78,7 @@ This is a BLOCKING decision because it fundamentally affects:
 The project will use **Flask-SocketIO** for real-time WebSocket communication.
 
 **Rationale:**
+
 1. **Framework Compatibility:** Integrates seamlessly with the existing Flask framework currently used in `monsterWeb.py`
 2. **Performance Adequate:** Expected latency (20-30ms) is acceptable given that only one user will have active control at any time
 3. **Multi-User Support:** Supports the planned control model where:
@@ -83,6 +89,7 @@ The project will use **Flask-SocketIO** for real-time WebSocket communication.
 5. **Reliability:** Built-in automatic reconnection is crucial for remote robot control
 
 **Implementation Details:**
+
 - Library: `Flask-SocketIO >= 3.0`
 - Update `requirements.txt` to include Flask-SocketIO
 - Async mode: Start with threading mode, can upgrade to asyncio if needed
@@ -93,6 +100,7 @@ The project will use **Flask-SocketIO** for real-time WebSocket communication.
 #### Option 1: `websockets` library (asyncio)
 
 **Pros:**
+
 - Native Python asyncio support (Python 3.7+)
 - Lower-level control over WebSocket protocol
 - Lightweight and fast
@@ -101,6 +109,7 @@ The project will use **Flask-SocketIO** for real-time WebSocket communication.
 - Simpler protocol (just WebSocket, no Socket.IO overhead)
 
 **Cons:**
+
 - Requires full asyncio architecture
 - More complex integration with existing synchronous code
 - Need to handle reconnection logic manually
@@ -108,6 +117,7 @@ The project will use **Flask-SocketIO** for real-time WebSocket communication.
 - Steeper learning curve
 
 **Technical Implications:**
+
 ```python
 # Would require async architecture:
 async def motor_control_handler(websocket, path):
@@ -124,6 +134,7 @@ async def read_sensors():
 #### Option 2: Flask-SocketIO
 
 **Pros:**
+
 - Integrates seamlessly with existing Flask (if using Flask)
 - Socket.IO protocol provides:
   - Automatic reconnection
@@ -134,6 +145,7 @@ async def read_sensors():
 - Better browser compatibility
 
 **Cons:**
+
 - Heavier than plain WebSocket
 - Requires eventlet or gevent (monkey patching concerns)
 - Framework dependency (Flask)
@@ -141,6 +153,7 @@ async def read_sensors():
 - More complex debugging
 
 **Technical Implications:**
+
 ```python
 # Can use synchronous patterns:
 @socketio.on('motor_command')
@@ -153,11 +166,13 @@ def handle_motor_command(data):
 #### Option 3: Alternative - `socket.io` (standalone, no Flask)
 
 **Pros:**
+
 - Socket.IO benefits without Flask dependency
 - Can use asyncio mode
 - More flexible than Flask-SocketIO
 
 **Cons:**
+
 - Less documentation than Flask-SocketIO
 - Still requires event loop management
 
@@ -175,12 +190,14 @@ def handle_motor_command(data):
 ### Current Codebase Analysis
 
 **Existing Code Review:**
+
 - `monsterWeb.py` uses Flask framework
 - Current architecture is synchronous
 - No async patterns currently used
 - Threading used for video streaming
 
 **Migration Effort:**
+
 - **To websockets:** HIGH - Full async refactor needed
 - **To Flask-SocketIO:** LOW - Drop-in replacement for Flask routes
 
@@ -191,6 +208,7 @@ def handle_motor_command(data):
 **Selected:** Flask-SocketIO (Option 2)
 
 This recommendation was accepted based on:
+
 1. Current codebase uses Flask (easier integration)
 2. Synchronous code can remain mostly unchanged
 3. Automatic reconnection crucial for remote robot control
@@ -202,17 +220,20 @@ This recommendation was accepted based on:
 ### Consequences if Accepted
 
 **Positive:**
+
 - Quick integration with existing Flask code
 - Reliable connection handling
 - Rich client-side library
 - Easier testing and debugging
 
 **Negative:**
+
 - Slight latency overhead
 - Dependency on Flask framework
 - Need to choose async_mode (eventlet/gevent/asyncio)
 
 **Migration Path:**
+
 - Start with Flask-SocketIO in threading mode
 - Profile performance
 - If needed, switch to async_mode='asyncio'
@@ -241,6 +262,7 @@ This recommendation was accepted based on:
 ### Context
 
 Configuration is currently stored in `Settings.py` (Python module), but documentation mentions "JSON or INI". Inconsistency causes confusion and affects:
+
 - Configuration management
 - User editability
 - Validation
@@ -253,12 +275,14 @@ Configuration is currently stored in `Settings.py` (Python module), but document
 The project will use **JSON** as the primary configuration storage format with a Python wrapper for validation and access.
 
 **Implementation Approach:**
+
 1. **Configuration Storage:** JSON file containing all settings key-value pairs
 2. **Settings.py Role:** Import and validate JSON configuration at startup
 3. **Web Interface:** Configuration view page to display/confirm current settings
 4. **Migration:** Convert existing Settings.py key-value pairs to JSON format
 
 **Rationale:**
+
 1. **Industry Standard:** JSON is widely understood and supported
 2. **Schema Validation:** Can implement JSON Schema validation for type safety
 3. **Web Integration:** Easy to serialize/deserialize for web configuration interface
@@ -271,6 +295,7 @@ The project will use **JSON** as the primary configuration storage format with a
 #### Option 1: Keep `Settings.py` (Python module)
 
 **Current Implementation:**
+
 ```python
 # Settings.py
 imageWidth = 320
@@ -280,6 +305,7 @@ frameRate = 10
 ```
 
 **Pros:**
+
 - Already implemented
 - No migration needed
 - Python syntax validation
@@ -287,6 +313,7 @@ frameRate = 10
 - Native type handling
 
 **Cons:**
+
 - Requires Python knowledge to edit
 - Harder for non-developers
 - Must reload code to change config
@@ -298,6 +325,7 @@ frameRate = 10
 #### Option 2: JSON Configuration
 
 **Example:**
+
 ```json
 {
   "camera": {
@@ -312,6 +340,7 @@ frameRate = 10
 ```
 
 **Pros:**
+
 - Industry standard
 - Easy to parse and generate
 - Schema validation available (JSON Schema)
@@ -320,6 +349,7 @@ frameRate = 10
 - Language-agnostic
 
 **Cons:**
+
 - No comments support (without extensions)
 - Strict syntax (trailing commas break parsing)
 - Less human-friendly than YAML/INI
@@ -329,6 +359,7 @@ frameRate = 10
 #### Option 3: INI Configuration
 
 **Example:**
+
 ```ini
 [camera]
 width = 320
@@ -340,6 +371,7 @@ maxPower = 0.8
 ```
 
 **Pros:**
+
 - Very human-readable
 - Simple syntax
 - Comments supported
@@ -347,6 +379,7 @@ maxPower = 0.8
 - Familiar to many users
 
 **Cons:**
+
 - Limited nesting (flat structure)
 - Type inference needed (all strings)
 - Less tooling than JSON
@@ -357,6 +390,7 @@ maxPower = 0.8
 #### Option 4: YAML Configuration
 
 **Example:**
+
 ```yaml
 camera:
   width: 320
@@ -368,6 +402,7 @@ motor:
 ```
 
 **Pros:**
+
 - Very readable
 - Comments supported
 - Good nesting support
@@ -375,6 +410,7 @@ motor:
 - Popular in DevOps
 
 **Cons:**
+
 - Whitespace-sensitive (error-prone)
 - Security concerns (arbitrary code execution in some parsers)
 - Requires external library
@@ -382,6 +418,7 @@ motor:
 #### Option 5: TOML Configuration
 
 **Example:**
+
 ```toml
 [camera]
 width = 320
@@ -393,6 +430,7 @@ maxPower = 0.8
 ```
 
 **Pros:**
+
 - Designed for config files
 - Comments supported
 - Type-aware
@@ -400,6 +438,7 @@ maxPower = 0.8
 - Better than INI for nested data
 
 **Cons:**
+
 - Less familiar than JSON/INI
 - Requires external library
 
@@ -421,6 +460,7 @@ maxPower = 0.8
 **Selected:** JSON Configuration with Python Wrapper (Hybrid of Options 1 & 2)
 
 **Final Implementation:**
+
 ```python
 # Settings.py becomes a loader/validator:
 import json
@@ -443,6 +483,7 @@ class Settings:
 ```
 
 **Web Interface Requirement:**
+
 - Configuration view page in web interface
 - Display all current settings (read-only for MVP)
 - Future: Allow editing through web UI
@@ -452,6 +493,7 @@ class Settings:
 **If changing from Settings.py:**
 
 1. **Phase 1:** Create config file reader
+
    ```python
    def load_config():
        if os.path.exists('config.json'):
@@ -461,6 +503,7 @@ class Settings:
    ```
 
 2. **Phase 2:** Generate default config from Settings.py
+
    ```bash
    python -m monster.tools.export_config > config.json
    ```
@@ -472,6 +515,7 @@ class Settings:
 ### Consequences
 
 **Positive:**
+
 - Clear configuration location (config.json)
 - User can edit JSON directly or via web interface
 - JSON Schema validation prevents errors
@@ -480,6 +524,7 @@ class Settings:
 - Language-agnostic configuration format
 
 **Negative:**
+
 - Migration effort required (convert Settings.py to JSON)
 - Need to implement JSON Schema
 - Potential for JSON syntax errors (mitigated by web interface)
@@ -508,6 +553,7 @@ class Settings:
 ### Context
 
 Current codebase has flat structure in root directory. CONSTITUTION proposes `src/` based structure. Need to decide:
+
 - Migrate to src/ structure OR keep flat
 - When to migrate (before or during development)
 - Import path changes
@@ -531,6 +577,7 @@ monster-self-drive/
 The project will migrate to a structured directory layout that separates source code from release/deployment components.
 
 **Rationale:**
+
 1. **Separation of Concerns:** Source code separated from configuration, documentation, and release artifacts
 2. **Scalability:** Better organization as project grows (currently 5 files, will expand significantly)
 3. **Professional Structure:** Follows Python best practices for larger projects
@@ -586,12 +633,14 @@ monster-self-drive/
 #### Option 1: Keep Flat Structure
 
 **Pros:**
+
 - No migration needed
 - Simpler imports: `import MonsterAuto`
 - No namespace packages
 - Easier for small projects
 
 **Cons:**
+
 - Less organized as project grows
 - All files in one directory
 - Harder to separate concerns
@@ -600,6 +649,7 @@ monster-self-drive/
 #### Option 2: Migrate to src/ Structure
 
 **Pros:**
+
 - Better organization
 - Clear separation of concerns
 - Scalable for growth
@@ -607,6 +657,7 @@ monster-self-drive/
 - Easier testing (import from src)
 
 **Cons:**
+
 - Requires migration effort
 - Import paths change: `from src.core import monster_auto`
 - Potential compatibility issues during transition
@@ -614,10 +665,12 @@ monster-self-drive/
 #### Option 3: Hybrid (gradual migration)
 
 **Pros:**
+
 - Can migrate incrementally
 - Lower risk
 
 **Cons:**
+
 - Confusing during transition
 - Import path inconsistency
 
@@ -630,6 +683,7 @@ monster-self-drive/
 **Migration Timing:** BEFORE Phase 1 implementation begins
 
 **Rationale:**
+
 1. Project will grow significantly (MVP alone requires 10+ new modules)
 2. Better to migrate early (less code to change now than later)
 3. Clearer organization helps contributors and maintenance
@@ -670,12 +724,14 @@ echo "release/" >> .gitignore
 ### Consequences
 
 **Positive:**
+
 - Better code organization
 - Easier to navigate
 - Professional structure
 - Easier testing
 
 **Negative:**
+
 - One-time migration effort (~2-4 hours)
 - Import statements need updates
 - Documentation needs updates
@@ -704,6 +760,7 @@ echo "release/" >> .gitignore
 ### Context
 
 REQUIREMENTS specify "3 simultaneous connections" but don't define control arbitration. Critical safety issue:
+
 - What happens when multiple users send conflicting commands?
 - Who has control of the robot?
 - How to prevent dangerous situations?
@@ -715,6 +772,7 @@ REQUIREMENTS specify "3 simultaneous connections" but don't define control arbit
 The project will implement a **single active user** control model with the following characteristics:
 
 **Control Model:**
+
 - Only ONE user has active control at any time
 - Other connected users are in "observer mode" (video feed only, controls disabled)
 - Control handoff mechanisms:
@@ -723,6 +781,7 @@ The project will implement a **single active user** control model with the follo
   - Optional: Active user can voluntarily **release control**
 
 **Rationale:**
+
 1. **Safety First:** Eliminates possibility of conflicting commands that could cause dangerous robot behavior
 2. **Clarity:** Always clear who is responsible for robot control
 3. **Simplicity:** Straightforward to implement and understand
@@ -732,17 +791,20 @@ The project will implement a **single active user** control model with the follo
 ### Safety Scenarios
 
 **Scenario 1: Conflicting Drive Commands**
+
 - User A: Forward full speed
 - User B: Backward full speed
 - Simultaneous arrival at robot
 - **Result:** ???
 
 **Scenario 2: Mode Switching**
+
 - User A: Autonomous mode active
 - User B: Switches to manual mode
 - **Result:** Does autonomous stop? Emergency?
 
 **Scenario 3: Emergency Stop**
+
 - User A: Driving robot
 - User B: Presses emergency stop
 - **Result:** Should User B be able to stop User A?
@@ -752,11 +814,13 @@ The project will implement a **single active user** control model with the follo
 #### Option 1: Single Active User (Recommended)
 
 **Control Model:**
+
 - Only ONE user has control at a time
 - Other users are "observers" (view-only)
 - Explicit handoff required
 
 **Implementation:**
+
 ```python
 active_user = None
 
@@ -767,16 +831,19 @@ def handle_command(user_id, command):
 ```
 
 **Pros:**
+
 - Clear responsibility
 - No conflicting commands
 - Safer operation
 - Simple to implement
 
 **Cons:**
+
 - Only one driver at a time
 - Need handoff mechanism
 
 **Handoff Options:**
+
 - A: Active user releases control (button)
 - B: Request/grant system
 - C: Timeout after inactivity
@@ -784,11 +851,13 @@ def handle_command(user_id, command):
 #### Option 2: Last-Command-Wins
 
 **Control Model:**
+
 - Any connected user can send commands
 - Latest command takes precedence
 - No explicit control assignment
 
 **Implementation:**
+
 ```python
 def handle_command(user_id, command):
     # No check, just execute
@@ -797,11 +866,13 @@ def handle_command(user_id, command):
 ```
 
 **Pros:**
+
 - Simple implementation
 - No handoff needed
 - Any user can intervene
 
 **Cons:**
+
 - ⚠️ DANGEROUS: Conflicting commands
 - Command oscillation possible
 - Unclear who's driving
@@ -810,11 +881,13 @@ def handle_command(user_id, command):
 #### Option 3: Priority-Based
 
 **Control Model:**
+
 - Users have priority levels (admin > user > guest)
 - Higher priority can override lower
 - Equal priority = last-command-wins
 
 **Implementation:**
+
 ```python
 user_priorities = {"admin": 3, "user": 2, "guest": 1}
 
@@ -825,11 +898,13 @@ def handle_command(user_id, command):
 ```
 
 **Pros:**
+
 - Admin can always take control
 - Guests can't interfere
 - Flexible hierarchy
 
 **Cons:**
+
 - More complex
 - Need user management
 - Priority conflicts still possible
@@ -837,14 +912,17 @@ def handle_command(user_id, command):
 #### Option 4: Collaborative (Multi-Input Averaging)
 
 **Control Model:**
+
 - Average all user inputs
 - Weighted by connection quality or role
 
 **Pros:**
+
 - Novel approach
 - True multi-user
 
 **Cons:**
+
 - ⚠️ VERY DANGEROUS for robot control
 - Unpredictable behavior
 - Not recommended
@@ -856,6 +934,7 @@ def handle_command(user_id, command):
 **Selected:** Option 1 - Single Active User
 
 **Implementation Requirements:**
+
 1. **Emergency Stop:** ANY user can trigger (broadcasts to all) - CRITICAL SAFETY FEATURE
 2. **Observer Mode:** Non-active users see video but UI disabled
 3. **Control Request:** Request/grant system for control takeover
@@ -866,6 +945,7 @@ def handle_command(user_id, command):
 ### UI Design
 
 **Active User:**
+
 ```
 ┌─────────────────────────────────────┐
 │ ● YOU HAVE CONTROL                   │
@@ -875,6 +955,7 @@ def handle_command(user_id, command):
 ```
 
 **Observer:**
+
 ```
 ┌─────────────────────────────────────┐
 │ 👁️ OBSERVER MODE                     │
@@ -917,12 +998,14 @@ class ControlManager:
 ### Consequences
 
 **Positive:**
+
 - Safe operation
 - Clear control model
 - Prevents accidents
 - Good user experience
 
 **Negative:**
+
 - Only one driver at a time
 - Need request/release UI
 - Slightly more complex
@@ -954,6 +1037,7 @@ class ControlManager:
 Multiple tracking algorithms mentioned (KCF, CSRT, MOSSE, Template, Color) but no clear strategy for which to implement when.
 
 **Constraints:**
+
 - Must function within Raspberry Pi 3B limitations
 - Limited CPU resources (4-core ARM Cortex-A53 @ 1.2GHz)
 - Limited memory (1GB RAM)
@@ -966,6 +1050,7 @@ Multiple tracking algorithms mentioned (KCF, CSRT, MOSSE, Template, Color) but n
 The project will implement **color-based tracking** as the primary tracking algorithm for the MVP (Phase 2).
 
 **Rationale:**
+
 1. **Performance:** Lightest computational load, suitable for Raspberry Pi 3B
 2. **Simplicity:** Easiest to implement and debug
 3. **Real-time Capable:** Can achieve 30 fps on Pi 3B hardware
@@ -973,17 +1058,20 @@ The project will implement **color-based tracking** as the primary tracking algo
 5. **Foundation:** Provides baseline for future algorithm comparison
 
 **MVP Implementation:**
+
 - HSV color space tracking (more robust than RGB)
 - Configurable color range via web interface
 - Bounding box detection
 - Centroid calculation for target position
 
 **Future Enhancements (Post-MVP):**
+
 - Phase 3: Add MOSSE tracker as fallback (fast, lightweight)
 - Phase 4: Consider KCF for improved robustness
 - Phase 5: Hybrid approach with algorithm selection
 
 **Performance Targets:**
+
 - Target FPS: 30 fps minimum
 - Acceptable FPS: 15 fps (degraded mode)
 - Processing time budget: <33ms per frame
@@ -1023,6 +1111,7 @@ The project will implement **color-based tracking** as the primary tracking algo
 Documentation shows conflicting information about IMU (Inert
 
 ial Measurement Unit) requirements:
+
 - REQUIREMENTS lists as "Recommended Additional Hardware" (optional)
 - CONSTITUTION treats as "Integrated module" (required)
 - Need to determine inversion detection method for robot
@@ -1034,6 +1123,7 @@ ial Measurement Unit) requirements:
 **ACCEPTED: IMU Optional - Image-Based Inversion Detection for MVP**
 
 **MVP Approach (No Additional Hardware):**
+
 - IMU is **OPTIONAL** for MVP
 - Inversion detection via **image analysis**
 - No additional sensors required initially
@@ -1063,6 +1153,7 @@ ial Measurement Unit) requirements:
    - Repeat SOS pattern until user intervention
 
 **Future Enhancement (Post-MVP):**
+
 - Phase 5+: Add IMU for reliable orientation detection
 - IMU provides definitive tilt/orientation data
 - Image-based method remains as fallback
@@ -1070,6 +1161,7 @@ ial Measurement Unit) requirements:
 ### Implementation Specification
 
 **Image-Based Inversion Detection:**
+
 ```python
 def detect_inversion(image):
     """
@@ -1099,6 +1191,7 @@ def handle_indeterminate_orientation():
 ```
 
 **SOS LED Flash Pattern:**
+
 ```python
 def flash_sos_pattern():
     """
@@ -1138,11 +1231,13 @@ def flash_sos_pattern():
 ### Odometry Measurements
 
 **Available Measurements:**
+
 - Motor rotation counts (encoder ticks)
 - Movement detected in camera (visual odometry)
 - Time duration of motor operation
 
 **No IMU means:**
+
 - No accelerometer data
 - No gyroscope data
 - No magnetometer data
@@ -1159,6 +1254,7 @@ def flash_sos_pattern():
 ### Consequences
 
 **Positive:**
+
 - Lower hardware cost for MVP
 - Simplified initial setup
 - Forces robust image analysis implementation
@@ -1166,6 +1262,7 @@ def flash_sos_pattern():
 - Can add IMU as enhancement later
 
 **Negative:**
+
 - Image-based detection less reliable than IMU
 - 360° rotation takes time and may be disruptive
 - SOS mode requires user intervention to reset
@@ -1188,6 +1285,7 @@ def flash_sos_pattern():
 **Status:** 🟡 PROPOSED
 
 Remaining ADRs outlined in CRITICAL_GAPS.md:
+
 - ADR-007: Frame Rate Requirements
 - ADR-008: Threading Model
 - ADR-009: Safety System Architecture
@@ -1200,16 +1298,19 @@ Remaining ADRs outlined in CRITICAL_GAPS.md:
 ## Decision Review Process
 
 ### Weekly Review
+
 - Review all 🟡 Proposed decisions
 - Escalate blockers
 - Update status
 
 ### Before Phase Kickoff
+
 - All P0 decisions for that phase must be 🟢 Accepted
 - Document decisions in relevant documents
 - Update architecture diagrams
 
 ### Decision Amendment Process
+
 1. Create new ADR superseding old one
 2. Mark old ADR as 🔵 Superseded
 3. Link to new ADR

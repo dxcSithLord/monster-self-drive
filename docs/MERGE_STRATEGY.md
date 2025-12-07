@@ -8,12 +8,16 @@
 
 ## Executive Summary
 
-Two documentation branches exist with complementary content that need to be merged into a single unified documentation branch:
+Two documentation branches exist with complementary content that
+need to be merged into a single unified documentation branch:
 
-1. **claude/mobile-web-controls-017DrqW4cYtxRfSgrL8yDsLr** - Contains project requirements and specifications
-2. **claude/select-websocket-library-0152FD9iNnXLLLCRfSwDd5Yi** - Contains gap analysis and decision framework
+1. **claude/mobile-web-controls-017DrqW4cYtxRfSgrL8yDsLr**
+   - Contains project requirements and specifications
+2. **claude/select-websocket-library-0152FD9iNnXLLLCRfSwDd5Yi**
+   - Contains gap analysis and decision framework
 
-**Recommendation:** Merge both branches into a new unified documentation branch: `docs/project-documentation`
+**Recommendation:** Merge both branches into a new unified
+documentation branch: `docs/project-documentation`
 
 ---
 
@@ -46,6 +50,7 @@ Branches:
 ### Branch Relationship
 
 Both branches diverged from the same point:
+
 ```text
 * daa7027 (select-websocket-library) Add comprehensive documentation structure
 | * 67543e6 (mobile-web-controls) Add some notes
@@ -56,6 +61,7 @@ Both branches diverged from the same point:
 ```
 
 **Key Insight:** The branches are **complementary, not conflicting**:
+
 - mobile-web-controls: Defines WHAT and HOW (requirements, constitution, implementation)
 - select-websocket-library: Identifies GAPS and DECISIONS (critical analysis, ADRs)
 
@@ -66,13 +72,14 @@ Both branches diverged from the same point:
 ### claude/mobile-web-controls-017DrqW4cYtxRfSgrL8yDsLr
 
 | File | Size | Purpose | Quality |
-|------|------|---------|---------|
-| REQUIREMENTS.md | 30KB | System requirements specification | ✅ Comprehensive |
-| PROJECT_CONSTITUTION.md | 40KB | Code standards, principles, guidelines | ✅ Detailed |
-| IMPLEMENTATION_PLAN.md | 27KB | 6-phase implementation roadmap | ✅ Well-structured |
+| --- | --- | --- | --- |
+| REQUIREMENTS.md | 30KB | System requirements | ✅ Comprehensive |
+| PROJECT_CONSTITUTION.md | 40KB | Code standards, principles | ✅ Detailed |
+| IMPLEMENTATION_PLAN.md | 27KB | 6-phase roadmap | ✅ Well-structured |
 | requirements.txt | 2KB | Python dependencies | ✅ Complete |
 
 **Key Contents:**
+
 - Functional requirements (FR1-FR8)
 - Technical requirements (TR1-TR6)
 - Performance requirements (PF1-PF4)
@@ -82,6 +89,7 @@ Both branches diverged from the same point:
 - Development principles
 
 **Issues Identified:**
+
 - Contains inconsistencies (documented in CRITICAL_GAPS.md)
 - Some specifications conflict with each other
 - Missing decisions on key architecture questions
@@ -89,12 +97,13 @@ Both branches diverged from the same point:
 ### claude/select-websocket-library-0152FD9iNnXLLLCRfSwDd5Yi
 
 | File | Size | Purpose | Quality |
-|------|------|---------|---------|
-| docs/CRITICAL_GAPS.md | ~60KB | Identifies 14+ critical gaps in project docs | ✅ Thorough analysis |
-| docs/DECISIONS.md | ~35KB | Architectural Decision Records (ADRs) | ✅ Well-structured |
-| docs/README.md | ~15KB | Documentation navigation and workflow | ✅ Comprehensive |
+| --- | --- | --- | --- |
+| docs/CRITICAL_GAPS.md | ~60KB | Critical gaps analysis | ✅ Thorough |
+| docs/DECISIONS.md | ~35KB | ADRs (architectural decisions) | ✅ Structured |
+| docs/README.md | ~15KB | Documentation navigation | ✅ Comprehensive |
 
 **Key Contents:**
+
 - 14 identified critical gaps (P0-P3 priority)
 - Cross-document inconsistency analysis
 - 10 ADR templates (5 detailed)
@@ -102,9 +111,11 @@ Both branches diverged from the same point:
 - Resolution framework
 
 **Critical Insight:**
-This branch **references and analyzes** the documents from the mobile-web-controls branch!
+This branch **references and analyzes** the documents from the
+mobile-web-controls branch!
 
 **Example from CRITICAL_GAPS.md:**
+
 ```markdown
 | Issue | REQUIREMENTS | CONSTITUTION | IMPLEMENTATION | Resolution Needed |
 |-------|--------------|--------------|----------------|-------------------|
@@ -116,6 +127,7 @@ This branch **references and analyzes** the documents from the mobile-web-contro
 ## The Problem: Split Documentation
 
 ### Current State
+
 ```text
 Documentation is split across two branches:
 
@@ -149,19 +161,23 @@ Branch B (select-websocket-library):│
 
 ### Option 1: Simple Sequential Merge (RECOMMENDED)
 
-**Strategy:** Merge both documentation branches into the select-websocket-library branch, then reorganize.
+**Strategy:** Merge both documentation branches into the
+select-websocket-library branch, then reorganize.
 
 **Steps:**
 
 1. **Prepare the target branch** (select-websocket-library)
+
    ```bash
    git checkout claude/select-websocket-library-0152FD9iNnXLLLCRfSwDd5Yi
    git pull origin claude/select-websocket-library-0152FD9iNnXLLLCRfSwDd5Yi
    ```
 
 2. **Merge mobile-web-controls branch**
+
    ```bash
-   git merge claude/mobile-web-controls-017DrqW4cYtxRfSgrL8yDsLr --no-ff -m "Merge mobile-web-controls documentation"
+   git merge claude/mobile-web-controls-017DrqW4cYtxRfSgrL8yDsLr \
+     --no-ff -m "Merge mobile-web-controls documentation"
    ```
 
 3. **Resolve any conflicts** (unlikely since files don't overlap)
@@ -169,6 +185,7 @@ Branch B (select-websocket-library):│
    - Resolution: Keep master's README.md (no changes in either branch)
 
 4. **Reorganize documentation**
+
    ```bash
    # Move top-level docs into docs/ directory
    git mv REQUIREMENTS.md docs/
@@ -189,18 +206,22 @@ Branch B (select-websocket-library):│
    - Update docs/DECISIONS.md to reference correct paths
 
 6. **Push unified branch**
+
    ```bash
    git push -u origin claude/select-websocket-library-0152FD9iNnXLLLCRfSwDd5Yi
    ```
 
 **Pros:**
+
 - Simple and straightforward
 - All history preserved
 - Clear commit history
 - Easy to execute
 
 **Cons:**
-- Branch name doesn't reflect final content (says "websocket-library" but contains all docs)
+
+- Branch name doesn't reflect final content
+  (says "websocket-library" but contains all docs)
 
 ---
 
@@ -211,12 +232,14 @@ Branch B (select-websocket-library):│
 **Steps:**
 
 1. **Create new documentation branch**
+
    ```bash
    git checkout master
    git checkout -b claude/project-documentation-$(date +%s | tail -c 10)
    ```
 
 2. **Cherry-pick commits from mobile-web-controls**
+
    ```bash
    git cherry-pick b7426b2  # Add implementation plan
    git cherry-pick 267098a  # Add requirements, constitution, dependencies
@@ -224,6 +247,7 @@ Branch B (select-websocket-library):│
    ```
 
 3. **Cherry-pick commits from select-websocket-library**
+
    ```bash
    git cherry-pick daa7027  # Add critical gaps analysis
    ```
@@ -233,11 +257,13 @@ Branch B (select-websocket-library):│
 5. **Push new branch**
 
 **Pros:**
+
 - Clean branch name reflecting purpose
 - Fresh start
 - Can reorder commits logically
 
 **Cons:**
+
 - More complex to execute
 - Loses some branch context
 - Need to create new branch name following session ID convention
@@ -247,6 +273,7 @@ Branch B (select-websocket-library):│
 ### Option 3: Merge Both into Master (NOT RECOMMENDED)
 
 **Why not recommended:**
+
 - Master should stay clean (only code, not planning docs)
 - These are working/planning documents, not final
 - Would clutter root directory
@@ -456,6 +483,7 @@ Entry Points:
 After merge completion, verify:
 
 ### File Existence
+
 - [ ] docs/README.md exists and renders
 - [ ] docs/REQUIREMENTS.md exists and renders
 - [ ] docs/PROJECT_CONSTITUTION.md exists and renders
@@ -465,18 +493,21 @@ After merge completion, verify:
 - [ ] requirements.txt exists at root
 
 ### Cross-References
+
 - [ ] All links in docs/README.md work
 - [ ] References in CRITICAL_GAPS.md point to correct files
 - [ ] ADRs in DECISIONS.md reference correct sections
 - [ ] No broken markdown links
 
 ### Content Accuracy
+
 - [ ] CRITICAL_GAPS.md still accurately describes gaps
 - [ ] DECISIONS.md ADRs still relevant
 - [ ] IMPLEMENTATION_PLAN.md phases make sense
 - [ ] REQUIREMENTS.md complete
 
 ### Git History
+
 - [ ] All commits from both branches present
 - [ ] Merge commit includes good description
 - [ ] No accidental file deletions
@@ -489,10 +520,10 @@ After merge completion, verify:
 ### Merge Risks
 
 | Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| README.md conflict | Medium | Low | Use master version (unchanged) |
+| --- | --- | --- | --- |
+| README.md conflict | Medium | Low | Use master version |
 | Lost commit history | Low | Medium | Use --no-ff merge |
-| Broken links | High | Low | Update cross-references phase |
+| Broken links | High | Low | Update cross-references |
 | Missing files | Low | High | Validation checklist |
 
 ### Rollback Plan
@@ -518,21 +549,27 @@ git checkout -b claude/select-websocket-library-backup-<timestamp> <commit-befor
 ## Alternative Approaches Considered
 
 ### Approach A: Keep Branches Separate
+
 **Rejected because:**
+
 - Documents reference each other
 - Hard to maintain consistency
 - Poor developer experience
 - Fragmented documentation
 
 ### Approach B: Merge to Master
+
 **Rejected because:**
+
 - Master should be production-ready code
 - Planning docs not appropriate for master
 - Would clutter root directory
 - Harder to review/iterate
 
 ### Approach C: Squash Merge
+
 **Rejected because:**
+
 - Loses detailed commit history
 - Harder to track individual changes
 - Can't cherry-pick specific commits later
@@ -542,7 +579,7 @@ git checkout -b claude/select-websocket-library-backup-<timestamp> <commit-befor
 ## Timeline Estimate
 
 | Phase | Duration | Description |
-|-------|----------|-------------|
+| --- | --- | --- |
 | Preparation | 5 min | Checkout, fetch, verify |
 | Merge | 10 min | Execute merge, resolve conflicts |
 | Reorganization | 15 min | Move files to docs/ |
