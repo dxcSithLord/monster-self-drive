@@ -48,14 +48,14 @@ else:
             print('No ThunderBorg at address %02X, but we did find boards:' % (TB.i2cAddress))
             for board in boards:
                 print('    %02X (%d)' % (board, board))
-            print('If you need to change the I�C address change the setup line so it is correct, e.g.')
+            print('If you need to change the I2C address change the setup line so it is correct, e.g.')
             print('TB.i2cAddress = 0x%02X' % (boards[0]))
         sys.exit()
     TB.SetCommsFailsafe(False)
 
     # Blink the LEDs in white to indicate startup
     TB.SetLedShowBattery(False)
-    for i in range(3):
+    for _ in range(3):
         TB.SetLeds(0, 0, 0)
         time.sleep(0.5)
         TB.SetLeds(1, 1, 1)
