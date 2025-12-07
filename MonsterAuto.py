@@ -66,6 +66,13 @@ else:
 
 
 def MonsterMotors(driveLeft, driveRight):
+    """
+    Set left and right motor outputs on the ThunderBorg scaled by the module-level `maxPower`.
+    
+    Parameters:
+        driveLeft (float): Scalar applied to the left motors; multiplied by `maxPower` before being sent to the controller.
+        driveRight (float): Scalar applied to the right motors; multiplied by `maxPower` before being sent to the controller.
+    """
     TB.SetMotor1(driveRight * maxPower)  # Right side motors
     TB.SetMotor2(driveLeft * maxPower)  # Left side motors
 
@@ -74,6 +81,18 @@ def MonsterMotors(driveLeft, driveRight):
 
 def TestModeMotors(driveLeft, driveRight):
     # Convert to percentages
+    """
+    Print formatted motor power percentages for test mode and advance the internal display counter.
+    
+    Parameters:
+        driveLeft (float): Left motor power as a fraction (expected range -1.0 to 1.0).
+        driveRight (float): Right motor power as a fraction (expected range -1.0 to 1.0).
+    
+    Detailed behavior:
+        Scales each input by 100 and prints a line showing the left and right percentages to stdout
+        when the internal Settings.testModeCounter reaches Settings.fpsInterval. Advances and resets
+        Settings.testModeCounter as needed.
+    """
     driveLeft *= 100.0
     driveRight *= 100.0
     # Display at FPS update rate

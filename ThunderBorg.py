@@ -81,10 +81,13 @@ COMMAND_ANALOG_MAX          = 0x3FF # Maximum value for analog readings
 
 def ScanForThunderBorg(busNumber = 1):
     """
-ScanForThunderBorg([busNumber])
-
-Scans the I�C bus for a ThunderBorg boards and returns a list of all usable addresses
-The busNumber if supplied is which I�C bus to scan, 0 for Rev 1 boards, 1 for Rev 2 boards, if not supplied the default is 1
+    Scan the I2C bus for ThunderBorg boards and return the addresses of any boards found.
+    
+    Parameters:
+    	busNumber (int): I2C bus to scan; use 0 for Rev 1 boards or 1 for Rev 2 boards. Defaults to 1.
+    
+    Returns:
+    	found (list[int]): A list of detected I2C addresses (each in the range 0x03 to 0x77).
     """
     found = []
     print('Scanning I�C bus #%d' % (busNumber))
@@ -116,12 +119,14 @@ The busNumber if supplied is which I�C bus to scan, 0 for Rev 1 boards, 1 for 
 
 def SetNewAddress(newAddress, oldAddress = -1, busNumber = 1):
     """
-SetNewAddress(newAddress, [oldAddress], [busNumber])
-
-Scans the I�C bus for the first ThunderBorg and sets it to a new I2C address
-If oldAddress is supplied it will change the address of the board at that address rather than scanning the bus
-The busNumber if supplied is which I�C bus to scan, 0 for Rev 1 boards, 1 for Rev 2 boards, if not supplied the default is 1
-Warning, this new I�C address will still be used after resetting the power on the device
+    Set a ThunderBorg module's I2C address to a new value.
+    
+    If oldAddress is provided, the board at that address is updated; otherwise the function scans the specified I2C bus and updates the first detected ThunderBorg. The chosen newAddress persists after power reset.
+    
+    Parameters:
+        newAddress (int): New I2C address to assign (must be between 0x03 and 0x77 inclusive).
+        oldAddress (int, optional): Current I2C address of the target board. If omitted or < 0, the bus is scanned for the first ThunderBorg. Default is -1.
+        busNumber (int, optional): I2C bus to use: 0 for revision 1 boards, 1 for revision 2 boards. Default is 1.
     """
     if newAddress < 0x03:
         print('Error, I�C addresses below 3 (0x03) are reserved, use an address between 3 (0x03) and 119 (0x77)')
@@ -250,10 +255,16 @@ Under most circumstances you should use the appropriate function instead of RawR
 
     def InitBusOnly(self, busNumber, address):
         """
-InitBusOnly(busNumber, address)
-
-Prepare the I2C driver for talking to a ThunderBorg on the specified bus and I2C address
-This call does not check the board is present or working, under most circumstances use Init() instead
+        Prepare the I2C device files and record the bus number and I2C address for communicating with a ThunderBorg.
+        
+        Parameters:
+            busNumber (int): I2C bus number (0 or 1 on Raspberry Pi).
+            address (int): I2C slave address (0x03 through 0x77).
+        
+        Raises:
+            TypeError: If `busNumber` or `address` are not integers.
+            ValueError: If `busNumber` is not 0 or 1, or `address` is outside 0x03–0x77.
+            OSError: If opening the I2C device files or setting the slave address via ioctl fails.
         """
         # Security: Validate busNumber to prevent path traversal
         if not isinstance(busNumber, int):
@@ -300,12 +311,17 @@ TB.printFunction = TB.NoPrint
 
     def Init(self, tryOtherBus = False):
         """
-Init([tryOtherBus])
-
-Prepare the I2C driver for talking to the ThunderBorg
-
-If tryOtherBus is True, this function will attempt to use the other bus if the ThunderBorg devices can not be found on the current busNumber
-    This is only really useful for early Raspberry Pi models!
+        Initialize the I2C connection and detect a ThunderBorg device on the configured bus.
+        
+        Parameters:
+        	tryOtherBus (bool): If True, attempt the alternate I2C bus (0 or 1) when no ThunderBorg is found on the current bus.
+        
+        Raises:
+        	TypeError: If self.busNumber is not an integer.
+        	ValueError: If self.busNumber is not 0 or 1.
+        	IOError: If opening the I2C device or performing I/O fails.
+        	OSError: If an OS-level error occurs while accessing the I2C bus.
+        	KeyboardInterrupt: If the operation is interrupted by the user.
         """
         # Security: Validate busNumber before using it
         if not isinstance(self.busNumber, int):
@@ -924,4 +940,3 @@ Displays the names and descriptions of the various functions and settings provid
         print
         for func in funcListSorted:
             print('=== %s === %s' % (func.func_name, func.func_doc))
-
