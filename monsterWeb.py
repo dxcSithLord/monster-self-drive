@@ -233,9 +233,11 @@ class WebServer(socketserver.BaseRequestHandler):
                     os.makedirs(photoDirectory, exist_ok=True)
                     # Create safe filename
                     filename = 'Photo_%s.jpg' % datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')
-                    photoName = os.path.join(os.path.abspath(photoDirectory), filename)
+                    base_dir = os.path.abspath(photoDirectory)
+                    photoName = os.path.join(base_dir, filename)
                     # Validate path is within photoDirectory (prevent path traversal)
-                    if not photoName.startswith(os.path.abspath(photoDirectory)):
+                    # Use os.path.commonpath for robust containment check
+                    if os.path.commonpath([photoName, base_dir]) != base_dir:
                         raise ValueError('Invalid photo path')
                     # Save photo
                     photoFile = open(photoName, 'wb')
