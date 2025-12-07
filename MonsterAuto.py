@@ -12,7 +12,6 @@ import sys
 import subprocess
 import threading
 import cv2
-import numpy
 import ThunderBorg
 import Settings
 import ImageProcessor
@@ -39,7 +38,7 @@ else:
     # Setup the ThunderBorg
     global TB
     TB = ThunderBorg.ThunderBorg()
-    #TB.i2cAddress = 0x15                  # Uncomment and change the value if you have changed the board address
+    # TB.i2cAddress = 0x15  # Uncomment and change the value if you have changed the board address
     TB.Init()
     if not TB.foundChip:
         boards = ThunderBorg.ScanForThunderBorg()
@@ -57,19 +56,22 @@ else:
     # Blink the LEDs in white to indicate startup
     TB.SetLedShowBattery(False)
     for i in range(3):
-        TB.SetLeds(0,0,0)
+        TB.SetLeds(0, 0, 0)
         time.sleep(0.5)
-        TB.SetLeds(1,1,1)
+        TB.SetLeds(1, 1, 1)
         time.sleep(0.5)
     TB.SetLedShowBattery(True)
 
 # Function used by the processing to control the MonsterBorg
+
+
 def MonsterMotors(driveLeft, driveRight):
-    global TB
-    TB.SetMotor1(driveRight * maxPower) # Right side motors
-    TB.SetMotor2(driveLeft  * maxPower) # Left side motors
+    TB.SetMotor1(driveRight * maxPower)  # Right side motors
+    TB.SetMotor2(driveLeft * maxPower)  # Left side motors
 
 # Function used by the processing for motor output in test mode
+
+
 def TestModeMotors(driveLeft, driveRight):
     # Convert to percentages
     driveLeft *= 100.0
@@ -79,6 +81,7 @@ def TestModeMotors(driveLeft, driveRight):
     if Settings.testModeCounter >= Settings.fpsInterval:
         Settings.testModeCounter = 0
         print('MOTORS: %+07.2f %% left, %+07.2f %% right' % (driveLeft, driveRight))
+
 
 # Push the appropriate motor function into the settings module
 if Settings.testMode:
@@ -134,11 +137,11 @@ try:
     while Settings.running:
         # See if there is a frame to show, wait either way
         monsterView = Settings.displayFrame
-        if monsterView != None:
+        if monsterView is not None:
             if Settings.scaleFinalImage != 1.0:
-                size = (int(monsterView.shape[1] * Settings.scaleFinalImage), 
+                size = (int(monsterView.shape[1] * Settings.scaleFinalImage),
                         int(monsterView.shape[0] * Settings.scaleFinalImage))
-                monsterView = cv2.resize(monsterView, size, interpolation = cv2.INTER_CUBIC)
+                monsterView = cv2.resize(monsterView, size, interpolation=cv2.INTER_CUBIC)
             cv2.imshow('Monster view', monsterView)
             cv2.waitKey(waitKeyDelay)
         else:
@@ -173,5 +176,5 @@ Settings.MonsterMotors(0, 0)
 if not Settings.testMode:
     # Turn the LEDs off to indicate we are done
     TB.SetLedShowBattery(False)
-    TB.SetLeds(0,0,0)
+    TB.SetLeds(0, 0, 0)
 print('Program terminated.')

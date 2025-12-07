@@ -27,15 +27,13 @@ photoDirectory = os.path.expanduser('~/monster-photos')  # Directory to save pho
 flippedCamera = True                    # Swap between True and False if the camera image is rotated by 180
 jpegQuality = 80                        # JPEG quality level, smaller is faster, higher looks better (0 to 100)
 
-# Global values
-global TB
-global lastFrame
-global lockFrame
-global camera
-global processor
-global running
-global watchdog
+# Global values (no need for global declaration at module level)
 running = True
+lastFrame = None
+lockFrame = None
+camera = None
+processor = None
+watchdog = None
 
 TB = ThunderBorg.ThunderBorg()
 #TB.i2cAddress = 0x15                  # Uncomment and change the value if you have changed the board address
@@ -101,15 +99,14 @@ class Watchdog(threading.Thread):
 class StreamProcessor(threading.Thread):
     def __init__(self):
         super(StreamProcessor, self).__init__()
-        self.stream = picamera.array.PiRGBArray(camera)
+        self.stream = picamera.array.PiRGBArray(camera)  # noqa: F821
         self.event = threading.Event()
         self.terminated = False
         self.start()
         self.begin = 0
 
     def run(self):
-        global lastFrame
-        global lockFrame
+        global lastFrame  # Assigned on line 124
         # This method runs in a separate thread
         while not self.terminated:
             # Wait for an image to be written to the stream
@@ -118,7 +115,7 @@ class StreamProcessor(threading.Thread):
                     # Read the image and save globally
                     self.stream.seek(0)
                     if flippedCamera:
-                        flippedArray = cv2.flip(self.stream.array, -1) # Flips X and Y
+                        flippedArray = cv2.flip(self.stream.array, -1)  # Flips X and Y
                         retval, thisFrame = cv2.imencode('.jpg', flippedArray, [cv2.IMWRITE_JPEG_QUALITY, jpegQuality])
                         del flippedArray
                     else:
@@ -139,10 +136,9 @@ class ImageCapture(threading.Thread):
         self.start()
 
     def run(self):
-        global camera
-        global processor
+        # camera and processor are read-only, no global needed
         print('Start the stream using the video port')
-        camera.capture_sequence(self.TriggerStream(), format='bgr', use_video_port=True)
+        camera.capture_sequence(self.TriggerStream(), format='bgr', use_video_port=True)  # noqa: F821
         print('Terminating camera processing...')
         processor.terminated = True
         processor.join()
@@ -150,7 +146,7 @@ class ImageCapture(threading.Thread):
 
     # Stream delegation loop
     def TriggerStream(self):
-        global running
+        # running and processor are read-only, no global needed
         while running:
             if processor.event.is_set():
                 time.sleep(0.01)
@@ -161,9 +157,7 @@ class ImageCapture(threading.Thread):
 # Class used to implement the web server
 class WebServer(socketserver.BaseRequestHandler):
     def handle(self):
-        global TB
-        global lastFrame
-        global watchdog
+        # TB, lastFrame, lockFrame, watchdog are read-only, no global needed
         # Get the HTTP request data
         reqData = self.request.recv(1024).strip()
         reqData = reqData.decode('utf-8').split('\n')

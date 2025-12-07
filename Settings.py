@@ -9,9 +9,10 @@
 # Review all settings carefully before deployment
 
 # Security settings (for web interface - monsterWeb.py)
-webBindAddress = '127.0.0.1'            # Network binding: '127.0.0.1' = localhost only (RECOMMENDED)
-                                        #                  '0.0.0.0' = all interfaces (DANGEROUS - not recommended)
-                                        #                  Specific IP = bind to that interface only
+# Network binding: '127.0.0.1' = localhost only (RECOMMENDED)
+#                  '0.0.0.0' = all interfaces (DANGEROUS - not recommended)
+#                  Specific IP = bind to that interface only
+webBindAddress = '127.0.0.1'
 # Note: Authentication is NOT YET IMPLEMENTED - do not expose to untrusted networks
 
 # Power settings
@@ -28,14 +29,16 @@ flippedImage = True                     # True if the camera needs to be rotated
 scaledWidth   = 160                     # Resized image width
 scaledHeight  = 120                     # Resized image height
 processingThreads = 4                   # Number of processing threads to run
-minHuntColour = ( 80,   0,   0)         # Minimum RGB values for our coloured line
+minHuntColour = (80, 0, 0)              # Minimum RGB values for our coloured line
 maxHuntColour = (255, 100, 100)         # Maximum RGB values for our coloured line
 erodeSize = 5                           # Size of the erosion used to remove noise, larger reduces noise further
 targetY1 = int(scaledHeight * 0.9)      # Y location for the closest point to track in the scaled image
 targetY2 = int(scaledHeight * 0.6)      # Y location for the furthest point to track in the scaled image
 
 # Control settings
-motorSmoothing = 5                      # Number of frames to average motor output for, larger is slower to respond but drives smoother
+# Number of frames to average motor output for
+# Larger values are slower to respond but drive smoother
+motorSmoothing = 5
 positionP = 1.00                        # P term for control based on distance from line
 positionI = 0.00                        # I term for control based on distance from line
 positionD = 0.40                        # D term for control based on distance from line
