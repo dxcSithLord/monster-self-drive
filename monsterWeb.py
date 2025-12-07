@@ -46,7 +46,7 @@ if not TB.foundChip:
         print('No ThunderBorg at address %02X, but we did find boards:' % (TB.i2cAddress))
         for board in boards:
             print('    %02X (%d)' % (board, board))
-        print('If you need to change the I�C address change the setup line so it is correct, e.g.')
+        print('If you need to change the I2C address change the setup line so it is correct, e.g.')
         print('TB.i2cAddress = 0x%02X' % (boards[0]))
     sys.exit()
 TB.SetCommsFailsafe(False)
@@ -138,9 +138,14 @@ class StreamProcessor(threading.Thread):
                     if flippedCamera:
                         flippedArray = cv2.flip(self.stream.array, -1)  # Flips X and Y
                         retval, thisFrame = cv2.imencode('.jpg', flippedArray, [cv2.IMWRITE_JPEG_QUALITY, jpegQuality])
+                        if not retval:
+                            continue  # Skip this frame
                         del flippedArray
                     else:
                         retval, thisFrame = cv2.imencode('.jpg', self.stream.array, [cv2.IMWRITE_JPEG_QUALITY, jpegQuality])
+                        if not retval:
+                            continue  # Skip this frame
+
                     # updated to resolve a possible concurrency bug.
                     # Use a context manager to guarantee the lock is always released
                     with lockFrame:
@@ -228,9 +233,8 @@ class WebServer(socketserver.BaseRequestHandler):
         watchdog.event.set()
         if getPath.startswith('/cam.jpg'):
             # Camera snapshot
-            lockFrame.acquire()
-            sendFrame = lastFrame
-            lockFrame.release()
+            with lockFrame
+                sendFrame = lastFrame
             if sendFrame is not None:
                 self.send(sendFrame.tobytes())
         elif getPath.startswith('/off'):
@@ -279,9 +283,8 @@ class WebServer(socketserver.BaseRequestHandler):
             TB.SetMotor2(driveLeft)
         elif getPath.startswith('/photo'):
             # Save camera photo
-            lockFrame.acquire()
-            captureFrame = lastFrame
-            lockFrame.release()
+            with lockFrame:
+                captureFrame = lastFrame
             httpText = '<html><body><center>'
             if captureFrame is not None:
                 # Security: Create safe photo path and ensure directory exists
