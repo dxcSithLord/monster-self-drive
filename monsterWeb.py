@@ -118,11 +118,16 @@ class StreamProcessor(threading.Thread):
 
     def run(self):
         """
-        Continuously waits for frames, encodes the latest camera frame to JPEG, and updates the module-global `lastFrame`.
+        Continuously waits for frames, encodes the latest camera frame to JPEG, and updates 
+        the module-global `lastFrame`.
         
-        While `self.terminated` is False, waits up to one second for `self.event` to be set. When set, reads the current frame from `self.stream`, optionally flips it according to `flippedCamera`, encodes it to JPEG with `jpegQuality`, and replaces the module-global `lastFrame` while holding `lockFrame`. After processing, resets the stream and clears the event.
+        While `self.terminated` is False, waits up to one second for `self.event` to be set.
+        When set, reads the current frame from `self.stream`, optionally flips it according 
+        to `flippedCamera`, encodes it to JPEG with `jpegQuality`, and replaces the 
+        module-global `lastFrame` while holding `lockFrame`. After processing, resets the 
+        stream and clears the event.
         """
-        global lastFrame  # Assigned on line 140
+        global lastFrame  # Assigned when frame changes
         # This method runs in a separate thread
         while not self.terminated:
             # Wait for an image to be written to the stream
@@ -151,7 +156,8 @@ class ImageCapture(threading.Thread):
         """
         Initialize the ImageCapture thread and start it.
         
-        Creates the thread instance responsible for driving the camera capture loop and begins its execution immediately.
+        Creates the thread instance responsible for driving the camera capture loop and 
+        begins its execution immediately.
         """
         super(ImageCapture, self).__init__()
         self.start()
@@ -159,9 +165,11 @@ class ImageCapture(threading.Thread):
     def run(self):
         # camera and processor are read-only, no global needed
         """
-        Capture a continuous video stream from the camera and coordinate shutdown of the frame processor.
+        Capture a continuous video stream from the camera and coordinate shutdown of the 
+        frame processor.
         
-        Starts camera capture using the camera's video port; when capture completes, marks the processor as terminated and waits for the processor thread to finish.
+        Starts camera capture using the camera's video port; when capture completes, marks 
+        the processor as terminated and waits for the processor thread to finish.
         """
         print('Start the stream using the video port')
         camera.capture_sequence(self.TriggerStream(), format='bgr', use_video_port=True)  # noqa: F821
@@ -174,10 +182,12 @@ class ImageCapture(threading.Thread):
     def TriggerStream(self):
         # running and processor are read-only, no global needed
         """
-        Provide a generator for the camera capture loop that yields the processor's frame buffer whenever the processor is ready.
+        Provide a generator for the camera capture loop that yields the processor's frame 
+        buffer whenever the processor is ready.
         
         Returns:
-            generator: Yields the current `processor.stream` object each time a new frame buffer should be captured while the module-level `running` flag is True.
+            generator: Yields the current `processor.stream` object each time a new frame 
+            buffer should be captured while the module-level `running` flag is True.
         """
         while running:
             if processor.event.is_set():
@@ -192,14 +202,18 @@ class WebServer(socketserver.BaseRequestHandler):
         # TB, lastFrame, lockFrame, watchdog are read-only, no global needed
         # Get the HTTP request data
         """
-        Handle a single incoming HTTP request and respond to camera, motor, and control endpoints.
+        Handle a single incoming HTTP request and respond to camera, motor, and control 
+        endpoints.
         
-        Processes the raw HTTP request from the connection and routes based on the request path. Supported behaviors include:
+        Processes the raw HTTP request from the connection and routes based on the request 
+        path. Supported behaviors include:
         - Serving the latest camera JPEG (/cam.jpg).
         - Stopping motors (/off) and setting motor power (/set/<left>/<right>).
-        - Saving a timestamped photo to the configured photo directory (/photo) with path validation and error handling.
+        - Saving a timestamped photo to the configured photo directory (/photo) with path 
+          validation and error handling.
         - Serving the main control pages (/, /hold) and the streaming page (/stream).
-        This method also signals activity to the watchdog, reads the current frame under lock, and may change motor state or write files as described.
+        This method also signals activity to the watchdog, reads the current frame under 
+        lock, and may change motor state or write files as described.
         """
         reqData = self.request.recv(1024).strip()
         reqData = reqData.decode('utf-8').split('\n')
