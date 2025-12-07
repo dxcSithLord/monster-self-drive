@@ -1,0 +1,106 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [ main, master, claude/* ]
+  pull_request:
+    branches: [ main, master ]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday at midnight
+
+jobs:
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-audit safety
+
+      - name: Run pip-audit
+        run: |
+          pip-audit -r requirements.txt --desc --format json --output pip-audit-report.json || true
+          pip-audit -r requirements.txt || echo "::warning::Vulnerabilities found in dependencies"
+
+      - name: Run Safety check
+        run: |
+          safety check -r requirements.txt --json --output safety-report.json || true
+          safety check -r requirements.txt || echo "::warning::Safety check found issues"
+
+      - name: Upload vulnerability reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            pip-audit-report.json
+            safety-report.json
+          retention-days: 90
+
+  code-scan:
+    name: Static Code Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install analysis tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit flake8 mypy pylint
+
+      - name: Run Bandit (Security)
+        run: |
+          bandit -r . -f json -o bandit-report.json || true
+          bandit -r . -ll || echo "::warning::Security issues found by Bandit"
+
+      - name: Run Flake8 (Linting)
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Run MyPy (Type Checking)
+        run: |
+          mypy --ignore-missing-imports --no-strict-optional *.py || echo "::warning::Type checking found issues"
+
+      - name: Upload scan reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-analysis-reports
+          path: |
+            bandit-report.json
+          retention-days: 90
+
+  sast-scan:
+    name: SAST with Semgrep
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        run: |
+          semgrep scan --config=auto --sarif --output=semgrep.sarif || echo "::warning::Semgrep found issues"
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep.sarif

@@ -3,17 +3,16 @@
 
 # Load library functions we want
 import time
-import datetime
 import threading
 import cv2
 import numpy
-import math
-import random
 import Settings
+
 
 def rgb2bgr(colour):
     (r, g, b) = colour
     return b, g, r
+
 
 # PID processing thread
 class ControlLoop(threading.Thread):
@@ -24,7 +23,7 @@ class ControlLoop(threading.Thread):
         self.terminated = False
         self.eventWait = 2.0 / Settings.frameRate
         self.Reset()
-        print('Control loop thread started with idle time of %.2fs' % (self.eventWait))
+        print("Control loop thread started with idle time of %.2fs" % (self.eventWait))
         self.start()
 
     def run(self):
@@ -42,7 +41,7 @@ class ControlLoop(threading.Thread):
                 finally:
                     # Reset the event trigger
                     self.event.clear()
-        print('Control loop thread terminated')
+        print("Control loop thread terminated")
 
     def Reset(self):
         with self.lock:
@@ -63,7 +62,7 @@ class ControlLoop(threading.Thread):
         self.lastPosition = 0.0
         self.lastChange = 0.0
         self.SetDrive(0.0, 0.0)
-    
+
     def SetDrive(self, speed, steering):
         # Make sure speed and steering are within limits
         if steering < -1.0:
@@ -82,7 +81,7 @@ class ControlLoop(threading.Thread):
         elif steering > Settings.steeringClip:
             steering = Settings.steeringClip
         # Determine the individual drive power levels
-        driveLeft  = speed
+        driveLeft = speed
         driveRight = speed
         if steering < -0.01:
             # Turning left
@@ -92,13 +91,13 @@ class ControlLoop(threading.Thread):
             driveRight *= 1.0 - steering
         # Set the motors to the new speeds
         Settings.MonsterMotors(driveLeft, driveRight)
-    
+
     def FirFilter(self, speed, steering):
         # Filtering for speed and steering
         self.firHistorySpeed.append(speed)
         self.firHistorySteering.append(steering)
-        self.firHistorySpeed = self.firHistorySpeed[-self.firTaps:]
-        self.firHistorySteering = self.firHistorySteering[-self.firTaps:]
+        self.firHistorySpeed = self.firHistorySpeed[-self.firTaps :]
+        self.firHistorySteering = self.firHistorySteering[-self.firTaps :]
         filteredSpeed = numpy.mean(self.firHistorySpeed)
         filteredSteering = numpy.mean(self.firHistorySteering)
         self.SetDrive(filteredSpeed, filteredSteering)
@@ -141,7 +140,7 @@ class ControlLoop(threading.Thread):
             self.FirFilter(speed, steering)
             self.lastSpeed = speed
             self.lastSteering = steering
-    
+
 
 # Image stream processing thread
 class StreamProcessor(threading.Thread):
@@ -155,7 +154,7 @@ class StreamProcessor(threading.Thread):
             self.resize = True
         else:
             self.resize = False
-        print('Processor thread %s started with idle time of %.2fs' % (self.name, self.eventWait))
+        print("Processor thread %s started with idle time of %.2fs" % (self.name, self.eventWait))
         self.start()
 
     def run(self):
@@ -180,8 +179,8 @@ class StreamProcessor(threading.Thread):
                     # Return ourselves to the pool at the back
                     with Settings.frameLock:
                         Settings.processorPool.insert(0, self)
-        print('Processor thread %s terminated' % (self.name))
-    
+        print("Processor thread %s terminated" % (self.name))
+
     # Find sections in a boolean image
     # Returns a list of size and location pairs sorted by largest first
     def SweepLine(self, image, Y):
@@ -234,13 +233,13 @@ class StreamProcessor(threading.Thread):
                 frameStamp = time.time()
                 if Settings.showFps:
                     fps = Settings.fpsInterval / (frameStamp - Settings.lastFrameStamp)
-                    fps = '%.1f FPS' % (fps)
+                    fps = "%.1f FPS" % (fps)
                     print(fps)
                 Settings.frameAnnounce = 0
                 Settings.lastFrameStamp = frameStamp
         # Resize if needed
         if self.resize:
-            image = cv2.resize(image, (Settings.scaledWidth, Settings.scaledHeight), interpolation = cv2.INTER_NEAREST)
+            image = cv2.resize(image, (Settings.scaledWidth, Settings.scaledHeight), interpolation=cv2.INTER_NEAREST)
         # Process image to get a lineMask image (boolean)
         minBGR = numpy.array((Settings.minHuntColour[2], Settings.minHuntColour[1], Settings.minHuntColour[0]))
         maxBGR = numpy.array((Settings.maxHuntColour[2], Settings.maxHuntColour[1], Settings.maxHuntColour[0]))
@@ -248,7 +247,7 @@ class StreamProcessor(threading.Thread):
         # Erode the mask to remove noise
         if Settings.erodeSize > 1:
             erodeKernel = numpy.ones((Settings.erodeSize, Settings.erodeSize), numpy.uint8)
-            lineMask   = cv2.erode(lineMask, erodeKernel)
+            lineMask = cv2.erode(lineMask, erodeKernel)
         # Find the line sections in our two locations
         sectionsY1 = self.SweepLine(lineMask, Settings.targetY1)
         sectionsY2 = self.SweepLine(lineMask, Settings.targetY2)
@@ -267,37 +266,53 @@ class StreamProcessor(threading.Thread):
                 displayImage = image.copy()
                 # Darken areas not matching the mask
                 blue, green, red = cv2.split(displayImage)
-                red  [lineMask == 0] /= 3
+                red[lineMask == 0] /= 3
                 green[lineMask == 0] /= 3
-                blue [lineMask == 0] /= 3
+                blue[lineMask == 0] /= 3
                 displayImage = cv2.merge([blue, green, red])
             else:
                 # Generate grey image from mask
                 displayImage = cv2.merge([lineMask, lineMask, lineMask])
                 displayImage /= 2
             # Draw line between points
-            if (X1 != None) and (X2 != None):
-                cv2.line(displayImage, (X1, Settings.targetY1), (X2, Settings.targetY2), Settings.targetLine, 1, lineType = cv2.CV_AA)
+            if (X1 is not None) and (X2 is not None):
+                cv2.line(
+                    displayImage, (X1, Settings.targetY1), (X2, Settings.targetY2), Settings.targetLine, 1, lineType=cv2.CV_AA
+                )
             # Draw circles around points
-            if X1 != None:
-                cv2.circle(displayImage, (X1, Settings.targetY1), Settings.targetPointSize, Settings.targetPoints, 1, lineType = cv2.CV_AA) 
-            if X2 != None:
-                cv2.circle(displayImage, (X2, Settings.targetY2), Settings.targetPointSize, Settings.targetPoints, 1, lineType = cv2.CV_AA) 
+            if X1 is not None:
+                cv2.circle(
+                    displayImage,
+                    (X1, Settings.targetY1),
+                    Settings.targetPointSize,
+                    Settings.targetPoints,
+                    1,
+                    lineType=cv2.CV_AA,
+                )
+            if X2 is not None:
+                cv2.circle(
+                    displayImage,
+                    (X2, Settings.targetY2),
+                    Settings.targetPointSize,
+                    Settings.targetPoints,
+                    1,
+                    lineType=cv2.CV_AA,
+                )
             Settings.displayFrame = displayImage
         # Pass the results to the control loop
         # Offset is most important, but ideally we need both
-        if (X1 == None) and (X2 == None):
+        if (X1 is None) and (X2 is None):
             # No line found
             isGood = False
             offset = 0.0
             change = 0.0
-        elif X1 == None:
+        elif X1 is None:
             # We only have a far point
             # Not great, but we will use it
             isGood = True
             offset = ((2.0 * X2) / Settings.scaledWidth) - 1.0
             change = 0.0
-        elif X2 == None:
+        elif X2 is None:
             # We only have a near point
             # We loose the change, but offset will be good
             isGood = True
@@ -334,10 +349,10 @@ class ImageCapture(threading.Thread):
                     processor.nextFrame = frame.copy()
                     processor.event.set()
                 else:
-                    print('Capture stream lost...')
+                    print("Capture stream lost...")
                     Settings.running = False
                     break
             else:
                 # When the pool is starved we wait a while to allow a processor to finish
                 time.sleep(0.01)
-        print('Streaming terminated.')
+        print("Streaming terminated.")

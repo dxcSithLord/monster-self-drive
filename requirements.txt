@@ -1,6 +1,6 @@
 # MonsterBorg Self-Drive Project Requirements
-# Python 3.11+ (3.12 recommended for development)
-# Target: Raspberry Pi 3B with Raspberry Pi OS / Ubuntu
+# Python 3.13.5+ (Debian Trixie default)
+# Target: Raspberry Pi 3B with Raspberry Pi OS Trixie / Ubuntu 24.04+
 
 # Core Dependencies
 numpy>=1.26.0

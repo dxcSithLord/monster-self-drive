@@ -1,16 +1,21 @@
 # MonsterBorg Mobile Controls & Object Tracking Implementation Plan
 
 ## Project Overview
-Upgrade the MonsterBorg web interface for mobile phone compatibility and add intelligent object tracking with re-acquisition capabilities, including inverted operation support.
+
+Upgrade the MonsterBorg web interface for mobile phone compatibility and add
+intelligent object tracking with re-acquisition capabilities, including inverted
+operation support.
 
 ---
 
 ## Phase 1: Mobile Web Interface Enhancement
 
 ### 1.1 Responsive Design
+
 **Objective**: Make web controls work seamlessly on mobile devices
 
 **Changes to `monsterWeb.py`**:
+
 - Add responsive viewport meta tag
 - Implement CSS media queries for mobile screens
 - Optimize layout for portrait and landscape orientations
@@ -18,14 +23,17 @@ Upgrade the MonsterBorg web interface for mobile phone compatibility and add int
 - Add touch-friendly spacing between controls
 
 **Implementation Details**:
+
 ```python
 # HTML additions:
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0,
+    maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 ```
 
 **CSS Enhancements**:
+
 - Flexbox/Grid layout for adaptive positioning
 - Larger buttons (60px+ for mobile)
 - Touch-optimized spacing (16px minimum)
@@ -33,9 +41,11 @@ Upgrade the MonsterBorg web interface for mobile phone compatibility and add int
 - Full-screen video stream option
 
 ### 1.2 Touch Controls
+
 **Objective**: Replace click-based controls with touch-optimized interactions
 
 **Features**:
+
 - Touch and hold for continuous movement
 - Release to stop (safety feature)
 - Prevent accidental activation
@@ -43,6 +53,7 @@ Upgrade the MonsterBorg web interface for mobile phone compatibility and add int
 - Haptic feedback via Vibration API (where supported)
 
 **Implementation**:
+
 ```javascript
 // Touch events
 element.addEventListener('touchstart', handleTouchStart);
@@ -51,11 +62,13 @@ element.addEventListener('touchmove', preventDefault); // Prevent scrolling
 ```
 
 ### 1.3 Virtual Joystick (Optional)
+
 **Objective**: Provide intuitive analog control
 
 **Library**: Use nipple.js or custom implementation
 
 **Features**:
+
 - Continuous speed/direction control
 - Visual feedback
 - Dead zone for stability
@@ -63,27 +76,33 @@ element.addEventListener('touchmove', preventDefault); // Prevent scrolling
 - Configurable sensitivity
 
 **Joystick Mapping**:
-```
+
+```text
 Y-axis: Forward/Backward speed (-1.0 to 1.0)
 X-axis: Left/Right steering (-1.0 to 1.0)
 ```
 
 ### 1.4 WebSocket Communication (Upgrade)
+
 **Objective**: Replace HTTP polling with real-time WebSocket connection
 
 **Benefits**:
+
 - Lower latency
 - Reduced bandwidth
 - Real-time telemetry
 - Bi-directional communication
 
 **Implementation**:
+
 - Python: Use `websockets` library or Flask-SocketIO
 - JavaScript: Native WebSocket API
 - Fallback to HTTP for compatibility
 
 ### 1.5 Mobile UI Enhancements
+
 **Additional Features**:
+
 - Battery level indicator
 - Speed indicator
 - Connection status indicator
@@ -96,9 +115,11 @@ X-axis: Left/Right steering (-1.0 to 1.0)
 ## Phase 2: Object Detection & Tracking System
 
 ### 2.1 Architecture Overview
+
 **New Module**: `ObjectTracker.py`
 
 **Components**:
+
 1. Object Detection Module
 2. Object Tracking Module
 3. Distance Estimation Module
@@ -107,11 +128,13 @@ X-axis: Left/Right steering (-1.0 to 1.0)
 6. Inversion Detection Module
 
 ### 2.2 Object Detection Module
+
 **Objective**: Identify and select objects to follow
 
 **Methods**:
 
 #### Option A: Template Matching (Simple, Fast)
+
 ```python
 # User clicks on web interface to select object
 # System captures template from current frame
@@ -122,6 +145,7 @@ X-axis: Left/Right steering (-1.0 to 1.0)
 **Cons**: Sensitive to scale/rotation changes
 
 #### Option B: Color-Based Detection (Current Track-Following Logic)
+
 ```python
 # Extend existing color detection from ImageProcessor.py
 # Allow user to select color range via web interface
@@ -132,6 +156,7 @@ X-axis: Left/Right steering (-1.0 to 1.0)
 **Cons**: Limited to color-distinctive objects
 
 #### Option C: Feature-Based Tracking (Recommended)
+
 ```python
 # Use cv2.goodFeaturesToTrack() + optical flow
 # Or cv2.TrackerKCF / cv2.TrackerCSRT
@@ -142,6 +167,7 @@ X-axis: Left/Right steering (-1.0 to 1.0)
 **Cons**: Higher computational load
 
 #### Option D: Deep Learning (Advanced)
+
 ```python
 # Use TensorFlow Lite or ONNX Runtime
 # MobileNet SSD or YOLO-tiny for object detection
@@ -152,6 +178,7 @@ X-axis: Left/Right steering (-1.0 to 1.0)
 **Cons**: Requires model files, slower inference
 
 **Recommended Approach**: Hybrid
+
 - Start with feature-based tracking (Option C)
 - Optional: Add TF Lite for object classification
 - Fallback to color tracking if features lost
@@ -159,6 +186,7 @@ X-axis: Left/Right steering (-1.0 to 1.0)
 ### 2.3 Object Tracking Implementation
 
 **Core Algorithm**:
+
 ```python
 class ObjectTracker:
     def __init__(self):
@@ -189,6 +217,7 @@ class ObjectTracker:
 ```
 
 **Tracking States**:
+
 1. **ACQUIRING**: User selecting object
 2. **TRACKING**: Successfully following object
 3. **SEARCHING**: Object lost, attempting re-acquisition
@@ -197,7 +226,8 @@ class ObjectTracker:
 
 ### 2.4 Distance Estimation & Safe Following
 
-**Method 1: Bounding Box Size (Simple)**
+### Method 1: Bounding Box Size (Simple)
+
 ```python
 def estimate_distance(bbox_height):
     """Estimate distance based on object size in frame"""
@@ -212,10 +242,12 @@ def estimate_distance(bbox_height):
     return estimated_distance
 ```
 
-**Method 2: Stereo Vision (If dual cameras available)**
+### Method 2: Stereo Vision (If dual cameras available)
+
 - Not applicable to current hardware
 
-**Method 3: Depth from Motion (Monocular)**
+### Method 3: Depth from Motion (Monocular)
+
 ```python
 def estimate_depth_from_motion():
     """Estimate depth using optical flow"""
@@ -225,6 +257,7 @@ def estimate_depth_from_motion():
 ```
 
 **Safe Following Logic**:
+
 ```python
 TARGET_DISTANCE = 1.5  # meters
 SAFE_MIN_DISTANCE = 0.5  # meters
@@ -259,6 +292,7 @@ def calculate_follow_speed(current_distance, object_velocity):
 ```
 
 **Steering Control**:
+
 ```python
 def calculate_steering(bbox_center_x, frame_width):
     """Keep object centered in frame"""
@@ -281,6 +315,7 @@ def calculate_steering(bbox_center_x, frame_width):
 ### 2.5 Object Velocity Estimation
 
 **Optical Flow Method**:
+
 ```python
 def estimate_object_velocity(prev_bbox, current_bbox, time_delta):
     """Estimate object velocity from position changes"""
@@ -310,7 +345,9 @@ def estimate_object_velocity(prev_bbox, current_bbox, time_delta):
 ## Phase 3: Re-acquisition Algorithm
 
 ### 3.1 Object Loss Detection
+
 **Triggers**:
+
 - Tracker reports failure
 - Tracking confidence below threshold (e.g., 0.3)
 - Bounding box moves out of frame
@@ -318,7 +355,8 @@ def estimate_object_velocity(prev_bbox, current_bbox, time_delta):
 
 ### 3.2 Search Strategy
 
-**Stage 1: Local Search (0-5 seconds)**
+### Stage 1: Local Search (0-5 seconds)
+
 ```python
 def local_search():
     """Search in last known direction"""
@@ -341,7 +379,8 @@ def local_search():
     return OBJECT_NOT_FOUND
 ```
 
-**Stage 2: Expanded Search (5-15 seconds)**
+### Stage 2: Expanded Search (5-15 seconds)
+
 ```python
 def expanded_search():
     """Wider rotation search"""
@@ -357,7 +396,8 @@ def expanded_search():
     return OBJECT_NOT_FOUND
 ```
 
-**Stage 3: Return to Last Position (15+ seconds)**
+### Stage 3: Return to Last Position (15+ seconds)
+
 ```python
 def return_to_last_position():
     """Navigate back to position where object was lost"""
@@ -383,7 +423,8 @@ def return_to_last_position():
 
 ### 3.3 Position Tracking (Odometry)
 
-**Method 1: Dead Reckoning (Basic)**
+### Method 1: Dead Reckoning (Basic)
+
 ```python
 class Odometry:
     def __init__(self):
@@ -426,7 +467,8 @@ class Odometry:
         self.theta = 0.0
 ```
 
-**Method 2: IMU Integration (If Available)**
+### Method 2: IMU Integration (If Available)
+
 - Use gyroscope for heading
 - Use accelerometer for movement (double integration)
 - Requires sensor fusion (Kalman filter)
@@ -474,7 +516,8 @@ class ReacquisitionStateMachine:
 
 ### 4.1 Orientation Detection
 
-**Method 1: Accelerometer (Recommended)**
+### Method 1: Accelerometer (Recommended)
+
 ```python
 # Use MPU6050 or similar IMU connected via I2C
 
@@ -506,7 +549,8 @@ class OrientationDetector:
         return accel_z < 0
 ```
 
-**Method 2: Image Analysis (Fallback)**
+### Method 2: Image Analysis (Fallback)
+
 ```python
 def detect_inversion_from_image(frame):
     """Detect if camera is upside down based on image features"""
@@ -520,6 +564,7 @@ def detect_inversion_from_image(frame):
 ```
 
 **Method 3: Manual Toggle (Simple)**
+
 ```python
 # Add button to web interface
 # User manually indicates inversion
@@ -528,6 +573,7 @@ def detect_inversion_from_image(frame):
 ### 4.2 Motor Control Inversion
 
 **Implementation**:
+
 ```python
 class InvertedDriveController:
     def __init__(self, thunderborg):
@@ -565,6 +611,7 @@ class InvertedDriveController:
 ### 4.3 Camera Orientation Adjustment
 
 **Auto-Flip Camera Image**:
+
 ```python
 def process_frame(frame, is_inverted):
     """Flip frame if robot is inverted"""
@@ -581,6 +628,7 @@ def process_frame(frame, is_inverted):
 **Challenge**: Object tracking may fail during flip transition
 
 **Solution**:
+
 ```python
 def handle_flip_transition():
     """Maintain tracking through orientation change"""
@@ -609,12 +657,14 @@ def handle_flip_transition():
 **Create**: `MonsterController.py` - Main controller integrating all modes
 
 **Modes**:
+
 1. **MANUAL**: Web interface control (existing)
 2. **LINE_FOLLOW**: Track following (existing)
 3. **OBJECT_FOLLOW**: Object tracking (new)
 4. **IDLE**: Stopped, awaiting command
 
 **Mode Switching**:
+
 ```python
 class MonsterController:
     def __init__(self):
@@ -655,6 +705,7 @@ class MonsterController:
 ### 5.2 Web Interface Updates
 
 **Add Mode Selector**:
+
 ```html
 <select id="mode-selector">
     <option value="IDLE">Idle</option>
@@ -665,6 +716,7 @@ class MonsterController:
 ```
 
 **Object Selection Interface**:
+
 ```html
 <!-- For object tracking mode -->
 <div id="object-selector">
@@ -675,6 +727,7 @@ class MonsterController:
 ```
 
 **JavaScript for Object Selection**:
+
 ```javascript
 // Allow user to tap on video stream to select object
 videoElement.addEventListener('click', function(event) {
@@ -695,6 +748,7 @@ videoElement.addEventListener('click', function(event) {
 ### 5.3 Real-time Telemetry
 
 **Data to Display**:
+
 - Current mode
 - Object tracking status
 - Distance to object
@@ -704,6 +758,7 @@ videoElement.addEventListener('click', function(event) {
 - Connection status
 
 **WebSocket Telemetry**:
+
 ```python
 def send_telemetry(websocket):
     """Send real-time data to web interface"""
@@ -726,12 +781,14 @@ def send_telemetry(websocket):
 ## Phase 6: Hardware Requirements & Dependencies
 
 ### 6.1 Required Hardware
+
 - Raspberry Pi 3B (existing)
 - Pi Camera Module (existing)
 - ThunderBorg Motor Controller (existing)
 - MonsterBorg Chassis (existing)
 
 ### 6.2 Optional Hardware
+
 - **IMU Module (Recommended)**: MPU6050 or BNO055
   - Purpose: Orientation detection, improved odometry
   - Connection: I2C
@@ -750,6 +807,7 @@ def send_telemetry(websocket):
 ### 6.3 Software Dependencies
 
 **Python Libraries**:
+
 ```bash
 # Core dependencies (already installed)
 pip3 install opencv-python
@@ -766,6 +824,7 @@ pip3 install onnxruntime      # ONNX Runtime (alternative)
 ```
 
 **System Packages**:
+
 ```bash
 sudo apt-get update
 sudo apt-get install -y \
@@ -777,6 +836,7 @@ sudo apt-get install -y \
 ```
 
 **Camera Module**:
+
 ```bash
 # Enable camera and I2C
 sudo raspi-config
@@ -791,6 +851,7 @@ sudo modprobe bcm2835-v4l2
 ## Phase 7: Implementation Roadmap
 
 ### Sprint 1: Mobile Web Interface (Week 1)
+
 - [ ] Update HTML/CSS for responsive design
 - [ ] Implement touch controls
 - [ ] Add virtual joystick
@@ -798,6 +859,7 @@ sudo modprobe bcm2835-v4l2
 - [ ] Optimize camera streaming for mobile bandwidth
 
 ### Sprint 2: Object Detection Foundation (Week 2)
+
 - [ ] Implement feature-based tracker (KCF/CSRT)
 - [ ] Create object selection interface
 - [ ] Add template matching fallback
@@ -805,6 +867,7 @@ sudo modprobe bcm2835-v4l2
 - [ ] Optimize for 30 fps operation
 
 ### Sprint 3: Distance & Following (Week 3)
+
 - [ ] Implement distance estimation
 - [ ] Create following PID controller
 - [ ] Add safe distance limits
@@ -812,6 +875,7 @@ sudo modprobe bcm2835-v4l2
 - [ ] Tune PID parameters
 
 ### Sprint 4: Re-acquisition System (Week 4)
+
 - [ ] Implement odometry system
 - [ ] Create search state machine
 - [ ] Add return-to-position logic
@@ -819,6 +883,7 @@ sudo modprobe bcm2835-v4l2
 - [ ] Add timeout and safety limits
 
 ### Sprint 5: Inversion Handling (Week 5)
+
 - [ ] Source and install IMU module (MPU6050)
 - [ ] Implement orientation detection
 - [ ] Create inverted motor controller
@@ -826,6 +891,7 @@ sudo modprobe bcm2835-v4l2
 - [ ] Add auto-recovery logic
 
 ### Sprint 6: Integration & Testing (Week 6)
+
 - [ ] Create unified MonsterController
 - [ ] Integrate all modes
 - [ ] Add mode switching interface
@@ -838,6 +904,7 @@ sudo modprobe bcm2835-v4l2
 ## Phase 8: Testing Strategy
 
 ### 8.1 Unit Tests
+
 - Object tracker initialization and update
 - Distance estimation accuracy
 - Motor inversion logic
@@ -845,6 +912,7 @@ sudo modprobe bcm2835-v4l2
 - Search algorithms
 
 ### 8.2 Integration Tests
+
 - Mode switching
 - Web interface communication
 - Camera stream reliability
@@ -852,6 +920,7 @@ sudo modprobe bcm2835-v4l2
 - Inversion detection
 
 ### 8.3 Field Tests
+
 1. **Object Following**:
    - Person walking at various speeds
    - Small object (ball, toy)
@@ -928,24 +997,28 @@ trackingTimeoutDuration = 30  # seconds
 ## Phase 10: Safety Considerations
 
 ### 10.1 Collision Avoidance
+
 - Minimum distance enforcement (0.5m)
 - Emergency stop on tracking loss + close proximity
 - Ultrasonic sensor backup (optional)
 - Speed limits based on distance
 
 ### 10.2 Battery Management
+
 - Low battery detection (< 7V)
 - Automatic shutdown at critical level
 - Battery level display on interface
 - Speed reduction at low battery
 
 ### 10.3 Timeout & Failsafes
+
 - Tracking timeout (30 seconds)
 - Web connection watchdog
 - Automatic mode switch to IDLE on timeout
 - Motor auto-stop on exception
 
 ### 10.4 User Control
+
 - Emergency stop button (always accessible)
 - Manual override from any mode
 - Clear mode indicators
@@ -956,6 +1029,7 @@ trackingTimeoutDuration = 30  # seconds
 ## Phase 11: Performance Optimization
 
 ### 11.1 Raspberry Pi 3B Constraints
+
 - CPU: 4-core ARM Cortex-A53 @ 1.2GHz
 - RAM: 1GB
 - Limited processing power
@@ -963,17 +1037,20 @@ trackingTimeoutDuration = 30  # seconds
 ### 11.2 Optimization Strategies
 
 **Image Processing**:
+
 - Reduce resolution (320x240 or 160x120 for tracking)
 - Use grayscale for feature detection
 - Limit processing threads (2-3)
 - Skip frames if processing lags (process every 2nd frame)
 
 **Tracking Algorithm**:
+
 - Use KCF (fastest) over CSRT (more accurate but slower)
 - Limit search region to predicted area
 - Use template matching for re-acquisition (faster)
 
 **Python Optimization**:
+
 ```python
 # Use NumPy vectorized operations
 # Avoid Python loops where possible
@@ -982,6 +1059,7 @@ trackingTimeoutDuration = 30  # seconds
 ```
 
 **Multi-threading**:
+
 - Separate threads for:
   - Camera capture
   - Image processing
@@ -995,27 +1073,32 @@ trackingTimeoutDuration = 30  # seconds
 ## Phase 12: Advanced Features (Future)
 
 ### 12.1 Machine Learning Object Detection
+
 - TensorFlow Lite MobileNet SSD
 - Detect and classify objects (person, car, pet)
 - Pre-trained model on COCO dataset
 - ~5-10 fps on RPi 3B
 
 ### 12.2 Gesture Recognition
+
 - Detect hand gestures from tracking target
 - Stop/Go/Left/Right commands
 - OpenCV contour analysis or MediaPipe
 
 ### 12.3 Multi-Object Tracking
+
 - Track multiple objects simultaneously
 - User selects priority target
 - Switch targets on command
 
 ### 12.4 Path Planning
+
 - Obstacle avoidance
 - Predicted path of target
 - Optimal following path
 
 ### 12.5 Cloud Integration
+
 - Remote monitoring via cloud service
 - Video streaming to phone app
 - GPS tracking (with GPS module)
