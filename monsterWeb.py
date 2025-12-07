@@ -233,7 +233,7 @@ class WebServer(socketserver.BaseRequestHandler):
         watchdog.event.set()
         if getPath.startswith('/cam.jpg'):
             # Camera snapshot
-            with lockFrame
+            with lockFrame:
                 sendFrame = lastFrame
             if sendFrame is not None:
                 self.send(sendFrame.tobytes())
