@@ -9,6 +9,7 @@
 import time
 import os
 import sys
+import subprocess
 import threading
 import cv2
 import numpy
@@ -27,7 +28,8 @@ showFrameDelay = 1.0 / Settings.showPerSecond
 waitKeyDelay = int(showFrameDelay * 1000)
 
 # Change the current directory to where this script is
-scriptDir = os.path.dirname(sys.argv[0])
+# Security: Use __file__ instead of sys.argv[0] to prevent path manipulation
+scriptDir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(scriptDir)
 print('Running script in directory "%s"' % (scriptDir))
 
@@ -47,7 +49,7 @@ else:
             print('No ThunderBorg at address %02X, but we did find boards:' % (TB.i2cAddress))
             for board in boards:
                 print('    %02X (%d)' % (board, board))
-            print('If you need to change the I²C address change the setup line so it is correct, e.g.')
+            print('If you need to change the Iï¿½C address change the setup line so it is correct, e.g.')
             print('TB.i2cAddress = 0x%02X' % (boards[0]))
         sys.exit()
     TB.SetCommsFailsafe(False)
@@ -86,11 +88,24 @@ else:
 
 # Startup sequence
 print('Setup camera input')
-os.system('sudo modprobe bcm2835-v4l2')
-Settings.capture = cv2.VideoCapture(0) 
-Settings.capture.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, Settings.cameraWidth);
-Settings.capture.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, Settings.cameraHeight);
-Settings.capture.set(cv2.cv.CV_CAP_PROP_FPS, Settings.frameRate);
+# Security: Use subprocess instead of os.system to prevent command injection
+try:
+    subprocess.run(['sudo', 'modprobe', 'bcm2835-v4l2'],
+                   check=True,
+                   capture_output=True,
+                   timeout=5)
+except subprocess.CalledProcessError as e:
+    print('Warning: Failed to load camera module: %s' % e)
+    print('Continuing anyway, camera may already be loaded...')
+except subprocess.TimeoutExpired:
+    print('Warning: Camera module load timed out')
+    print('Continuing anyway...')
+
+Settings.capture = cv2.VideoCapture(0)
+# Fix: Use Python 3 OpenCV constants (removed cv2.cv. prefix)
+Settings.capture.set(cv2.CAP_PROP_FRAME_WIDTH, Settings.cameraWidth)
+Settings.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, Settings.cameraHeight)
+Settings.capture.set(cv2.CAP_PROP_FPS, Settings.frameRate)
 if not Settings.capture.isOpened():
     Settings.capture.open()
     if not Settings.capture.isOpened():
@@ -135,12 +150,11 @@ except KeyboardInterrupt:
     # CTRL+C exit, disable all drives
     print('\nUser shutdown')
     Settings.MonsterMotors(0, 0)
-except:
+except Exception as e:
     # Unexpected error, shut down!
-    e = sys.exc_info()
-    print()
-    print(e)
+    # Security: Use specific exception and don't expose full traceback to users
     print('\nUnexpected error, shutting down!')
+    print('Error: %s' % str(e))
     Settings.MonsterMotors(0, 0)
 # Tell each thread to stop, and wait for them to end
 Settings.running = False

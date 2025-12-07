@@ -7,6 +7,7 @@
 import ThunderBorg
 import time
 import sys
+import os
 import threading
 import socketserver
 import picamera
@@ -16,11 +17,13 @@ import datetime
 
 # Settings for the web-page
 webPort = 8080                            # Port number for the web-page, 80 is what web-pages normally use
+webBindAddress = '127.0.0.1'            # Security: Bind to localhost only (use '0.0.0.0' to allow external access - NOT recommended)
 imageWidth = 240                        # Width of the captured image in pixels
 imageHeight = 192                       # Height of the captured image in pixels
 frameRate = 30                          # Number of images to capture per second
 displayRate = 10                        # Number of images to request per second
-photoDirectory = '/home/pisith'             # Directory to save photos to
+# Security: Use expanduser instead of hardcoded username path
+photoDirectory = os.path.expanduser('~/monster-photos')  # Directory to save photos to
 flippedCamera = True                    # Swap between True and False if the camera image is rotated by 180
 jpegQuality = 80                        # JPEG quality level, smaller is faster, higher looks better (0 to 100)
 
@@ -45,7 +48,7 @@ if not TB.foundChip:
         print('No ThunderBorg at address %02X, but we did find boards:' % (TB.i2cAddress))
         for board in boards:
             print('    %02X (%d)' % (board, board))
-        print('If you need to change the I²C address change the setup line so it is correct, e.g.')
+        print('If you need to change the Iï¿½C address change the setup line so it is correct, e.g.')
         print('TB.i2cAddress = 0x%02X' % (boards[0]))
     sys.exit()
 TB.SetCommsFailsafe(False)
@@ -230,14 +233,25 @@ class WebServer(socketserver.BaseRequestHandler):
             lockFrame.release()
             httpText = '<html><body><center>'
             if captureFrame is not None:
-                photoName = '%s/Photo %s.jpg' % (photoDirectory, datetime.datetime.utcnow())
+                # Security: Create safe photo path and ensure directory exists
                 try:
+                    # Ensure photo directory exists
+                    os.makedirs(photoDirectory, exist_ok=True)
+                    # Create safe filename
+                    filename = 'Photo_%s.jpg' % datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+                    photoName = os.path.join(os.path.abspath(photoDirectory), filename)
+                    # Validate path is within photoDirectory (prevent path traversal)
+                    if not photoName.startswith(os.path.abspath(photoDirectory)):
+                        raise ValueError('Invalid photo path')
+                    # Save photo
                     photoFile = open(photoName, 'wb')
                     photoFile.write(captureFrame)
                     photoFile.close()
                     httpText += 'Photo saved to %s' % (photoName)
-                except:
+                except (IOError, OSError, ValueError) as e:
+                    # Security: Use specific exceptions and don't expose details to user
                     httpText += 'Failed to take photo!'
+                    print('Photo save error: %s' % str(e))
             else:
                 httpText += 'Failed to take photo!'
             httpText += '</center></body></html>'
@@ -380,15 +394,21 @@ watchdog = Watchdog()
 # Run the web server until we are told to close
 try:
     httpServer = None
-    httpServer = socketserver.TCPServer(("0.0.0.0", webPort), WebServer)
-except:
+    # Security: Bind to configured address (default localhost for security)
+    print('Starting web server on %s:%d' % (webBindAddress, webPort))
+    if webBindAddress == '0.0.0.0':
+        print('WARNING: Server is exposed on ALL network interfaces!')
+        print('         This is a SECURITY RISK - consider using localhost or specific IP')
+    httpServer = socketserver.TCPServer((webBindAddress, webPort), WebServer)
+except (OSError, IOError) as e:
+    # Security: Use specific exceptions instead of bare except
     # Failed to open the port, report common issues
     print()
-    print('Failed to open port %d' % (webPort))
+    print('Failed to open port %d: %s' % (webPort, str(e)))
     print('Make sure you are running the script with sudo permissions')
     print('Other problems include running another script with the same port')
     print('If the script was just working recently try waiting a minute first')
-    print() 
+    print()
     # Flag the script to exit
     running = False
 try:
