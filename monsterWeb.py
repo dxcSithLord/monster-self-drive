@@ -141,9 +141,10 @@ class StreamProcessor(threading.Thread):
                         del flippedArray
                     else:
                         retval, thisFrame = cv2.imencode('.jpg', self.stream.array, [cv2.IMWRITE_JPEG_QUALITY, jpegQuality])
-                    lockFrame.acquire()
-                    lastFrame = thisFrame
-                    lockFrame.release()
+                    # updated to resolve a possible concurrency bug.
+                    # Use a context manager to guarantee the lock is always released
+                    with lockFrame:
+                        lastFrame = thisFrame
                 finally:
                     # Reset the stream and event
                     self.stream.seek(0)
