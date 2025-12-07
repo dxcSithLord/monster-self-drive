@@ -749,7 +749,7 @@ libffi-dev
 #### DP1.1: Raspberry Pi Setup
 ```bash
 # 1. Flash OS (Raspberry Pi OS Lite or Desktop)
-# 2. Enable I2C (camera using linux camera library) 
+# 2. Enable I2C (camera using linux camera library)
 sudo raspi-config
 
 # 3. Update system

@@ -21,7 +21,7 @@ repos:
         args: ['--line-length=127']
 
   - repo: https://github.com/PyCQA/flake8
-    rev: 7.0.0
+    rev: 7.3.0
     hooks:
       - id: flake8
         args: ['--max-line-length=127', '--extend-ignore=E203,W503']
@@ -30,17 +30,20 @@ repos:
     rev: 1.9.2
     hooks:
       - id: bandit
-        args: ['-ll', '-r', '.', '-x', './tests/']
+        args: ['-ll', '-r', '.']
         exclude: ^tests/
+        pass_filenames: false
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
-    rev: v1.3.3
+    rev: v1.4.2
     hooks:
       - id: python-safety-dependencies-check
         files: requirements.txt
 
-  - repo: https://github.com/markdownlint/markdownlint
-    rev: v0.12.0
-    hooks:
-      - id: markdownlint
-        args: ['--config', '.markdownlint.json']
+  # Note: markdownlint is handled by GitHub Actions workflow
+  # using markdownlint-cli2 (see .github/workflows/code-quality.yml)
+  # - repo: https://github.com/markdownlint/markdownlint
+  #   rev: v0.15.0
+  #   hooks:
+  #     - id: markdownlint
+  #       args: ['--config', '.markdownlint.json']
