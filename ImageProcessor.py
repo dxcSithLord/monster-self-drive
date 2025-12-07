@@ -3,12 +3,9 @@
 
 # Load library functions we want
 import time
-import datetime
 import threading
 import cv2
 import numpy
-import math
-import random
 import Settings
 
 
@@ -278,12 +275,12 @@ class StreamProcessor(threading.Thread):
                 displayImage = cv2.merge([lineMask, lineMask, lineMask])
                 displayImage /= 2
             # Draw line between points
-            if (X1 != None) and (X2 != None):
+            if (X1 is not None) and (X2 is not None):
                 cv2.line(
                     displayImage, (X1, Settings.targetY1), (X2, Settings.targetY2), Settings.targetLine, 1, lineType=cv2.CV_AA
                 )
             # Draw circles around points
-            if X1 != None:
+            if X1 is not None:
                 cv2.circle(
                     displayImage,
                     (X1, Settings.targetY1),
@@ -292,7 +289,7 @@ class StreamProcessor(threading.Thread):
                     1,
                     lineType=cv2.CV_AA,
                 )
-            if X2 != None:
+            if X2 is not None:
                 cv2.circle(
                     displayImage,
                     (X2, Settings.targetY2),
@@ -304,18 +301,18 @@ class StreamProcessor(threading.Thread):
             Settings.displayFrame = displayImage
         # Pass the results to the control loop
         # Offset is most important, but ideally we need both
-        if (X1 == None) and (X2 == None):
+        if (X1 is None) and (X2 is None):
             # No line found
             isGood = False
             offset = 0.0
             change = 0.0
-        elif X1 == None:
+        elif X1 is None:
             # We only have a far point
             # Not great, but we will use it
             isGood = True
             offset = ((2.0 * X2) / Settings.scaledWidth) - 1.0
             change = 0.0
-        elif X2 == None:
+        elif X2 is None:
             # We only have a near point
             # We loose the change, but offset will be good
             isGood = True

@@ -125,11 +125,13 @@ def SetNewAddress(newAddress, oldAddress=-1, busNumber=1):
     """
     Set a ThunderBorg module's I2C address to a new value.
 
-    If oldAddress is provided, the board at that address is updated; otherwise the function scans the specified I2C bus and updates the first detected ThunderBorg. The chosen newAddress persists after power reset.
+    If oldAddress is provided, the board at that address is updated; otherwise the function scans the specified I2C bus
+    and updates the first detected ThunderBorg. The chosen newAddress persists after power reset.
 
     Parameters:
         newAddress (int): New I2C address to assign (must be between 0x03 and 0x77 inclusive).
-        oldAddress (int, optional): Current I2C address of the target board. If omitted or < 0, the bus is scanned for the first ThunderBorg. Default is -1.
+        oldAddress (int, optional): Current I2C address of the target board. If omitted or < 0, the bus is scanned for
+            the first ThunderBorg. Default is -1.
         busNumber (int, optional): I2C bus to use: 0 for revision 1 boards, 1 for revision 2 boards. Default is 1.
     """
     if newAddress < 0x03:
@@ -165,7 +167,7 @@ def SetNewAddress(newAddress, oldAddress=-1, busNumber=1):
             print("Missing ThunderBorg at %02X" % (oldAddress))
     except KeyboardInterrupt:
         raise
-    except:
+    except (IOError, OSError):
         foundChip = False
         print("Missing ThunderBorg at %02X" % (oldAddress))
     if foundChip:
@@ -190,7 +192,7 @@ def SetNewAddress(newAddress, oldAddress=-1, busNumber=1):
                 print("Missing ThunderBorg at %02X" % (newAddress))
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             foundChip = False
             print("Missing ThunderBorg at %02X" % (newAddress))
     if foundChip:
@@ -298,7 +300,7 @@ class ThunderBorg:
 
         Wrapper used by the ThunderBorg instance to print(messages, will call printFunction if set, print otherwise)
         """
-        if self.printFunction == None:
+        if self.printFunction is None:
             print(message)
         else:
             self.printFunction(message)
@@ -318,7 +320,8 @@ class ThunderBorg:
         Initialize the I2C connection and detect a ThunderBorg device on the configured bus.
 
         Parameters:
-                tryOtherBus (bool): If True, attempt the alternate I2C bus (0 or 1) when no ThunderBorg is found on the current bus.
+                tryOtherBus (bool): If True, attempt the alternate I2C bus (0 or 1) when no ThunderBorg is found on the
+                    current bus.
 
         Raises:
                 TypeError: If self.busNumber is not an integer.
@@ -376,7 +379,8 @@ class ThunderBorg:
                 self.Init(False)
             else:
                 self.Print(
-                    "Are you sure your ThunderBorg is properly attached, the correct address is used, and the I2C drivers are running?"
+                    "Are you sure your ThunderBorg is properly attached, the correct address is used, "
+                    "and the I2C drivers are running?"
                 )
                 self.bus = None
         else:
@@ -410,7 +414,7 @@ class ThunderBorg:
             self.RawWrite(command, [pwm])
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed sending motor 2 drive level!")
 
     def GetMotor2(self):
@@ -428,7 +432,7 @@ class ThunderBorg:
             i2cRecv = self.RawRead(COMMAND_GET_B, I2C_MAX_LEN)
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed reading motor 2 drive level!")
             return
 
@@ -469,7 +473,7 @@ class ThunderBorg:
             self.RawWrite(command, [pwm])
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed sending motor 1 drive level!")
 
     def GetMotor1(self):
@@ -487,7 +491,7 @@ class ThunderBorg:
             i2cRecv = self.RawRead(COMMAND_GET_A, I2C_MAX_LEN)
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed reading motor 1 drive level!")
             return
 
@@ -528,7 +532,7 @@ class ThunderBorg:
             self.RawWrite(command, [pwm])
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed sending all motors drive level!")
 
     def MotorsOff(self):
@@ -541,7 +545,7 @@ class ThunderBorg:
             self.RawWrite(COMMAND_ALL_OFF, [0])
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed sending motors off command!")
 
     def SetLed1(self, r, g, b):
@@ -563,7 +567,7 @@ class ThunderBorg:
             self.RawWrite(COMMAND_SET_LED1, [levelR, levelG, levelB])
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed sending colour for the ThunderBorg LED!")
 
     def GetLed1(self):
@@ -581,7 +585,7 @@ class ThunderBorg:
             i2cRecv = self.RawRead(COMMAND_GET_LED1, I2C_MAX_LEN)
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed reading ThunderBorg LED colour!")
             return
 
@@ -609,7 +613,7 @@ class ThunderBorg:
             self.RawWrite(COMMAND_SET_LED2, [levelR, levelG, levelB])
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed sending colour for the ThunderBorg Lid LED!")
 
     def GetLed2(self):
@@ -627,7 +631,7 @@ class ThunderBorg:
             i2cRecv = self.RawRead(COMMAND_GET_LED2, I2C_MAX_LEN)
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed reading ThunderBorg Lid LED colour!")
             return
 
@@ -655,7 +659,7 @@ class ThunderBorg:
             self.RawWrite(COMMAND_SET_LEDS, [levelR, levelG, levelB])
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed sending colour for both LEDs!")
 
     def SetLedShowBattery(self, state):
@@ -675,7 +679,7 @@ class ThunderBorg:
             self.RawWrite(COMMAND_SET_LED_BATT_MON, [level])
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed sending LED battery monitoring state!")
 
     def GetLedShowBattery(self):
@@ -690,7 +694,7 @@ class ThunderBorg:
             i2cRecv = self.RawRead(COMMAND_GET_LED_BATT_MON, I2C_MAX_LEN)
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed reading LED battery monitoring state!")
             return
 
@@ -717,7 +721,7 @@ class ThunderBorg:
             self.RawWrite(COMMAND_SET_FAILSAFE, [level])
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed sending communications failsafe state!")
 
     def GetCommsFailsafe(self):
@@ -731,7 +735,7 @@ class ThunderBorg:
             i2cRecv = self.RawRead(COMMAND_GET_FAILSAFE, I2C_MAX_LEN)
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed reading communications failsafe state!")
             return
 
@@ -745,8 +749,10 @@ class ThunderBorg:
         state = GetDriveFault1()
 
         Reads the motor drive fault state for motor #1, False for no problems, True for a fault has been detected
-        Faults may indicate power problems, such as under-voltage (not enough power), and may be cleared by setting a lower drive power
-        If a fault is persistent, it repeatably occurs when trying to control the board, this may indicate a wiring problem such as:
+        Faults may indicate power problems, such as under-voltage (not enough power), and may be cleared by setting a
+        lower drive power
+        If a fault is persistent, it repeatably occurs when trying to control the board, this may indicate a wiring
+        problem such as:
             * The supply is not powerful enough for the motors
                 The board has a bare minimum requirement of 6V to operate correctly
                 A recommended minimum supply of 7.2V should be sufficient for smaller motors
@@ -754,16 +760,19 @@ class ThunderBorg:
             * Either + or - is connected to ground (GND, also known as 0V or earth)
             * Either + or - is connected to the power supply (V+, directly to the battery or power pack)
             * One of the motors may be damaged
-        Faults will self-clear, they do not need to be reset, however some faults require both motors to be moving at less than 100% to clear
-        The easiest way to check is to put both motors at a low power setting which is high enough for them to rotate easily, such as 30%
-        Note that the fault state may be true at power up, this is normal and should clear when both motors have been driven
+        Faults will self-clear, they do not need to be reset, however some faults require both motors to be moving at
+        less than 100% to clear
+        The easiest way to check is to put both motors at a low power setting which is high enough for them to rotate
+        easily, such as 30%
+        Note that the fault state may be true at power up, this is normal and should clear when both motors have been
+        driven
         For more details check the website at www.piborg.org/thunderborg and double check the wiring instructions
         """
         try:
             i2cRecv = self.RawRead(COMMAND_GET_DRIVE_A_FAULT, I2C_MAX_LEN)
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed reading the drive fault state for motor #1!")
             return
 
@@ -777,8 +786,10 @@ class ThunderBorg:
         state = GetDriveFault2()
 
         Reads the motor drive fault state for motor #2, False for no problems, True for a fault has been detected
-        Faults may indicate power problems, such as under-voltage (not enough power), and may be cleared by setting a lower drive power
-        If a fault is persistent, it repeatably occurs when trying to control the board, this may indicate a wiring problem such as:
+        Faults may indicate power problems, such as under-voltage (not enough power), and may be cleared by setting a
+        lower drive power
+        If a fault is persistent, it repeatably occurs when trying to control the board, this may indicate a wiring
+        problem such as:
             * The supply is not powerful enough for the motors
                 The board has a bare minimum requirement of 6V to operate correctly
                 A recommended minimum supply of 7.2V should be sufficient for smaller motors
@@ -786,16 +797,19 @@ class ThunderBorg:
             * Either + or - is connected to ground (GND, also known as 0V or earth)
             * Either + or - is connected to the power supply (V+, directly to the battery or power pack)
             * One of the motors may be damaged
-        Faults will self-clear, they do not need to be reset, however some faults require both motors to be moving at less than 100% to clear
-        The easiest way to check is to put both motors at a low power setting which is high enough for them to rotate easily, such as 30%
-        Note that the fault state may be true at power up, this is normal and should clear when both motors have been driven
+        Faults will self-clear, they do not need to be reset, however some faults require both motors to be moving at
+        less than 100% to clear
+        The easiest way to check is to put both motors at a low power setting which is high enough for them to rotate
+        easily, such as 30%
+        Note that the fault state may be true at power up, this is normal and should clear when both motors have been
+        driven
         For more details check the website at www.piborg.org/thunderborg and double check the wiring instructions
         """
         try:
             i2cRecv = self.RawRead(COMMAND_GET_DRIVE_B_FAULT, I2C_MAX_LEN)
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed reading the drive fault state for motor #2!")
             return
 
@@ -815,7 +829,7 @@ class ThunderBorg:
             i2cRecv = self.RawRead(COMMAND_GET_BATT_VOLT, I2C_MAX_LEN)
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed reading battery level!")
             return
 
@@ -843,7 +857,7 @@ class ThunderBorg:
             time.sleep(0.2)  # Wait for EEPROM write to complete
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed sending battery monitoring limits!")
 
     def GetBatteryMonitoringLimits(self):
@@ -858,7 +872,7 @@ class ThunderBorg:
             i2cRecv = self.RawRead(COMMAND_GET_BATT_LIMITS, I2C_MAX_LEN)
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed reading battery monitoring limits!")
             return
 
@@ -891,7 +905,7 @@ class ThunderBorg:
             self.RawWrite(COMMAND_WRITE_EXTERNAL_LED, [b0, b1, b2, b3])
         except KeyboardInterrupt:
             raise
-        except:
+        except (IOError, OSError):
             self.Print("Failed sending word for the external LEDs!")
 
     def SetExternalLedColours(self, colours):
@@ -920,13 +934,13 @@ class ThunderBorg:
         Displays the names and descriptions of the various functions and settings provided
         """
         funcList = [
-            ThunderBorg.__dict__.get(a)
+            getattr(ThunderBorg, a)
             for a in dir(ThunderBorg)
-            if isinstance(ThunderBorg.__dict__.get(a), types.FunctionType)
+            if isinstance(getattr(ThunderBorg, a, None), types.FunctionType)
         ]
-        funcListSorted = sorted(funcList, key=lambda x: x.func_code.co_firstlineno)
+        funcListSorted = sorted(funcList, key=lambda x: x.__code__.co_firstlineno)
 
         print(self.__doc__)
-        print
+        print()
         for func in funcListSorted:
-            print("=== %s === %s" % (func.func_name, func.func_doc))
+            print("=== %s === %s" % (func.__name__, func.__doc__))

@@ -256,7 +256,7 @@ class WebServer(socketserver.BaseRequestHandler):
                 try:
                     driveLeft = float(parts[2])
                     driveRight = float(parts[3])
-                except:
+                except (ValueError, TypeError):
                     # Bad values
                     driveRight = 0.0
                     driveLeft = 0.0
@@ -382,16 +382,40 @@ class WebServer(socketserver.BaseRequestHandler):
             httpText += "//--></script>\n"
             httpText += "</head>\n"
             httpText += "<body>\n"
-            httpText += '<iframe src="/stream" width="100%" height="500" frameborder="0"></iframe>\n'
-            httpText += '<iframe id="setDrive" src="/off" width="100%" height="50" frameborder="0"></iframe>\n'
+            httpText += (
+                '<iframe src="/stream" width="100%" height="500" '
+                'frameborder="0"></iframe>\n'
+            )
+            httpText += (
+                '<iframe id="setDrive" src="/off" width="100%" height="50" '
+                'frameborder="0"></iframe>\n'
+            )
             httpText += "<center>\n"
-            httpText += '<button onmousedown="Drive(-1,1)" onmouseup="Off()" style="width:200px;height:100px;"><b>Spin Left</b></button>\n'
-            httpText += '<button onmousedown="Drive(1,1)" onmouseup="Off()" style="width:200px;height:100px;"><b>Forward</b></button>\n'
-            httpText += '<button onmousedown="Drive(1,-1)" onmouseup="Off()" style="width:200px;height:100px;"><b>Spin Right</b></button>\n'
+            httpText += (
+                '<button onmousedown="Drive(-1,1)" onmouseup="Off()" '
+                'style="width:200px;height:100px;"><b>Spin Left</b></button>\n'
+            )
+            httpText += (
+                '<button onmousedown="Drive(1,1)" onmouseup="Off()" '
+                'style="width:200px;height:100px;"><b>Forward</b></button>\n'
+            )
+            httpText += (
+                '<button onmousedown="Drive(1,-1)" onmouseup="Off()" '
+                'style="width:200px;height:100px;"><b>Spin Right</b></button>\n'
+            )
             httpText += "<br /><br />\n"
-            httpText += '<button onmousedown="Drive(0,1)" onmouseup="Off()" style="width:200px;height:100px;"><b>Turn Left</b></button>\n'
-            httpText += '<button onmousedown="Drive(-1,-1)" onmouseup="Off()" style="width:200px;height:100px;"><b>Reverse</b></button>\n'
-            httpText += '<button onmousedown="Drive(1,0)" onmouseup="Off()" style="width:200px;height:100px;"><b>Turn Right</b></button>\n'
+            httpText += (
+                '<button onmousedown="Drive(0,1)" onmouseup="Off()" '
+                'style="width:200px;height:100px;"><b>Turn Left</b></button>\n'
+            )
+            httpText += (
+                '<button onmousedown="Drive(-1,-1)" onmouseup="Off()" '
+                'style="width:200px;height:100px;"><b>Reverse</b></button>\n'
+            )
+            httpText += (
+                '<button onmousedown="Drive(1,0)" onmouseup="Off()" '
+                'style="width:200px;height:100px;"><b>Turn Right</b></button>\n'
+            )
             httpText += "<br /><br />\n"
             httpText += '<button onclick="Photo()" style="width:200px;height:100px;"><b>Save Photo</b></button>\n'
             httpText += "<br /><br />\n"
@@ -423,9 +447,9 @@ class WebServer(socketserver.BaseRequestHandler):
             self.send('Path : "%s"' % (getPath))
 
     def send(self, content):
-        if type(content) == bytes:
+        if isinstance(content, bytes):
             h_head = b"HTTP/1.0 200 OK\n\n" + content
-        elif type(content) == str:
+        elif isinstance(content, str):
             h_head = b"HTTP/1.0 200 OK\n\n" + content.encode("utf-8")
         self.request.sendall(h_head)
         # self.request.sendall('HTTP/1.0 200 OK\n\n%s' % (content.encode('utf-8')))
@@ -483,7 +507,7 @@ finally:
     TB.MotorsOff()
     print("Motors off")
 # Tell each thread to stop, and wait for them to end
-if httpServer != None:
+if httpServer is not None:
     httpServer.server_close()
 running = False
 captureThread.join()
