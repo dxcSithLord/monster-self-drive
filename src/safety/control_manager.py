@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # coding: utf-8
 """Control Manager for single-user control model (ADR-004).
 
@@ -245,6 +244,7 @@ class ControlManager:
 
         If controller disconnects, control passes to first observer.
         If the disconnecting user had a pending takeover request, it is cleared.
+        Notifies via callback when users disconnect for lifecycle tracking.
 
         Args:
             user_id: Disconnecting user's ID
@@ -260,6 +260,9 @@ class ControlManager:
             was_controller = user_id == self._active_controller
             self._sessions[user_id].role = UserRole.DISCONNECTED
             del self._sessions[user_id]
+
+            # Notify that user disconnected (for lifecycle tracking symmetry)
+            self._notify_change(user_id, UserRole.DISCONNECTED)
 
             if was_controller:
                 self._active_controller = None

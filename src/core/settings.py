@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # coding: utf-8
 """Settings loader for MonsterBorg self-driving code.
 
@@ -203,75 +202,85 @@ class Settings:
         cls._loaded = True
 
         # Map JSON config to class attributes
-        # Security
-        cls.webBindAddress = config["security"]["webBindAddress"]
-        cls.webPort = config["security"].get("webPort", 8080)
+        # Wrap in try/except to convert structural errors to ConfigurationError
+        try:
+            # Security
+            cls.webBindAddress = config["security"]["webBindAddress"]
+            cls.webPort = config["security"].get("webPort", 8080)
 
-        # Power
-        cls.voltageIn = config["power"]["voltageIn"]
-        cls.voltageOut = config["power"]["voltageOut"]
+            # Power
+            cls.voltageIn = config["power"]["voltageIn"]
+            cls.voltageOut = config["power"]["voltageOut"]
 
-        # Camera
-        cls.cameraWidth = config["camera"]["width"]
-        cls.cameraHeight = config["camera"]["height"]
-        cls.frameRate = config["camera"]["frameRate"]
-        cls.flippedImage = config["camera"]["flippedImage"]
-        cls.jpegQuality = config["camera"].get("jpegQuality", 80)
-        cls.displayRate = config["camera"].get("displayRate", 10)
+            # Camera
+            cls.cameraWidth = config["camera"]["width"]
+            cls.cameraHeight = config["camera"]["height"]
+            cls.frameRate = config["camera"]["frameRate"]
+            cls.flippedImage = config["camera"]["flippedImage"]
+            cls.jpegQuality = config["camera"].get("jpegQuality", 80)
+            cls.displayRate = config["camera"].get("displayRate", 10)
 
-        # Processing
-        cls.scaledWidth = config["processing"]["scaledWidth"]
-        cls.scaledHeight = config["processing"]["scaledHeight"]
-        cls.processingThreads = config["processing"]["processingThreads"]
-        cls.minHuntColour = tuple(config["processing"]["minHuntColour"])
-        cls.maxHuntColour = tuple(config["processing"]["maxHuntColour"])
-        cls.erodeSize = config["processing"]["erodeSize"]
+            # Processing
+            cls.scaledWidth = config["processing"]["scaledWidth"]
+            cls.scaledHeight = config["processing"]["scaledHeight"]
+            cls.processingThreads = config["processing"]["processingThreads"]
+            cls.minHuntColour = tuple(config["processing"]["minHuntColour"])
+            cls.maxHuntColour = tuple(config["processing"]["maxHuntColour"])
+            cls.erodeSize = config["processing"]["erodeSize"]
 
-        # Calculate target Y positions from ratios
-        y1_ratio = config["processing"].get("targetY1Ratio", 0.9)
-        y2_ratio = config["processing"].get("targetY2Ratio", 0.6)
-        cls.targetY1 = int(cls.scaledHeight * y1_ratio)
-        cls.targetY2 = int(cls.scaledHeight * y2_ratio)
+            # Calculate target Y positions from ratios
+            y1_ratio = config["processing"].get("targetY1Ratio", 0.9)
+            y2_ratio = config["processing"].get("targetY2Ratio", 0.6)
+            cls.targetY1 = int(cls.scaledHeight * y1_ratio)
+            cls.targetY2 = int(cls.scaledHeight * y2_ratio)
 
-        # Control (PID)
-        cls.motorSmoothing = config["control"]["motorSmoothing"]
-        cls.positionP = config["control"]["positionP"]
-        cls.positionI = config["control"]["positionI"]
-        cls.positionD = config["control"]["positionD"]
-        cls.changeP = config["control"]["changeP"]
-        cls.changeI = config["control"]["changeI"]
-        cls.changeD = config["control"]["changeD"]
-        cls.clipI = config["control"]["clipI"]
+            # Control (PID)
+            cls.motorSmoothing = config["control"]["motorSmoothing"]
+            cls.positionP = config["control"]["positionP"]
+            cls.positionI = config["control"]["positionI"]
+            cls.positionD = config["control"]["positionD"]
+            cls.changeP = config["control"]["changeP"]
+            cls.changeI = config["control"]["changeI"]
+            cls.changeD = config["control"]["changeD"]
+            cls.clipI = config["control"]["clipI"]
 
-        # Drive
-        cls.steeringGain = config["drive"]["steeringGain"]
-        cls.steeringClip = config["drive"]["steeringClip"]
-        cls.steeringOffset = config["drive"]["steeringOffset"]
+            # Drive
+            cls.steeringGain = config["drive"]["steeringGain"]
+            cls.steeringClip = config["drive"]["steeringClip"]
+            cls.steeringOffset = config["drive"]["steeringOffset"]
 
-        # Debug
-        cls.showFps = config["debug"]["showFps"]
-        cls.testMode = config["debug"]["testMode"]
-        cls.showImages = config["debug"]["showImages"]
-        cls.overlayOriginal = config["debug"].get("overlayOriginal", True)
-        cls.showPerSecond = config["debug"].get("showPerSecond", 1)
-        cls.scaleFinalImage = config["debug"].get("scaleFinalImage", 1.0)
-        cls.targetLine = tuple(config["debug"].get("targetLineColour", [0, 255, 255]))
-        cls.targetPoints = tuple(
-            config["debug"].get("targetPointsColour", [255, 255, 0])
-        )
-        cls.targetPointSize = config["debug"].get("targetPointSize", 3)
-        cls.fpsInterval = cls.frameRate
+            # Debug
+            cls.showFps = config["debug"]["showFps"]
+            cls.testMode = config["debug"]["testMode"]
+            cls.showImages = config["debug"]["showImages"]
+            cls.overlayOriginal = config["debug"].get("overlayOriginal", True)
+            cls.showPerSecond = config["debug"].get("showPerSecond", 1)
+            cls.scaleFinalImage = config["debug"].get("scaleFinalImage", 1.0)
+            cls.targetLine = tuple(
+                config["debug"].get("targetLineColour", [0, 255, 255])
+            )
+            cls.targetPoints = tuple(
+                config["debug"].get("targetPointsColour", [255, 255, 0])
+            )
+            cls.targetPointSize = config["debug"].get("targetPointSize", 3)
+            cls.fpsInterval = cls.frameRate
 
-        # Safety (ADR-009)
-        cls.batteryStopVoltage = config["safety"]["batteryStopVoltage"]
-        cls.batteryWarningVoltage = config["safety"]["batteryWarningVoltage"]
-        cls.watchdogTimeoutSeconds = config["safety"]["watchdogTimeoutSeconds"]
-        cls.emergencyStopEnabled = config["safety"]["emergencyStopEnabled"]
+            # Safety (ADR-009)
+            cls.batteryStopVoltage = config["safety"]["batteryStopVoltage"]
+            cls.batteryWarningVoltage = config["safety"]["batteryWarningVoltage"]
+            cls.watchdogTimeoutSeconds = config["safety"]["watchdogTimeoutSeconds"]
+            cls.emergencyStopEnabled = config["safety"]["emergencyStopEnabled"]
 
-        # Paths
-        cls.photoDirectory = os.path.expanduser(
-            config.get("paths", {}).get("photoDirectory", "~/monster-photos")
-        )
+            # Paths
+            cls.photoDirectory = os.path.expanduser(
+                config.get("paths", {}).get("photoDirectory", "~/monster-photos")
+            )
+        except KeyError as e:
+            raise ConfigurationError(f"Missing required config key: {e}") from e
+        except TypeError as e:
+            raise ConfigurationError(f"Invalid config value type: {e}") from e
+        except ValueError as e:
+            raise ConfigurationError(f"Invalid config value: {e}") from e
 
     @classmethod
     def get_config(cls) -> Dict[str, Any]:

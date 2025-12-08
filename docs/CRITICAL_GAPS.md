@@ -494,8 +494,8 @@ No additional GPIO hardware is being added at this time.
 - [x] Specify emergency stop propagation mechanism
 - [x] Document recovery procedures
 - [x] Leverage existing ThunderBorg safety features
-- [ ] Implement Safety Monitor Thread
-- [ ] Add battery monitoring thresholds to Settings
+- [x] Implement Safety Monitor Thread
+- [x] Add battery monitoring thresholds to Settings
 - [ ] Create recovery UI
 - [ ] Add safety system to architecture diagrams
 

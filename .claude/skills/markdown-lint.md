@@ -81,5 +81,5 @@ The project uses `.markdownlint.json` for configuration. Current settings:
 
 1. First, run the fix command to apply automatic fixes
 2. Then run the check command to see remaining issues
-3. Manually fix any issues that cannot be auto-fixed
+3. Manually resolve any issues that cannot be auto-fixed
 4. Re-run check to verify all issues are resolved

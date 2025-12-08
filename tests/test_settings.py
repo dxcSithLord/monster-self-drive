@@ -99,54 +99,65 @@ class TestSettings:
 
     def test_settings_reload(self, tmp_path: Path) -> None:
         """Test that Settings can reload configuration."""
-        # Create a test config
-        config_file = tmp_path / "config.json"
-        config_data = {
-            "security": {"webBindAddress": "192.168.1.1", "webPort": 9090},
-            "power": {"voltageIn": 12.0, "voltageOut": 11.4},
-            "camera": {
-                "width": 320,
-                "height": 240,
-                "frameRate": 15,
-                "flippedImage": False,
-            },
-            "processing": {
-                "scaledWidth": 80,
-                "scaledHeight": 60,
-                "processingThreads": 2,
-                "minHuntColour": [0, 0, 0],
-                "maxHuntColour": [255, 255, 255],
-                "erodeSize": 3,
-            },
-            "control": {
-                "motorSmoothing": 3,
-                "positionP": 0.5,
-                "positionI": 0.1,
-                "positionD": 0.2,
-                "changeP": 0.5,
-                "changeI": 0.1,
-                "changeD": 0.2,
-                "clipI": 50,
-            },
-            "drive": {
-                "steeringGain": 0.8,
-                "steeringClip": 0.9,
-                "steeringOffset": 0.1,
-            },
-            "debug": {"showFps": False, "testMode": False, "showImages": False},
-            "safety": {
-                "batteryStopVoltage": 10.0,
-                "batteryWarningVoltage": 10.5,
-                "watchdogTimeoutSeconds": 2.0,
-                "emergencyStopEnabled": False,
-            },
-        }
-        config_file.write_text(json.dumps(config_data))
+        # Save original state to restore after test
+        original_loaded = Settings._loaded
+        original_config = Settings._config.copy() if Settings._config else None
 
-        # Load the test config
-        Settings._loaded = False
-        Settings.load(config_file)
+        try:
+            # Create a test config
+            config_file = tmp_path / "config.json"
+            config_data = {
+                "security": {"webBindAddress": "192.168.1.1", "webPort": 9090},
+                "power": {"voltageIn": 12.0, "voltageOut": 11.4},
+                "camera": {
+                    "width": 320,
+                    "height": 240,
+                    "frameRate": 15,
+                    "flippedImage": False,
+                },
+                "processing": {
+                    "scaledWidth": 80,
+                    "scaledHeight": 60,
+                    "processingThreads": 2,
+                    "minHuntColour": [0, 0, 0],
+                    "maxHuntColour": [255, 255, 255],
+                    "erodeSize": 3,
+                },
+                "control": {
+                    "motorSmoothing": 3,
+                    "positionP": 0.5,
+                    "positionI": 0.1,
+                    "positionD": 0.2,
+                    "changeP": 0.5,
+                    "changeI": 0.1,
+                    "changeD": 0.2,
+                    "clipI": 50,
+                },
+                "drive": {
+                    "steeringGain": 0.8,
+                    "steeringClip": 0.9,
+                    "steeringOffset": 0.1,
+                },
+                "debug": {"showFps": False, "testMode": False, "showImages": False},
+                "safety": {
+                    "batteryStopVoltage": 10.0,
+                    "batteryWarningVoltage": 10.5,
+                    "watchdogTimeoutSeconds": 2.0,
+                    "emergencyStopEnabled": False,
+                },
+            }
+            config_file.write_text(json.dumps(config_data))
 
-        assert Settings.webBindAddress == "192.168.1.1"
-        assert Settings.frameRate == 15
-        assert Settings.testMode is False
+            # Load the test config
+            Settings._loaded = False
+            Settings.load(config_file)
+
+            assert Settings.webBindAddress == "192.168.1.1"
+            assert Settings.frameRate == 15
+            assert Settings.testMode is False
+        finally:
+            # Restore original Settings state to avoid affecting other tests
+            Settings._loaded = original_loaded
+            if original_config is not None:
+                Settings._config = original_config
+                Settings._apply_config(original_config)

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # coding: utf-8
 """Emergency Stop implementation for MonsterBorg (ADR-009).
 

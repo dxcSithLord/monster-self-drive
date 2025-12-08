@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # coding: utf-8
 """Safety Monitor Thread implementation (ADR-009 Layer 3).
 
@@ -48,7 +47,20 @@ class OperationMode(Enum):
 
 @dataclass
 class SafetyStatus:
-    """Current safety system status."""
+    """Current safety system status.
+
+    Attributes:
+        mode: Current operation mode
+        battery_voltage: Last read battery voltage (0.0 if read failed)
+        battery_ok: True if battery is safe for current mode. In AUTONOMOUS mode,
+            this is False when voltage drops below stop threshold. In MANUAL mode,
+            this is always True (battery warnings are advisory only). This indicates
+            "safe for current operating mode" rather than absolute battery health.
+        fault_detected: True if motor driver fault was detected
+        fault_message: Human-readable fault description (empty if no fault)
+        signal_ok: True if control signals are being received within timeout
+        last_check: Timestamp of last safety check
+    """
 
     mode: OperationMode
     battery_voltage: float
@@ -249,7 +261,7 @@ class SafetyMonitor(threading.Thread):
         # Mode-dependent checks
         if current_mode == OperationMode.AUTONOMOUS:
             # Autonomous: strict battery check
-            if battery_voltage > 0 and battery_voltage < self._battery_stop_voltage:
+            if 0 < battery_voltage < self._battery_stop_voltage:
                 battery_ok = False
                 issues.append(f"Battery critical: {battery_voltage:.1f}V")
 
@@ -262,7 +274,7 @@ class SafetyMonitor(threading.Thread):
         elif current_mode == OperationMode.MANUAL:
             # Manual: only signal loss triggers stop
             # Battery warning is advisory only
-            if battery_voltage > 0 and battery_voltage < self._battery_warning_voltage:
+            if 0 < battery_voltage < self._battery_warning_voltage:
                 # Warning only, don't stop
                 pass
 
