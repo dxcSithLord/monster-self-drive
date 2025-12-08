@@ -235,9 +235,9 @@ class EmergencyStop:
 
         # We need to wait for the flag to be cleared
         # threading.Event doesn't have wait_for_clear, so we poll
-        start = time.time()
+        start = time.monotonic()
         while self._stopped.is_set():
-            if timeout is not None and (time.time() - start) > timeout:
+            if timeout is not None and (time.monotonic() - start) > timeout:
                 return False
             time.sleep(0.01)  # 10ms poll interval
         return True
