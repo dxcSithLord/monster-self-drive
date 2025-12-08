@@ -1,14 +1,20 @@
 # coding: utf-8
 """Emergency Stop implementation for MonsterBorg (ADR-009).
 
-This module provides lock-free emergency stop accessible to ANY user.
+This module provides emergency stop accessible to ANY user.
 Target response time: <100ms
 
 The emergency stop:
 - Immediately sets motor power to zero
-- Is lock-free for guaranteed response time
+- Uses minimal locking for state transitions while keeping reads lock-free
 - Can be triggered by any connected user (not just controller)
 - Logs all emergency stop events
+
+Thread Safety:
+    - is_stopped property: Lock-free read (threading.Event.is_set())
+    - trigger(): Uses _state_lock for atomic test-and-set + motor stop
+    - reset(): Uses _state_lock for atomic transition
+    - Callbacks invoked outside lock to prevent deadlocks
 
 See Also:
     - docs/DECISIONS.md: ADR-009 for safety system architecture
@@ -34,13 +40,19 @@ class EmergencyStopEvent:
 
 
 class EmergencyStop:
-    """Lock-free emergency stop implementation.
+    """Emergency stop implementation with thread-safe state transitions.
 
-    Uses atomic operations where possible to minimize latency.
+    Uses a state lock for atomic transitions while keeping reads lock-free.
     ANY user can trigger emergency stop - this is intentional for safety.
 
+    Thread Safety:
+        - is_stopped: Lock-free read via threading.Event.is_set()
+        - trigger()/reset(): Protected by _state_lock for atomic transitions
+        - Motor stop callback called exactly once per trigger (not per caller)
+        - State change callback called exactly once per transition
+
     Attributes:
-        is_stopped: Current emergency stop state (atomic read)
+        is_stopped: Current emergency stop state (lock-free read)
         history: List of recent emergency stop events
 
     Example:
@@ -66,12 +78,15 @@ class EmergencyStop:
             motor_stop_callback: Function to call to stop motors (must be fast!)
             on_state_change: Callback when stop state changes (is_stopped, reason)
         """
-        # Use threading.Event for atomic state - it's lock-free for is_set()
+        # Use threading.Event for state - is_set() is lock-free for reads
         self._stopped = threading.Event()
         self._motor_stop = motor_stop_callback
         self._on_state_change = on_state_change
         self._history: List[EmergencyStopEvent] = []
         self._history_lock = threading.Lock()
+        # State lock for atomic test-and-set/clear transitions
+        # Ensures motor_stop and on_state_change are called exactly once per transition
+        self._state_lock = threading.Lock()
 
     @property
     def is_stopped(self) -> bool:
@@ -81,21 +96,35 @@ class EmergencyStop:
     def trigger(self, triggered_by: str = "system", reason: str = "Emergency stop") -> None:
         """Trigger emergency stop - accessible to ANY user.
 
-        This method is designed to be as fast as possible.
-        It uses atomic operations and defers logging to avoid blocking.
+        Thread-safe: Uses _state_lock for atomic test-and-set to ensure
+        motor_stop callback is called exactly once per stop event.
 
         Args:
             triggered_by: User or system that triggered the stop
             reason: Human-readable reason for the stop
         """
-        # Set stop flag first (atomic)
-        already_stopped = self._stopped.is_set()
-        self._stopped.set()
+        # Atomic test-and-set with motor stop under lock
+        # This ensures only one thread calls motor_stop per transition
+        performed_transition = False
+        motor_callback = None
+        state_callback = None
+        callback_reason = reason
 
-        # Stop motors immediately
-        if self._motor_stop and not already_stopped:
+        with self._state_lock:
+            if not self._stopped.is_set():
+                self._stopped.set()
+                performed_transition = True
+                # Capture callbacks to invoke outside lock
+                motor_callback = self._motor_stop
+                state_callback = self._on_state_change
+            else:
+                # Already stopped, just set again (idempotent)
+                self._stopped.set()
+
+        # Call motor stop outside lock (but only if we performed the transition)
+        if motor_callback and performed_transition:
             try:
-                self._motor_stop()
+                motor_callback()
             except Exception:
                 # Log but don't fail - safety critical path must complete
                 _logger.exception("Motor stop callback failed")
@@ -117,15 +146,18 @@ class EmergencyStop:
             finally:
                 self._history_lock.release()
 
-        # Notify state change
-        if self._on_state_change and not already_stopped:
+        # Notify state change outside lock (only if we performed the transition)
+        if state_callback and performed_transition:
             try:
-                self._on_state_change(True, reason)
+                state_callback(True, callback_reason)
             except Exception:
                 _logger.exception("State change callback failed during trigger")
 
     def reset(self, reset_by: str = "system") -> bool:
         """Reset emergency stop state.
+
+        Thread-safe: Uses _state_lock for atomic check-and-clear to ensure
+        on_state_change callback is called exactly once per reset.
 
         Args:
             reset_by: User or system resetting the stop
@@ -133,12 +165,22 @@ class EmergencyStop:
         Returns:
             True if reset successful, False if was not stopped
         """
-        if not self._stopped.is_set():
+        # Atomic check-and-clear under lock
+        # This ensures only one thread performs the reset transition
+        performed_transition = False
+        state_callback = None
+        callback_message = f"Reset by {reset_by}"
+
+        with self._state_lock:
+            if self._stopped.is_set():
+                self._stopped.clear()
+                performed_transition = True
+                state_callback = self._on_state_change
+
+        if not performed_transition:
             return False
 
-        self._stopped.clear()
-
-        # Log the reset
+        # Log the reset (outside state lock, but uses history lock)
         event = EmergencyStopEvent(
             timestamp=time.time(),
             triggered_by=reset_by,
@@ -150,9 +192,10 @@ class EmergencyStop:
             if len(self._history) > self.MAX_HISTORY:
                 self._history = self._history[-self.MAX_HISTORY :]
 
-        if self._on_state_change:
+        # Notify state change outside lock (only if we performed the transition)
+        if state_callback:
             try:
-                self._on_state_change(False, "Reset by " + reset_by)
+                state_callback(False, callback_message)
             except Exception:
                 _logger.exception("State change callback failed during reset")
 
