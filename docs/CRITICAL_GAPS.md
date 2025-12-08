@@ -57,119 +57,100 @@ development.
 
 ### 2. Configuration Format Inconsistency (Affects All Phases)
 
-**Status:** ⚠️ INCONSISTENT
+**Status:** ✅ RESOLVED
+**Resolution Date:** 2025-12-07
 **Impact:** Developer confusion, documentation mismatch
 **Affected Phases:** All
 
-**Inconsistencies Found:**
+**RESOLUTION:**
+**Decision: JSON with Python Wrapper** (See ADR-002 in DECISIONS.md)
 
-| Document | Specified Format | Location |
-| --------- | ---------------------- | ----------------------- |
-| REQUIREMENTS | "JSON or INI" | Configuration section |
-| Current Code | `Settings.py` (Python module) | Root directory |
-| IMPLEMENTATION | Python format | Configuration examples |
+**Implemented:**
 
-**Problem:**
+- Configuration stored in `config/config.json`
+- Python wrapper in `src/core/settings.py` provides backward-compatible interface
+- JSON Schema defined in `config/config.schema.json` for documentation
 
-- No single source of truth for configuration format
-- Migration path unclear if format changes
-- Validation/schema undefined
+**Completed Actions:**
 
-**Required Decisions:**
+- [x] Choose ONE format: JSON with Python wrapper
+- [x] Document migration plan if changing from current `Settings.py`
+- [x] Define configuration schema/validation
+- [x] Update all documentation to match
+- [x] Specify configuration file location (`config/` directory)
 
-- [ ] Choose ONE format: JSON, INI, or Python module
-- [ ] Document migration plan if changing from current `Settings.py`
-- [ ] Define configuration schema/validation
-- [ ] Update all documentation to match
-- [ ] Specify configuration file location (root vs. config directory)
-
-**Current State:** Using `Settings.py` (Python module)
+**Reference:** See `docs/DECISIONS.md` ADR-002 for complete analysis
 
 ---
 
 ### 3. Directory Structure Migration (Phase 1 Blocker)
 
-**Status:** ⚠️ UNDEFINED
+**Status:** ✅ RESOLVED
+**Resolution Date:** 2025-12-07
 **Impact:** Code organization, import paths, deployment
 **Affected Phases:** Phase 1 and beyond
 
-**Current State:**
+**RESOLUTION:**
+**Decision: Structured `src/` Layout** (See ADR-003 in DECISIONS.md)
+
+**Implemented Structure:**
 
 ```text
 monster-self-drive/
-├── ImageProcessor.py
-├── MonsterAuto.py
-├── Settings.py
-├── ThunderBorg.py
-└── monsterWeb.py
+├── config/
+│   ├── config.json
+│   └── config.schema.json
+├── src/
+│   ├── core/
+│   │   ├── __init__.py
+│   │   └── settings.py
+│   └── safety/
+│       ├── __init__.py
+│       ├── control_manager.py
+│       ├── emergency_stop.py
+│       └── safety_monitor.py
+└── tests/
+    ├── test_safety.py
+    └── test_settings.py
 ```
 
-**Proposed State (from CONSTITUTION):**
+**Completed Actions:**
 
-```text
-monster-self-drive/
-└── src/
-    ├── core/
-    ├── web/
-    ├── vision/
-    └── hardware/
-```
+- [x] Decide: Migrate to `src/` structure
+- [x] Define migration timeline (Pre-Phase 1)
+- [x] Document import path changes
+- [x] Create new module structure
+- [x] Legacy files remain in root for backward compatibility
 
-**Gaps:**
-
-- No migration plan documented
-- Import path changes not addressed
-- Backwards compatibility not considered
-- Deployment impact not analyzed
-
-**Required Decisions:**
-
-- [ ] Decide: Migrate to `src/` structure OR keep flat structure
-- [ ] If migrating: Define migration timeline (before Phase 1 or during?)
-- [ ] Document import path changes
-- [ ] Update all import statements in documentation
-- [ ] Consider symlinks for backwards compatibility
-- [ ] Update deployment scripts
+**Reference:** See `docs/DECISIONS.md` ADR-003 for complete analysis
 
 ---
 
 ### 4. Tracking Algorithm Priority (Phase 2 Blocker)
 
-**Status:** ⚠️ AMBIGUOUS
+**Status:** ✅ RESOLVED
+**Resolution Date:** 2025-12-07
 **Impact:** Feature implementation order, performance expectations
 **Affected Phases:** Phase 2
 
-**Listed Algorithms:**
+**RESOLUTION:**
+**Decision: HSV Color-Based MVP** (See ADR-005 in DECISIONS.md)
 
-1. KCF (Kernelized Correlation Filter)
-2. CSRT (Channel and Spatial Reliability Tracker)
-3. MOSSE (Minimum Output Sum of Squared Error)
-4. Template Matching
-5. Color-based tracking
+**MVP Algorithm:** HSV color-based tracking (existing implementation)
 
-**Current Specification:** "Hybrid approach" (undefined)
+**Rationale:**
 
-**Gaps:**
+1. Already implemented and working in current codebase
+2. Simple, fast, and well-understood
+3. Adequate for Phase 2 target following
+4. Advanced algorithms (KCF, CSRT) deferred to later phases
 
-- Which algorithm for MVP?
-- What does "hybrid" mean exactly?
-- Fallback order not specified
-- Performance requirements per algorithm missing
-- Algorithm selection criteria undefined
+**Completed Actions:**
 
-**Required Decisions:**
-
-- [ ] Define MVP algorithm (single algorithm for Phase 2)
-- [ ] Specify "hybrid approach" in detail:
-  - Which algorithms run in parallel?
-  - How are results combined?
-  - Confidence scoring mechanism
-- [ ] Define fallback order: Primary → Secondary → Tertiary
-- [ ] Set performance thresholds for algorithm switching
-- [ ] Document when each algorithm is appropriate
-
-**Recommendation:**
-Start with single algorithm (CSRT or KCF), add hybrid in later phase
+- [x] Define MVP algorithm: HSV color-based tracking
+- [x] Document in ADR-005
+- [ ] Implement hybrid approach in future phase
+- [ ] Add algorithm selection UI
 
 ---
 
@@ -227,38 +208,30 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 
 ### 6. IMU Status Confusion (Phase 5 Blocker)
 
-**Status:** ⚠️ CONFLICTING
+**Status:** ✅ RESOLVED
+**Resolution Date:** 2025-12-07
 **Impact:** Hardware requirements, budget, fallback behavior
 **Affected Phases:** Phase 5
 
-**Conflicting Specifications:**
+**RESOLUTION:**
+**Decision: Optional Hardware with Graceful Degradation** (See ADR-006 in DECISIONS.md)
 
-| Document | IMU Status | Implication |
-| --------- | -------------------------------- | ----------------------- |
-| REQUIREMENTS | "Recommended Additional Hardware" | Optional component |
-| CONSTITUTION | "Integrated module" | Required component |
-| IMPLEMENTATION | "Source and install IMU" | Required for Phase 5 |
+**Key Decisions:**
 
-**Gaps:**
+1. **IMU is Optional:** Not required for basic operation
+2. **Fallback Behavior:** System operates without IMU using wheel odometry only
+3. **Interface:** I2C (shares bus with ThunderBorg at different address)
+4. **Phase 5 Enhancement:** IMU improves accuracy but is not mandatory
 
-- Is IMU required or optional?
-- What happens if IMU not present?
-- Fallback odometry methods undefined
-- Calibration requirements unclear
+**Completed Actions:**
 
-**Required Decisions:**
+- [x] Clarify: IMU is Optional/Recommended
+- [x] Define fallback behavior without IMU (wheel odometry only)
+- [x] Specify IMU interface (I2C)
+- [x] Document in ADR-006
+- [ ] Add IMU calibration procedure when hardware is added
 
-- [ ] Clarify: Required vs. Optional vs. Recommended
-- [ ] If optional: Define fallback behavior without IMU
-- [ ] If required: Update REQUIREMENTS to reflect this
-- [ ] Specify IMU model/interface (I2C? SPI?)
-- [ ] Define calibration procedure
-- [ ] Document degraded operation mode without IMU
-
-**Impact on Phases:**
-
-- If required: Must be specified in Phase 1 hardware setup
-- If optional: Need graceful degradation strategy
+**Reference:** See `docs/DECISIONS.md` ADR-006 for complete analysis
 
 ---
 
@@ -274,16 +247,19 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **RESOLUTION:**
 **Decision: Document ThunderBorg HAT, Reserve Pins for Future** (See ADR-010 in DECISIONS.md)
 
-**Critical Finding:** MonsterBorg is fully built with ThunderBorg HAT attached. No additional GPIO hardware is being added at this time.
+**Critical Finding:** MonsterBorg is fully built with ThunderBorg HAT attached.
+No additional GPIO hardware is being added at this time.
 
 **Current Pin Usage:**
 
 #### I2C Bus (ThunderBorg HAT)
+
 - **I2C1 SDA:** GPIO 2 (Pin 3)
 - **I2C1 SCL:** GPIO 3 (Pin 5)
 - **I2C Address:** 0x15 (ThunderBorg)
 
 **ThunderBorg Onboard Features (No GPIO Required):**
+
 - 2x Motor outputs
 - 2x RGB LEDs (onboard, I2C controlled via `TB.SetLed1()`, `TB.SetLed2()`)
 - Battery voltage monitoring
@@ -293,12 +269,14 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **Key Insight:** Use ThunderBorg onboard LEDs instead of external GPIO LEDs - saves GPIO pins!
 
 **Future Pin Reservations (Documented):**
+
 - Phase 3 (Ultrasonic): GPIO 17, 18, 22, 23, 24, 27
 - Phase 1+ (Emergency button): GPIO 21
 - Phase 5 (Encoders): GPIO 5, 6, 13, 19
 - Phase 5 (IMU): Shares I2C bus with ThunderBorg
 
 **Completed Actions:**
+
 - [x] Document ThunderBorg I2C pin usage
 - [x] Identify all available GPIO pins
 - [x] Reserve pins for future phases
@@ -384,30 +362,36 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **Thread Priority Hierarchy:**
 
 **Tier 1 (Highest - Equal Priority):**
+
 - Motor Control Thread
 - Safety Monitor Thread
 
 **Tier 2 (Medium Priority):**
+
 - Video Streaming Thread
 - Image Processing Thread
 
 **Tier 3 (Lowest Priority):**
+
 - Web Server Thread
 
 **Critical Linkage:** Web server stop button directly signals Safety Monitor Thread
 
 **Inter-Thread Communication:**
+
 - **Control Command Queue:** `queue.Queue(maxsize=10)` - Image Processing & Web Server → Motor Control
 - **Safety Event Flags:** `threading.Event()` - Emergency stop, battery low, comm timeout
 - **Frame Buffer:** Circular buffer (2 frames) with `threading.Lock()` - Video → Image Processing & Web Server
 
 **Deadlock Prevention:**
+
 1. Lock ordering: Frame Lock → Command Queue → Event Flags
 2. All queue operations have 100ms timeout
 3. No nested locks (max one lock per thread at a time)
 4. Emergency stop uses lock-free event flag
 
 **Completed Actions:**
+
 - [x] Define thread priority hierarchy
 - [x] Specify inter-thread communication patterns
 - [x] Define deadlock prevention rules
@@ -434,16 +418,19 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **Safety Layers:**
 
 **Layer 1: Hardware (ThunderBorg Board)**
+
 - Failsafe: Motors off if no command within 250ms
 - Fault detection: Motor overcurrent detection (built-in)
 - Activation: Enabled via `TB.SetCommsFailsafe(True)` at startup
 
 **Layer 2: Watchdog Thread (monsterWeb.py)**
+
 - Timeout: 1 second of no web activity
 - Action: Calls `TB.MotorsOff()`, sets LED to blue
 - Recovery: Automatic reconnection resets watchdog
 
 **Layer 3: Safety Monitor Thread (New - High Priority)**
+
 - Battery voltage monitoring
 - Drive fault checking
 - Process emergency stop signals
@@ -453,31 +440,35 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **Mode-Dependent Safety:**
 
 **Manual Mode:**
+
 - Primary safety: Driver responsibility
 - Automatic stops: Communication timeout, hardware failsafe, emergency button
 - Speed limiting: FPS-based (15fps→50%, 30fps→100%)
 - Warnings only: Battery low, motor faults (driver decides)
 
 **Autonomous Mode:**
+
 - Enhanced safety: All checks mandatory
 - Automatic stops: Low battery, motor faults, obstacle detection, tracking loss
 - Speed limiting: Additional limits based on obstacles/confidence
 - Recovery: Requires manual intervention
 
 **Emergency Stop Propagation:**
+
 - Trigger sources: Web UI, hardware button (future), safety checks, watchdog
 - Mechanism: `threading.Event()` - lock-free, fast
 - Response time: <100ms
 - ANY user can trigger emergency stop
 
 **Completed Actions:**
+
 - [x] Design multi-layer safety architecture
 - [x] Define mode-dependent behavior (manual vs autonomous)
 - [x] Specify emergency stop propagation mechanism
 - [x] Document recovery procedures
 - [x] Leverage existing ThunderBorg safety features
-- [ ] Implement Safety Monitor Thread
-- [ ] Add battery monitoring thresholds to Settings
+- [x] Implement Safety Monitor Thread
+- [x] Add battery monitoring thresholds to Settings
 - [ ] Create recovery UI
 - [ ] Add safety system to architecture diagrams
 
@@ -496,6 +487,7 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **Decision: Adaptive Frame Rate with Speed Limiting** (See ADR-007 in DECISIONS.md)
 
 **Accepted Frame Rate Tiers:**
+
 - **Minimum:** 15 fps → Maximum robot speed limited to 50%
 - **Target:** 30 fps → 100% maximum speed available
 - **Above Target:** >30 fps → No additional speed benefit
@@ -503,12 +495,14 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **Policy:** Quality over frame rate - skip frames if needed to maintain processing quality
 
 **Rationale:**
+
 1. Current Raspberry Pi + Camera V2 achieves 30fps with OpenCV color following
 2. Safety first: Lower frame rates = lower max speed ensures safety
 3. Processing priority: Better to process fewer frames well than many frames poorly
 4. Graceful degradation: System remains functional at lower frame rates
 
 **Completed Actions:**
+
 - [x] Define FPS tiers and speed limiting logic
 - [x] Specify frame skip policy (quality over quantity)
 - [x] Document in ADR-007

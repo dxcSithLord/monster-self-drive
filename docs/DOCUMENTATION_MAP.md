@@ -87,18 +87,21 @@ graph TD
 ### 📘 Core Documentation (Current State)
 
 **PROJECT_CONSTITUTION.md**
+
 - Purpose: Code standards, architectural principles, development guidelines
 - Audience: All developers
 - Status: Active reference
 - References: All other documents follow this
 
 **REQUIREMENTS.md**
+
 - Purpose: System requirements, hardware specs, performance targets
 - Audience: Developers, testers
 - Status: Active specification
 - Links to: DECISIONS.md (ADR-001, 004, 006, 007, 010)
 
 **SECURITY.md**
+
 - Purpose: Security guidelines, threat model, best practices
 - Audience: Developers, security reviewers
 - Status: Active reference
@@ -107,22 +110,26 @@ graph TD
 ### 🎯 Planning & Decisions (Current State)
 
 **DECISIONS.md**
+
 - Purpose: All 10 Architectural Decision Records (ADRs)
 - Status: All ADRs ACCEPTED ✅
 - ADRs: 001-006 (2025-12-06), 007-010 (2025-12-07)
 - Links to: All core documents
 
 **DECISIONS_SUMMARY.md**
+
 - Purpose: Quick summary of all ADRs and progress
 - Status: Updated 2025-12-07 (100% complete)
 - Links to: DECISIONS.md, CRITICAL_GAPS.md
 
 **CRITICAL_GAPS.md**
+
 - Purpose: Gap analysis and resolution tracking
 - Status: All P0 and P1 gaps resolved
 - Links to: DECISIONS.md (ADR references)
 
 **IMPLEMENTATION_PLAN.md**
+
 - Purpose: 6-phase implementation roadmap
 - Status: Ready for Phase 1 implementation
 - Links to: DECISIONS.md, REQUIREMENTS.md
@@ -130,11 +137,13 @@ graph TD
 ### 🗺️ Navigation
 
 **docs/README.md**
+
 - Purpose: Documentation index and reading guide
 - Audience: All users
 - Links to: All documentation files
 
 **README.md** (root)
+
 - Purpose: Project overview and quick start
 - Audience: New users, contributors
 - Links to: docs/README.md, core documentation

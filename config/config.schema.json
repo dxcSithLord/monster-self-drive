@@ -1,0 +1,373 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/dxcSithLord/monster-self-drive/config.schema.json",
+  "title": "MonsterBorg Configuration Schema",
+  "description": "Configuration schema for the MonsterBorg self-driving robot",
+  "type": "object",
+  "required": ["security", "power", "camera", "processing", "control", "drive", "debug", "safety"],
+  "properties": {
+    "security": {
+      "type": "object",
+      "description": "Security settings for web interface",
+      "required": ["webBindAddress", "webPort"],
+      "properties": {
+        "webBindAddress": {
+          "type": "string",
+          "description": "IP address to bind web server. Use 127.0.0.1 for localhost only (recommended)",
+          "default": "127.0.0.1",
+          "examples": ["127.0.0.1", "0.0.0.0", "192.168.1.100"]
+        },
+        "webPort": {
+          "type": "integer",
+          "description": "Port number for web server",
+          "minimum": 1,
+          "maximum": 65535,
+          "default": 8080
+        }
+      }
+    },
+    "power": {
+      "type": "object",
+      "description": "Power and voltage settings",
+      "required": ["voltageIn", "voltageOut"],
+      "properties": {
+        "voltageIn": {
+          "type": "number",
+          "description": "Total battery voltage to the ThunderBorg",
+          "minimum": 0,
+          "maximum": 24
+        },
+        "voltageOut": {
+          "type": "number",
+          "description": "Maximum motor voltage (limit to 95% of input for RPi headroom)",
+          "minimum": 0,
+          "maximum": 24
+        },
+        "voltageInComment": {
+          "type": "string",
+          "description": "Documentation comment for voltageIn"
+        },
+        "voltageOutComment": {
+          "type": "string",
+          "description": "Documentation comment for voltageOut"
+        }
+      }
+    },
+    "camera": {
+      "type": "object",
+      "description": "Camera capture settings",
+      "required": ["width", "height", "frameRate", "flippedImage"],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "description": "Camera image width in pixels",
+          "minimum": 160,
+          "maximum": 1920,
+          "default": 640
+        },
+        "height": {
+          "type": "integer",
+          "description": "Camera image height in pixels",
+          "minimum": 120,
+          "maximum": 1080,
+          "default": 480
+        },
+        "frameRate": {
+          "type": "integer",
+          "description": "Camera capture frame rate (target 30, minimum 15)",
+          "minimum": 15,
+          "maximum": 60,
+          "default": 30
+        },
+        "flippedImage": {
+          "type": "boolean",
+          "description": "True if the camera needs to be rotated 180 degrees",
+          "default": true
+        },
+        "jpegQuality": {
+          "type": "integer",
+          "description": "JPEG quality level for web streaming (0-100)",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 80
+        },
+        "displayRate": {
+          "type": "integer",
+          "description": "Number of images to request per second for display",
+          "minimum": 1,
+          "maximum": 60,
+          "default": 10
+        }
+      }
+    },
+    "processing": {
+      "type": "object",
+      "description": "Image processing settings",
+      "required": ["scaledWidth", "scaledHeight", "processingThreads", "minHuntColour", "maxHuntColour", "erodeSize"],
+      "properties": {
+        "scaledWidth": {
+          "type": "integer",
+          "description": "Resized image width for processing",
+          "minimum": 80,
+          "maximum": 640,
+          "default": 160
+        },
+        "scaledHeight": {
+          "type": "integer",
+          "description": "Resized image height for processing",
+          "minimum": 60,
+          "maximum": 480,
+          "default": 120
+        },
+        "processingThreads": {
+          "type": "integer",
+          "description": "Number of processing threads to run",
+          "minimum": 1,
+          "maximum": 8,
+          "default": 4
+        },
+        "minHuntColour": {
+          "type": "array",
+          "description": "Minimum RGB values for tracked colour [R, G, B]",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "maxHuntColour": {
+          "type": "array",
+          "description": "Maximum RGB values for tracked colour [R, G, B]",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "erodeSize": {
+          "type": "integer",
+          "description": "Size of erosion kernel for noise removal",
+          "minimum": 1,
+          "maximum": 15,
+          "default": 5
+        },
+        "targetY1Ratio": {
+          "type": "number",
+          "description": "Y location ratio for closest point (0.0-1.0)",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.9
+        },
+        "targetY2Ratio": {
+          "type": "number",
+          "description": "Y location ratio for furthest point (0.0-1.0)",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.6
+        }
+      }
+    },
+    "control": {
+      "type": "object",
+      "description": "PID control settings",
+      "required": ["motorSmoothing", "positionP", "positionI", "positionD", "changeP", "changeI", "changeD", "clipI"],
+      "properties": {
+        "motorSmoothing": {
+          "type": "integer",
+          "description": "Number of frames to average motor output for smoothing",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 5
+        },
+        "positionP": {
+          "type": "number",
+          "description": "P term for control based on distance from line",
+          "minimum": 0,
+          "default": 1.0
+        },
+        "positionI": {
+          "type": "number",
+          "description": "I term for control based on distance from line",
+          "minimum": 0,
+          "default": 0.0
+        },
+        "positionD": {
+          "type": "number",
+          "description": "D term for control based on distance from line",
+          "minimum": 0,
+          "default": 0.4
+        },
+        "changeP": {
+          "type": "number",
+          "description": "P term for control based on change between points",
+          "minimum": 0,
+          "default": 1.0
+        },
+        "changeI": {
+          "type": "number",
+          "description": "I term for control based on change between points",
+          "minimum": 0,
+          "default": 0.0
+        },
+        "changeD": {
+          "type": "number",
+          "description": "D term for control based on change between points",
+          "minimum": 0,
+          "default": 0.4
+        },
+        "clipI": {
+          "type": "number",
+          "description": "Maximum limit for both integrators",
+          "minimum": 0,
+          "default": 100
+        }
+      }
+    },
+    "drive": {
+      "type": "object",
+      "description": "Final drive output settings",
+      "required": ["steeringGain", "steeringClip", "steeringOffset"],
+      "properties": {
+        "steeringGain": {
+          "type": "number",
+          "description": "Steering range correction value",
+          "minimum": 0,
+          "maximum": 2,
+          "default": 1.0
+        },
+        "steeringClip": {
+          "type": "number",
+          "description": "Maximum steering value",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 1.0
+        },
+        "steeringOffset": {
+          "type": "number",
+          "description": "Steering centre correction value",
+          "minimum": -1,
+          "maximum": 1,
+          "default": 0.0
+        }
+      }
+    },
+    "debug": {
+      "type": "object",
+      "description": "Debug and display settings",
+      "required": ["showFps", "testMode", "showImages"],
+      "properties": {
+        "showFps": {
+          "type": "boolean",
+          "description": "Display FPS readings in terminal",
+          "default": true
+        },
+        "testMode": {
+          "type": "boolean",
+          "description": "True to prevent robot moving (safe testing)",
+          "default": true
+        },
+        "showImages": {
+          "type": "boolean",
+          "description": "True to show processing images",
+          "default": true
+        },
+        "overlayOriginal": {
+          "type": "boolean",
+          "description": "True to draw over original image, False for mask",
+          "default": true
+        },
+        "showPerSecond": {
+          "type": "integer",
+          "description": "Frames to show per second",
+          "minimum": 1,
+          "maximum": 30,
+          "default": 1
+        },
+        "scaleFinalImage": {
+          "type": "number",
+          "description": "Scale factor for displayed image (1.0 = actual size)",
+          "minimum": 0.1,
+          "maximum": 4.0,
+          "default": 1.0
+        },
+        "targetLineColour": {
+          "type": "array",
+          "description": "RGB colour for line between target points",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "targetPointsColour": {
+          "type": "array",
+          "description": "RGB colour for circles around target points",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "targetPointSize": {
+          "type": "integer",
+          "description": "Size of target circle radius",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 3
+        }
+      }
+    },
+    "safety": {
+      "type": "object",
+      "description": "Safety system settings (ADR-009)",
+      "required": ["batteryStopVoltage", "batteryWarningVoltage", "watchdogTimeoutSeconds", "emergencyStopEnabled"],
+      "properties": {
+        "batteryStopVoltage": {
+          "type": "number",
+          "description": "Battery voltage threshold for automatic stop (autonomous mode)",
+          "minimum": 9.0,
+          "maximum": 12.0,
+          "default": 10.5
+        },
+        "batteryWarningVoltage": {
+          "type": "number",
+          "description": "Battery voltage threshold for warning (manual mode)",
+          "minimum": 9.0,
+          "maximum": 12.0,
+          "default": 11.0
+        },
+        "watchdogTimeoutSeconds": {
+          "type": "number",
+          "description": "Watchdog timeout in seconds (Layer 2 safety)",
+          "minimum": 0.5,
+          "maximum": 5.0,
+          "default": 1.0
+        },
+        "emergencyStopEnabled": {
+          "type": "boolean",
+          "description": "Enable emergency stop accessible to any user",
+          "default": true
+        }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "description": "File system paths",
+      "properties": {
+        "photoDirectory": {
+          "type": "string",
+          "description": "Directory to save photos (supports ~ expansion)",
+          "default": "~/monster-photos"
+        }
+      }
+    }
+  }
+}
