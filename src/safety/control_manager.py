@@ -135,11 +135,16 @@ class ControlManager:
         The current controller will be notified and can approve/deny.
         If controller doesn't respond within timeout, takeover is granted.
 
+        Only one takeover request can be pending at a time. If a request
+        is already pending, new requests are rejected until the current
+        one is approved, denied, or the requester disconnects.
+
         Args:
             user_id: User ID requesting takeover
 
         Returns:
-            True if takeover request registered, False if already controller
+            True if takeover request registered, False if already controller,
+            not connected, or another takeover request is pending
         """
         with self._lock:
             if user_id == self._active_controller:
@@ -148,10 +153,47 @@ class ControlManager:
             if user_id not in self._sessions:
                 return False  # Not connected
 
+            # Reject if another takeover request is already pending
+            if self._takeover_requester is not None:
+                return False  # Takeover already pending
+
             self._takeover_requester = user_id
             # TODO: Implement takeover notification to current controller
             # TODO: Implement timeout for auto-takeover
             return True
+
+    def cancel_takeover(self, user_id: str) -> bool:
+        """Cancel a pending takeover request.
+
+        Can be called by the requester to cancel their own request,
+        or by the controller to deny the request.
+
+        Args:
+            user_id: User ID canceling (must be requester or controller)
+
+        Returns:
+            True if takeover was canceled, False if no pending request
+            or user not authorized to cancel
+        """
+        with self._lock:
+            if self._takeover_requester is None:
+                return False
+
+            # Either the requester or controller can cancel
+            if user_id != self._takeover_requester and user_id != self._active_controller:
+                return False
+
+            self._takeover_requester = None
+            return True
+
+    def has_pending_takeover(self) -> bool:
+        """Check if there's a pending takeover request.
+
+        Returns:
+            True if a takeover request is pending
+        """
+        with self._lock:
+            return self._takeover_requester is not None
 
     def approve_takeover(self, approver_id: str) -> bool:
         """Approve a pending takeover request.
@@ -160,7 +202,8 @@ class ControlManager:
             approver_id: Must be the current controller
 
         Returns:
-            True if takeover approved and completed
+            True if takeover approved and completed, False if approver is not
+            controller, no pending request, or requester has disconnected
         """
         with self._lock:
             if approver_id != self._active_controller:
@@ -169,10 +212,17 @@ class ControlManager:
             if self._takeover_requester is None:
                 return False
 
-            # Transfer control
             new_controller = self._takeover_requester
+
+            # Check if the requester is still connected
+            if new_controller not in self._sessions:
+                # Requester disconnected while waiting - clear the request
+                self._takeover_requester = None
+                return False
+
             old_controller = self._active_controller
 
+            # Transfer control
             self._active_controller = new_controller
             self._sessions[new_controller].role = UserRole.CONTROLLER
             self._sessions[old_controller].role = UserRole.OBSERVER
@@ -186,6 +236,7 @@ class ControlManager:
         """Handle user disconnection.
 
         If controller disconnects, control passes to first observer.
+        If the disconnecting user had a pending takeover request, it is cleared.
 
         Args:
             user_id: Disconnecting user's ID
@@ -193,6 +244,10 @@ class ControlManager:
         with self._lock:
             if user_id not in self._sessions:
                 return
+
+            # Clear pending takeover request if the requester is disconnecting
+            if self._takeover_requester == user_id:
+                self._takeover_requester = None
 
             was_controller = user_id == self._active_controller
             self._sessions[user_id].role = UserRole.DISCONNECTED

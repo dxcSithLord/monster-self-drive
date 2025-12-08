@@ -73,6 +73,27 @@ class TestEmergencyStop:
             estop.trigger(user, f"Stop by {user}")
             assert estop.is_stopped is True
 
+    def test_wait_for_reset_timeout_zero(self) -> None:
+        """Test that timeout=0 returns immediately without sleeping."""
+        estop = EmergencyStop()
+        estop.trigger("test", "Test stop")
+
+        # timeout=0 should return False immediately since still stopped
+        start = time.time()
+        result = estop.wait_for_reset(timeout=0)
+        elapsed = time.time() - start
+
+        assert result is False
+        assert elapsed < 0.01  # Should be nearly instant
+
+    def test_wait_for_reset_timeout_zero_not_stopped(self) -> None:
+        """Test that timeout=0 returns True when not stopped."""
+        estop = EmergencyStop()
+
+        # Not stopped, so should return True immediately
+        result = estop.wait_for_reset(timeout=0)
+        assert result is True
+
 
 class TestControlManager:
     """Tests for ControlManager class."""
@@ -125,3 +146,83 @@ class TestControlManager:
         manager.request_control("user1")
         result = manager.request_takeover("user1")
         assert result is False
+
+    def test_takeover_rejected_when_pending(self) -> None:
+        """Test that new takeover request is rejected when one is pending."""
+        manager = ControlManager()
+        manager.request_control("user1")
+        manager.request_control("user2")
+        manager.request_control("user3")
+
+        # User2 requests takeover
+        result = manager.request_takeover("user2")
+        assert result is True
+        assert manager.has_pending_takeover() is True
+
+        # User3 also tries to request - should be rejected
+        result = manager.request_takeover("user3")
+        assert result is False
+
+    def test_approve_takeover_fails_when_requester_disconnected(self) -> None:
+        """Test that approve_takeover fails if requester has disconnected."""
+        manager = ControlManager()
+        manager.request_control("user1")
+        manager.request_control("user2")
+
+        # User2 requests takeover
+        manager.request_takeover("user2")
+
+        # User2 disconnects before approval
+        manager.disconnect("user2")
+
+        # Approval should fail
+        result = manager.approve_takeover("user1")
+        assert result is False
+        assert manager.has_pending_takeover() is False
+
+    def test_disconnect_clears_pending_takeover(self) -> None:
+        """Test that disconnect clears pending takeover request."""
+        manager = ControlManager()
+        manager.request_control("user1")
+        manager.request_control("user2")
+
+        # User2 requests takeover
+        manager.request_takeover("user2")
+        assert manager.has_pending_takeover() is True
+
+        # User2 disconnects
+        manager.disconnect("user2")
+
+        # Takeover request should be cleared
+        assert manager.has_pending_takeover() is False
+
+    def test_cancel_takeover(self) -> None:
+        """Test canceling a takeover request."""
+        manager = ControlManager()
+        manager.request_control("user1")
+        manager.request_control("user2")
+
+        # User2 requests takeover
+        manager.request_takeover("user2")
+        assert manager.has_pending_takeover() is True
+
+        # User2 cancels their own request
+        result = manager.cancel_takeover("user2")
+        assert result is True
+        assert manager.has_pending_takeover() is False
+
+    def test_controller_can_deny_takeover(self) -> None:
+        """Test that controller can deny (cancel) a takeover request."""
+        manager = ControlManager()
+        manager.request_control("user1")
+        manager.request_control("user2")
+
+        # User2 requests takeover
+        manager.request_takeover("user2")
+
+        # User1 (controller) denies by canceling
+        result = manager.cancel_takeover("user1")
+        assert result is True
+        assert manager.has_pending_takeover() is False
+        # User1 still has control
+        assert manager.active_controller == "user1"

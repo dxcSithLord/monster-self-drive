@@ -296,58 +296,96 @@ except Exception as e:
 
 
 # =========================================================================
-# Backward compatibility - expose Settings attributes at module level
+# Backward compatibility - dynamic attribute proxy (Python 3.7+ required)
 # =========================================================================
-# These allow: `import Settings; print(Settings.frameRate)`
-# to work the same as: `from src.core.settings import Settings; print(Settings.frameRate)`
+# This allows: `from src.core.settings import frameRate`
+# to work the same as: `Settings.frameRate`
+# and properly reflects values after Settings.reload()
 
-webBindAddress = Settings.webBindAddress
-voltageIn = Settings.voltageIn
-voltageOut = Settings.voltageOut
-cameraWidth = Settings.cameraWidth
-cameraHeight = Settings.cameraHeight
-frameRate = Settings.frameRate
-flippedImage = Settings.flippedImage
-scaledWidth = Settings.scaledWidth
-scaledHeight = Settings.scaledHeight
-processingThreads = Settings.processingThreads
-minHuntColour = Settings.minHuntColour
-maxHuntColour = Settings.maxHuntColour
-erodeSize = Settings.erodeSize
-targetY1 = Settings.targetY1
-targetY2 = Settings.targetY2
-motorSmoothing = Settings.motorSmoothing
-positionP = Settings.positionP
-positionI = Settings.positionI
-positionD = Settings.positionD
-changeP = Settings.changeP
-changeI = Settings.changeI
-changeD = Settings.changeD
-clipI = Settings.clipI
-steeringGain = Settings.steeringGain
-steeringClip = Settings.steeringClip
-steeringOffset = Settings.steeringOffset
-fpsInterval = Settings.fpsInterval
-showFps = Settings.showFps
-testMode = Settings.testMode
-showImages = Settings.showImages
-overlayOriginal = Settings.overlayOriginal
-showPerSecond = Settings.showPerSecond
-scaleFinalImage = Settings.scaleFinalImage
-targetLine = Settings.targetLine
-targetPoints = Settings.targetPoints
-targetPointSize = Settings.targetPointSize
+# List of all forwarded attribute names for __dir__
+_FORWARDED_ATTRS = [
+    # Configuration settings
+    "webBindAddress",
+    "voltageIn",
+    "voltageOut",
+    "cameraWidth",
+    "cameraHeight",
+    "frameRate",
+    "flippedImage",
+    "scaledWidth",
+    "scaledHeight",
+    "processingThreads",
+    "minHuntColour",
+    "maxHuntColour",
+    "erodeSize",
+    "targetY1",
+    "targetY2",
+    "motorSmoothing",
+    "positionP",
+    "positionI",
+    "positionD",
+    "changeP",
+    "changeI",
+    "changeD",
+    "clipI",
+    "steeringGain",
+    "steeringClip",
+    "steeringOffset",
+    "fpsInterval",
+    "showFps",
+    "testMode",
+    "showImages",
+    "overlayOriginal",
+    "showPerSecond",
+    "scaleFinalImage",
+    "targetLine",
+    "targetPoints",
+    "targetPointSize",
+    # Shared runtime values
+    "running",
+    "currentSpeed",
+    "testModeCounter",
+    "MonsterMotors",
+    "displayFrame",
+    "frameCounter",
+    "frameAnnounce",
+    "lastFrameStamp",
+    "frameLock",
+    "processorPool",
+    "capture",
+    "controller",
+]
 
-# Shared runtime values
-running = Settings.running
-currentSpeed = Settings.currentSpeed
-testModeCounter = Settings.testModeCounter
-MonsterMotors = Settings.MonsterMotors
-displayFrame = Settings.displayFrame
-frameCounter = Settings.frameCounter
-frameAnnounce = Settings.frameAnnounce
-lastFrameStamp = Settings.lastFrameStamp
-frameLock = Settings.frameLock
-processorPool = Settings.processorPool
-capture = Settings.capture
-controller = Settings.controller
+
+def __getattr__(name: str):
+    """Dynamic attribute forwarding to Settings class.
+
+    This enables module-level attribute access that reflects the current
+    Settings values, even after Settings.reload() is called.
+
+    Note: Requires Python 3.7+ for module-level __getattr__ support.
+
+    Args:
+        name: Attribute name to look up
+
+    Returns:
+        The current value from Settings class
+
+    Raises:
+        AttributeError: If the attribute doesn't exist on Settings
+    """
+    if name in _FORWARDED_ATTRS:
+        return getattr(Settings, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__():
+    """List available module attributes including forwarded Settings attributes.
+
+    Returns:
+        List of all module attribute names
+    """
+    # Get the standard module attributes
+    module_attrs = list(globals().keys())
+    # Add forwarded attributes
+    return module_attrs + _FORWARDED_ATTRS

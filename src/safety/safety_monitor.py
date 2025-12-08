@@ -27,11 +27,15 @@ See Also:
     - config/config.json: safety section for thresholds
 """
 
+import logging
 import threading
 import time
 from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, Optional
+
+# Module logger for safety monitoring events
+_logger = logging.getLogger(__name__)
 
 
 class OperationMode(Enum):
@@ -62,6 +66,16 @@ class SafetyMonitor(threading.Thread):
     - MANUAL: Only checks for signal loss
     - AUTONOMOUS: Checks battery, faults, and signal
 
+    This thread is non-daemon to ensure clean shutdown. The main program
+    must call terminate() followed by join() during shutdown.
+
+    Lock Acquisition Order:
+        To prevent deadlocks, always acquire locks in this order:
+        1. _mode_lock (for operation mode)
+        2. _status_lock (for safety status)
+        3. _signal_lock (for signal timing)
+        Any code acquiring multiple locks must follow this order.
+
     Attributes:
         status: Current SafetyStatus
         mode: Current operation mode
@@ -74,6 +88,9 @@ class SafetyMonitor(threading.Thread):
         ... )
         >>> monitor.start()
         >>> monitor.set_mode(OperationMode.AUTONOMOUS)
+        >>> # During shutdown:
+        >>> monitor.terminate()
+        >>> monitor.join()
     """
 
     # Monitor frequency
@@ -96,7 +113,9 @@ class SafetyMonitor(threading.Thread):
             battery_stop_voltage: Voltage threshold for automatic stop
             battery_warning_voltage: Voltage threshold for warning
         """
-        super().__init__(name="SafetyMonitor", daemon=True)
+        # Non-daemon thread to ensure clean shutdown
+        # Main program must call terminate() + join() on shutdown
+        super().__init__(name="SafetyMonitor", daemon=False)
 
         self._get_battery_voltage = get_battery_voltage
         self._get_fault_status = get_fault_status
@@ -105,8 +124,11 @@ class SafetyMonitor(threading.Thread):
         self._battery_warning_voltage = battery_warning_voltage
 
         self._mode = OperationMode.STOPPED
+        # Lock acquisition order: _mode_lock -> _status_lock -> _signal_lock
+        # Always acquire locks in this order to prevent deadlocks
         self._mode_lock = threading.Lock()
         self._terminated = threading.Event()
+        self._signal_lock = threading.Lock()  # Protects _last_signal_time
         self._last_signal_time = time.time()
         self._signal_timeout = 1.0  # 1 second timeout
 
@@ -144,9 +166,12 @@ class SafetyMonitor(threading.Thread):
     def set_mode(self, mode: OperationMode) -> None:
         """Set operation mode.
 
+        Note: Acquires _mode_lock then _status_lock (following lock order).
+
         Args:
             mode: New operation mode
         """
+        # Lock order: _mode_lock -> _status_lock (as documented in class)
         with self._mode_lock:
             self._mode = mode
         with self._status_lock:
@@ -156,8 +181,10 @@ class SafetyMonitor(threading.Thread):
         """Call this when a valid control signal is received.
 
         Updates the last signal time to prevent signal loss detection.
+        Thread-safe via _signal_lock.
         """
-        self._last_signal_time = time.time()
+        with self._signal_lock:
+            self._last_signal_time = time.time()
 
     def terminate(self) -> None:
         """Signal the monitor thread to terminate."""
@@ -187,8 +214,10 @@ class SafetyMonitor(threading.Thread):
         with self._mode_lock:
             current_mode = self._mode
 
-        # Always check signal
-        signal_ok = (now - self._last_signal_time) < self._signal_timeout
+        # Check signal timing (thread-safe read)
+        with self._signal_lock:
+            last_signal = self._last_signal_time
+        signal_ok = (now - last_signal) < self._signal_timeout
 
         # Read battery voltage if available
         battery_voltage = 0.0
@@ -196,7 +225,10 @@ class SafetyMonitor(threading.Thread):
         if self._get_battery_voltage:
             try:
                 battery_voltage = self._get_battery_voltage()
-            except Exception:
+            except Exception as e:
+                _logger.error(
+                    "Failed to read battery voltage: %s", e, exc_info=True
+                )
                 battery_voltage = 0.0
 
         # Read fault status if available
@@ -207,8 +239,12 @@ class SafetyMonitor(threading.Thread):
                 fault_detected = self._get_fault_status()
                 if fault_detected:
                     fault_message = "Motor driver fault detected"
-            except Exception:
-                pass
+            except Exception as e:
+                _logger.error(
+                    "Failed to read fault status: %s", e, exc_info=True
+                )
+                fault_detected = False
+                fault_message = ""
 
         # Mode-dependent checks
         if current_mode == OperationMode.AUTONOMOUS:

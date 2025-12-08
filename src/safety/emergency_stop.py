@@ -167,19 +167,24 @@ class EmergencyStop:
         """Wait for emergency stop to be reset.
 
         Args:
-            timeout: Maximum seconds to wait (None = wait forever)
+            timeout: Maximum seconds to wait (None = wait forever, 0 = non-blocking)
 
         Returns:
-            True if reset occurred, False if timeout
+            True if reset occurred (or not stopped), False if timeout or still stopped
         """
+        # If not stopped, return immediately
         if not self._stopped.is_set():
             return True
+
+        # Handle timeout==0 as immediate non-blocking check
+        if timeout == 0:
+            return not self._stopped.is_set()
 
         # We need to wait for the flag to be cleared
         # threading.Event doesn't have wait_for_clear, so we poll
         start = time.time()
         while self._stopped.is_set():
-            if timeout and (time.time() - start) > timeout:
+            if timeout is not None and (time.time() - start) > timeout:
                 return False
             time.sleep(0.01)  # 10ms poll interval
         return True
