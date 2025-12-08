@@ -219,7 +219,22 @@ class SafetyMonitor(threading.Thread):
         _logger.info("Safety monitor terminated")
 
     def _check_safety(self) -> None:
-        """Perform safety checks based on current mode."""
+        """Perform safety checks based on current mode.
+
+        Graceful Degradation (No-Sensor Modes):
+            When sensor callbacks are not configured or fail, the monitor
+            operates in degraded mode with safe defaults:
+
+            - No battery callback: battery_voltage=0.0, battery_ok=True
+              (skips voltage checks since 0 is not in valid range)
+            - No fault callback: fault_detected=False (assumes no fault)
+            - Callback exception: Logged with exc_info, uses safe default
+
+            Signal loss detection always works (based on signal_received() calls).
+            This ensures the system remains operational even without hardware
+            sensors, relying on the ThunderBorg's built-in 250ms failsafe as
+            the ultimate safety layer.
+        """
         now = time.time()
         issues = []
 

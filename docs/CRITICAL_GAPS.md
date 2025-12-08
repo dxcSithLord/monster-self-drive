@@ -128,41 +128,29 @@ monster-self-drive/
 
 ### 4. Tracking Algorithm Priority (Phase 2 Blocker)
 
-**Status:** ⚠️ AMBIGUOUS
+**Status:** ✅ RESOLVED
+**Resolution Date:** 2025-12-07
 **Impact:** Feature implementation order, performance expectations
 **Affected Phases:** Phase 2
 
-**Listed Algorithms:**
+**RESOLUTION:**
+**Decision: HSV Color-Based MVP** (See ADR-005 in DECISIONS.md)
 
-1. KCF (Kernelized Correlation Filter)
-2. CSRT (Channel and Spatial Reliability Tracker)
-3. MOSSE (Minimum Output Sum of Squared Error)
-4. Template Matching
-5. Color-based tracking
+**MVP Algorithm:** HSV color-based tracking (existing implementation)
 
-**Current Specification:** "Hybrid approach" (undefined)
+**Rationale:**
 
-**Gaps:**
+1. Already implemented and working in current codebase
+2. Simple, fast, and well-understood
+3. Adequate for Phase 2 target following
+4. Advanced algorithms (KCF, CSRT) deferred to later phases
 
-- Which algorithm for MVP?
-- What does "hybrid" mean exactly?
-- Fallback order not specified
-- Performance requirements per algorithm missing
-- Algorithm selection criteria undefined
+**Completed Actions:**
 
-**Required Decisions:**
-
-- [ ] Define MVP algorithm (single algorithm for Phase 2)
-- [ ] Specify "hybrid approach" in detail:
-  - Which algorithms run in parallel?
-  - How are results combined?
-  - Confidence scoring mechanism
-- [ ] Define fallback order: Primary → Secondary → Tertiary
-- [ ] Set performance thresholds for algorithm switching
-- [ ] Document when each algorithm is appropriate
-
-**Recommendation:**
-Start with single algorithm (CSRT or KCF), add hybrid in later phase
+- [x] Define MVP algorithm: HSV color-based tracking
+- [x] Document in ADR-005
+- [ ] Implement hybrid approach in future phase
+- [ ] Add algorithm selection UI
 
 ---
 
@@ -220,38 +208,30 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 
 ### 6. IMU Status Confusion (Phase 5 Blocker)
 
-**Status:** ⚠️ CONFLICTING
+**Status:** ✅ RESOLVED
+**Resolution Date:** 2025-12-07
 **Impact:** Hardware requirements, budget, fallback behavior
 **Affected Phases:** Phase 5
 
-**Conflicting Specifications:**
+**RESOLUTION:**
+**Decision: Optional Hardware with Graceful Degradation** (See ADR-006 in DECISIONS.md)
 
-| Document | IMU Status | Implication |
-| --------- | -------------------------------- | ----------------------- |
-| REQUIREMENTS | "Recommended Additional Hardware" | Optional component |
-| CONSTITUTION | "Integrated module" | Required component |
-| IMPLEMENTATION | "Source and install IMU" | Required for Phase 5 |
+**Key Decisions:**
 
-**Gaps:**
+1. **IMU is Optional:** Not required for basic operation
+2. **Fallback Behavior:** System operates without IMU using wheel odometry only
+3. **Interface:** I2C (shares bus with ThunderBorg at different address)
+4. **Phase 5 Enhancement:** IMU improves accuracy but is not mandatory
 
-- Is IMU required or optional?
-- What happens if IMU not present?
-- Fallback odometry methods undefined
-- Calibration requirements unclear
+**Completed Actions:**
 
-**Required Decisions:**
+- [x] Clarify: IMU is Optional/Recommended
+- [x] Define fallback behavior without IMU (wheel odometry only)
+- [x] Specify IMU interface (I2C)
+- [x] Document in ADR-006
+- [ ] Add IMU calibration procedure when hardware is added
 
-- [ ] Clarify: Required vs. Optional vs. Recommended
-- [ ] If optional: Define fallback behavior without IMU
-- [ ] If required: Update REQUIREMENTS to reflect this
-- [ ] Specify IMU model/interface (I2C? SPI?)
-- [ ] Define calibration procedure
-- [ ] Document degraded operation mode without IMU
-
-**Impact on Phases:**
-
-- If required: Must be specified in Phase 1 hardware setup
-- If optional: Need graceful degradation strategy
+**Reference:** See `docs/DECISIONS.md` ADR-006 for complete analysis
 
 ---
 
