@@ -11,11 +11,15 @@ See Also:
     - docs/DECISIONS.md: ADR-004 for multi-user control model decision
 """
 
+import logging
 import threading
 import time
 from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, Optional
+
+# Module logger
+_logger = logging.getLogger(__name__)
 
 
 class UserRole(Enum):
@@ -66,12 +70,16 @@ class ControlManager:
 
         Args:
             on_control_change: Callback when control changes (user_id, new_role)
-            takeover_timeout: Seconds to wait for takeover confirmation
+            takeover_timeout: Seconds to wait for takeover confirmation before
+                auto-granting. Note: Auto-takeover is not yet implemented;
+                this parameter is stored for future use.
         """
         self._lock = threading.RLock()
         self._sessions: dict[str, UserSession] = {}
         self._active_controller: Optional[str] = None
         self._takeover_requester: Optional[str] = None
+        # TODO: Implement auto-takeover timer that grants control after timeout
+        # if controller doesn't respond to takeover request
         self._takeover_timeout = takeover_timeout
         self._on_control_change = on_control_change
 
@@ -292,5 +300,12 @@ class ControlManager:
         if self._on_control_change:
             try:
                 self._on_control_change(user_id, new_role)
-            except Exception:
-                pass  # Don't let callback errors affect control manager
+            except Exception as e:
+                # Log but don't let callback errors affect control manager
+                _logger.error(
+                    "Error in control change callback for user %s -> %s: %s",
+                    user_id,
+                    new_role.value,
+                    e,
+                    exc_info=True,
+                )

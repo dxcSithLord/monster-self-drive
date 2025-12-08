@@ -22,22 +22,25 @@ When invoked, this skill will:
 
 ## Commands
 
+Note: markdownlint auto-discovers `.markdownlint.json` in the project root,
+so the `--config` flag is not required.
+
 ### Check All Markdown Files
 
 ```bash
-markdownlint "**/*.md" --config .markdownlint.json
+markdownlint "**/*.md"
 ```
 
 ### Fix Automatically Fixable Issues
 
 ```bash
-markdownlint --fix "**/*.md" --config .markdownlint.json
+markdownlint --fix "**/*.md"
 ```
 
 ### Check Specific File
 
 ```bash
-markdownlint <filename.md> --config .markdownlint.json
+markdownlint <filename.md>
 ```
 
 ## Configuration
@@ -50,7 +53,7 @@ The project uses `.markdownlint.json` for configuration. Current settings:
 - MD036 (no emphasis as heading): Disabled (project uses emphasis for
   sub-headings)
 - MD040 (fenced code language): Allows text, bash, python, json, javascript,
-  html, css, yaml, markdown, ini, toml, mermaid, shell, sh
+  html, css, yaml, markdown, ini, toml, mermaid
 - MD041 (first line should be h1): Disabled
 - MD060 (table column style): Disabled (project has varied table styles)
 

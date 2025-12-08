@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # coding: utf-8
 """Tests for safety module."""
 
@@ -68,8 +67,10 @@ class TestEmergencyStop:
         estop = EmergencyStop()
 
         # Simulate multiple users triggering
-        for user in ["controller", "observer1", "observer2", "random_user"]:
-            estop.reset("admin")
+        for i, user in enumerate(["controller", "observer1", "observer2", "random_user"]):
+            # Reset before each iteration (except first, since not triggered yet)
+            if i > 0:
+                estop.reset("admin")
             estop.trigger(user, f"Stop by {user}")
             assert estop.is_stopped is True
 

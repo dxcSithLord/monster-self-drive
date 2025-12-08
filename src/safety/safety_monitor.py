@@ -192,19 +192,19 @@ class SafetyMonitor(threading.Thread):
 
     def run(self) -> None:
         """Main monitoring loop - runs at 10Hz."""
-        print("Safety monitor started (10Hz)")
+        _logger.info("Safety monitor started (10Hz)")
 
         while not self._terminated.is_set():
             try:
                 self._check_safety()
             except Exception as e:
                 # Log but don't crash the safety monitor
-                print(f"Safety monitor error: {e}")
+                _logger.error("Safety monitor error: %s", e, exc_info=True)
 
             # Wait for next poll interval
             self._terminated.wait(self.POLL_INTERVAL)
 
-        print("Safety monitor terminated")
+        _logger.info("Safety monitor terminated")
 
     def _check_safety(self) -> None:
         """Perform safety checks based on current mode."""

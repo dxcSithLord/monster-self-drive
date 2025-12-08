@@ -274,7 +274,8 @@ Start with single algorithm (CSRT or KCF), add hybrid in later phase
 **RESOLUTION:**
 **Decision: Document ThunderBorg HAT, Reserve Pins for Future** (See ADR-010 in DECISIONS.md)
 
-**Critical Finding:** MonsterBorg is fully built with ThunderBorg HAT attached. No additional GPIO hardware is being added at this time.
+**Critical Finding:** MonsterBorg is fully built with ThunderBorg HAT attached.
+No additional GPIO hardware is being added at this time.
 
 **Current Pin Usage:**
 

@@ -2,20 +2,30 @@
 # coding: utf-8
 """Settings loader for MonsterBorg self-driving code.
 
-This module loads configuration from config/config.json and validates it
-against the JSON schema. It provides the same interface as the legacy
-Settings.py for backward compatibility.
+This module loads configuration from config/config.json and provides
+basic validation (required sections check). It provides the same interface
+as the legacy Settings.py for backward compatibility.
+
+Note:
+    Full JSON Schema validation is not implemented. The module validates
+    that required config sections exist but does not validate against
+    config/config.schema.json. The schema file is provided for documentation
+    and can be used by external tools or a future implementation.
 
 See Also:
     - config/config.json: Configuration file
-    - config/config.schema.json: JSON Schema for validation
+    - config/config.schema.json: JSON Schema for documentation/external validation
     - docs/DECISIONS.md: ADR-002 for configuration format decision
 """
 
 import json
+import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, ClassVar, Dict, Optional, Tuple
+
+# Module logger
+_logger = logging.getLogger(__name__)
 
 # Determine config path relative to this file
 _CONFIG_DIR = Path(__file__).parent.parent.parent / "config"
@@ -79,8 +89,8 @@ class Settings:
         the legacy Settings.py interface.
     """
 
-    _config: Dict[str, Any] = {}
-    _loaded: bool = False
+    _config: ClassVar[Dict[str, Any]] = {}
+    _loaded: ClassVar[bool] = False
 
     # =========================================================================
     # Security settings
@@ -288,11 +298,14 @@ except FileNotFoundError:
     # Config file not found - use defaults
     # This allows the module to be imported even if config doesn't exist yet
     pass
-except Exception as e:
-    # Log error but don't crash on import
-    import sys
-
-    print(f"Warning: Failed to load config: {e}", file=sys.stderr)
+except json.JSONDecodeError as e:
+    _logger.warning("Invalid JSON in config file: %s", e)
+except ConfigurationError as e:
+    _logger.warning("Configuration validation error: %s", e)
+except PermissionError as e:
+    _logger.warning("Permission denied reading config file: %s", e)
+except OSError as e:
+    _logger.warning("OS error reading config file: %s", e)
 
 
 # =========================================================================
@@ -304,14 +317,20 @@ except Exception as e:
 
 # List of all forwarded attribute names for __dir__
 _FORWARDED_ATTRS = [
-    # Configuration settings
+    # Security settings
     "webBindAddress",
+    "webPort",
+    # Power settings
     "voltageIn",
     "voltageOut",
+    # Camera settings
     "cameraWidth",
     "cameraHeight",
     "frameRate",
     "flippedImage",
+    "jpegQuality",
+    "displayRate",
+    # Processing settings
     "scaledWidth",
     "scaledHeight",
     "processingThreads",
@@ -320,6 +339,7 @@ _FORWARDED_ATTRS = [
     "erodeSize",
     "targetY1",
     "targetY2",
+    # Control settings (PID)
     "motorSmoothing",
     "positionP",
     "positionI",
@@ -328,9 +348,11 @@ _FORWARDED_ATTRS = [
     "changeI",
     "changeD",
     "clipI",
+    # Drive settings
     "steeringGain",
     "steeringClip",
     "steeringOffset",
+    # Debug settings
     "fpsInterval",
     "showFps",
     "testMode",
@@ -341,7 +363,14 @@ _FORWARDED_ATTRS = [
     "targetLine",
     "targetPoints",
     "targetPointSize",
-    # Shared runtime values
+    # Safety settings (ADR-009)
+    "batteryStopVoltage",
+    "batteryWarningVoltage",
+    "watchdogTimeoutSeconds",
+    "emergencyStopEnabled",
+    # Path settings
+    "photoDirectory",
+    # Shared runtime values (not from config)
     "running",
     "currentSpeed",
     "testModeCounter",
