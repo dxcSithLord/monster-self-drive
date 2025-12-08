@@ -210,6 +210,9 @@ class EmergencyStop:
         Returns:
             List of recent EmergencyStopEvent objects
         """
+        if limit <= 0:
+            return []
+            
         with self._history_lock:
             return self._history[-limit:]
 
