@@ -57,79 +57,72 @@ development.
 
 ### 2. Configuration Format Inconsistency (Affects All Phases)
 
-**Status:** ⚠️ INCONSISTENT
+**Status:** ✅ RESOLVED
+**Resolution Date:** 2025-12-07
 **Impact:** Developer confusion, documentation mismatch
 **Affected Phases:** All
 
-**Inconsistencies Found:**
+**RESOLUTION:**
+**Decision: JSON with Python Wrapper** (See ADR-002 in DECISIONS.md)
 
-| Document | Specified Format | Location |
-| --------- | ---------------------- | ----------------------- |
-| REQUIREMENTS | "JSON or INI" | Configuration section |
-| Current Code | `Settings.py` (Python module) | Root directory |
-| IMPLEMENTATION | Python format | Configuration examples |
+**Implemented:**
 
-**Problem:**
+- Configuration stored in `config/config.json`
+- Python wrapper in `src/core/settings.py` provides backward-compatible interface
+- JSON Schema defined in `config/config.schema.json` for documentation
 
-- No single source of truth for configuration format
-- Migration path unclear if format changes
-- Validation/schema undefined
+**Completed Actions:**
 
-**Required Decisions:**
+- [x] Choose ONE format: JSON with Python wrapper
+- [x] Document migration plan if changing from current `Settings.py`
+- [x] Define configuration schema/validation
+- [x] Update all documentation to match
+- [x] Specify configuration file location (`config/` directory)
 
-- [ ] Choose ONE format: JSON, INI, or Python module
-- [ ] Document migration plan if changing from current `Settings.py`
-- [ ] Define configuration schema/validation
-- [ ] Update all documentation to match
-- [ ] Specify configuration file location (root vs. config directory)
-
-**Current State:** Using `Settings.py` (Python module)
+**Reference:** See `docs/DECISIONS.md` ADR-002 for complete analysis
 
 ---
 
 ### 3. Directory Structure Migration (Phase 1 Blocker)
 
-**Status:** ⚠️ UNDEFINED
+**Status:** ✅ RESOLVED
+**Resolution Date:** 2025-12-07
 **Impact:** Code organization, import paths, deployment
 **Affected Phases:** Phase 1 and beyond
 
-**Current State:**
+**RESOLUTION:**
+**Decision: Structured `src/` Layout** (See ADR-003 in DECISIONS.md)
+
+**Implemented Structure:**
 
 ```text
 monster-self-drive/
-├── ImageProcessor.py
-├── MonsterAuto.py
-├── Settings.py
-├── ThunderBorg.py
-└── monsterWeb.py
+├── config/
+│   ├── config.json
+│   └── config.schema.json
+├── src/
+│   ├── core/
+│   │   ├── __init__.py
+│   │   └── settings.py
+│   └── safety/
+│       ├── __init__.py
+│       ├── control_manager.py
+│       ├── emergency_stop.py
+│       └── safety_monitor.py
+└── tests/
+    ├── test_safety.py
+    └── test_settings.py
 ```
 
-**Proposed State (from CONSTITUTION):**
+**Completed Actions:**
 
-```text
-monster-self-drive/
-└── src/
-    ├── core/
-    ├── web/
-    ├── vision/
-    └── hardware/
-```
+- [x] Decide: Migrate to `src/` structure
+- [x] Define migration timeline (Pre-Phase 1)
+- [x] Document import path changes
+- [x] Create new module structure
+- [x] Legacy files remain in root for backward compatibility
 
-**Gaps:**
-
-- No migration plan documented
-- Import path changes not addressed
-- Backwards compatibility not considered
-- Deployment impact not analyzed
-
-**Required Decisions:**
-
-- [ ] Decide: Migrate to `src/` structure OR keep flat structure
-- [ ] If migrating: Define migration timeline (before Phase 1 or during?)
-- [ ] Document import path changes
-- [ ] Update all import statements in documentation
-- [ ] Consider symlinks for backwards compatibility
-- [ ] Update deployment scripts
+**Reference:** See `docs/DECISIONS.md` ADR-003 for complete analysis
 
 ---
 

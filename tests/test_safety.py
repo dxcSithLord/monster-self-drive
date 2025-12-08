@@ -227,3 +227,44 @@ class TestControlManager:
         assert manager.has_pending_takeover() is False
         # User1 still has control
         assert manager.active_controller == "user1"
+
+    def test_non_connected_user_cannot_request_takeover(self) -> None:
+        """Test that a user who hasn't connected cannot request takeover."""
+        manager = ControlManager()
+        manager.request_control("user1")
+
+        # User2 never connected, tries to request takeover
+        result = manager.request_takeover("user2")
+        assert result is False
+        assert manager.has_pending_takeover() is False
+
+    def test_approve_takeover_fails_when_no_request_pending(self) -> None:
+        """Test that approve_takeover fails when no takeover request is pending."""
+        manager = ControlManager()
+        manager.request_control("user1")
+        manager.request_control("user2")
+
+        # No takeover request pending
+        assert manager.has_pending_takeover() is False
+
+        # Controller tries to approve non-existent request
+        result = manager.approve_takeover("user1")
+        assert result is False
+
+    def test_non_controller_cannot_approve_takeover(self) -> None:
+        """Test that only the controller can approve a takeover request."""
+        manager = ControlManager()
+        manager.request_control("user1")
+        manager.request_control("user2")
+        manager.request_control("user3")
+
+        # User2 requests takeover
+        manager.request_takeover("user2")
+        assert manager.has_pending_takeover() is True
+
+        # User3 (observer, not controller) tries to approve
+        result = manager.approve_takeover("user3")
+        assert result is False
+        # Takeover request still pending, user1 still controller
+        assert manager.has_pending_takeover() is True
+        assert manager.active_controller == "user1"

@@ -14,10 +14,14 @@ See Also:
     - docs/DECISIONS.md: ADR-009 for safety system architecture
 """
 
+import logging
 import threading
 import time
 from dataclasses import dataclass
 from typing import Callable, List, Optional
+
+# Module logger for emergency stop events
+_logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -93,7 +97,8 @@ class EmergencyStop:
             try:
                 self._motor_stop()
             except Exception:
-                pass  # Must not fail - safety critical
+                # Log but don't fail - safety critical path must complete
+                _logger.exception("Motor stop callback failed")
 
         # Log event (non-blocking if possible)
         event = EmergencyStopEvent(
@@ -117,7 +122,7 @@ class EmergencyStop:
             try:
                 self._on_state_change(True, reason)
             except Exception:
-                pass
+                _logger.exception("State change callback failed during trigger")
 
     def reset(self, reset_by: str = "system") -> bool:
         """Reset emergency stop state.
@@ -141,12 +146,15 @@ class EmergencyStop:
         )
         with self._history_lock:
             self._history.append(event)
+            # Trim history if needed
+            if len(self._history) > self.MAX_HISTORY:
+                self._history = self._history[-self.MAX_HISTORY :]
 
         if self._on_state_change:
             try:
                 self._on_state_change(False, "Reset by " + reset_by)
             except Exception:
-                pass
+                _logger.exception("State change callback failed during reset")
 
         return True
 
