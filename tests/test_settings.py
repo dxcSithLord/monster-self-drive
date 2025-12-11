@@ -101,7 +101,13 @@ class TestSettings:
         """Test that Settings can reload configuration."""
         # Save original state to restore after test
         original_loaded = Settings._loaded
-        original_config = Settings._config.copy() if Settings._config else None
+        original_config = Settings._config.copy() if Settings._config else {}
+        # Save key attribute values that will be modified
+        original_values = {
+            'webBindAddress': Settings.webBindAddress,
+            'frameRate': Settings.frameRate,
+            'testMode': Settings.testMode,
+        }
 
         try:
             # Create a test config
@@ -157,10 +163,9 @@ class TestSettings:
             assert Settings.testMode is False
         finally:
             # Restore original Settings state to avoid affecting other tests
-            Settings._loaded = False
-            # Reload from the original config file
-            try:
-                Settings.load()
-            except FileNotFoundError:
-                # If no config file, use defaults
-                pass
+            Settings._loaded = original_loaded
+            Settings._config = original_config
+            # Restore the attribute values that were modified
+            Settings.webBindAddress = original_values['webBindAddress']
+            Settings.frameRate = original_values['frameRate']
+            Settings.testMode = original_values['testMode']

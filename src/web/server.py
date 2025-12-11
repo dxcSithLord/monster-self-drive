@@ -282,7 +282,7 @@ class MonsterWebServer:
             self._set_motors(0.0, 0.0)
 
         @self.socketio.on('emergency_stop')
-        def handle_emergency_stop(data: Dict[str, Any] = None):
+        def handle_emergency_stop(data: Optional[Dict[str, Any]] = None):
             """Handle emergency stop - accessible to ANY user.
 
             Args:
@@ -383,8 +383,18 @@ class MonsterWebServer:
             sid = request.sid
 
             if self._control_manager:
-                self._control_manager.cancel_takeover(sid)
-                emit('takeover_denied', {'message': 'Takeover denied'})
+                # Get the requester before canceling so we can notify them
+                requester = self._control_manager.get_pending_requester()
+                if self._control_manager.cancel_takeover(sid):
+                    # Notify the controller (who denied)
+                    emit('takeover_denied', {'message': 'Takeover denied'})
+                    # Notify the requester that their request was denied
+                    if requester:
+                        self.socketio.emit(
+                            'takeover_denied',
+                            {'message': 'Your takeover request was denied'},
+                            room=requester
+                        )
 
         @self.socketio.on('take_photo')
         def handle_take_photo():
@@ -414,7 +424,7 @@ class MonsterWebServer:
                         emit('photo_saved', {'path': filepath, 'filename': filename})
 
                     except (IOError, OSError, ValueError) as e:
-                        _logger.error("Failed to save photo: %s", e)
+                        _logger.exception("Failed to save photo")
                         emit('error', {'message': 'Failed to save photo'})
                 else:
                     emit('error', {'message': 'No frame available'})
@@ -450,7 +460,7 @@ class MonsterWebServer:
                 try:
                     self._motor_callback(left, right)
                 except Exception as e:
-                    _logger.error("Motor callback error: %s", e)
+                    _logger.exception("Motor callback error")
 
     def _send_telemetry(self, sid: Optional[str] = None) -> None:
         """Send telemetry data to client(s).
@@ -473,7 +483,7 @@ class MonsterWebServer:
                 if custom:
                     telemetry.update(custom)
             except Exception as e:
-                _logger.error("Telemetry callback error: %s", e)
+                _logger.exception("Telemetry callback error")
 
         if sid:
             self.socketio.emit('telemetry', telemetry, room=sid)
@@ -486,7 +496,7 @@ class MonsterWebServer:
             try:
                 self._send_telemetry()
             except Exception as e:
-                _logger.error("Telemetry loop error: %s", e)
+                _logger.exception("Telemetry loop error")
             time.sleep(self._telemetry_interval)
 
     def _watchdog_loop(self) -> None:
@@ -510,7 +520,7 @@ class MonsterWebServer:
                     del self._last_command_time[sid]
 
             except Exception as e:
-                _logger.error("Watchdog loop error: %s", e)
+                _logger.exception("Watchdog loop error")
             time.sleep(0.1)
 
     def start_telemetry(self) -> None:
@@ -539,6 +549,8 @@ class MonsterWebServer:
         self._telemetry_running = False
         if self._telemetry_thread:
             self._telemetry_thread.join(timeout=1.0)
+        if self._watchdog_thread:
+            self._watchdog_thread.join(timeout=1.0)
 
     def run(
         self,

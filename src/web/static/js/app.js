@@ -289,13 +289,25 @@
             console.warn('Camera frame load failed');
         };
 
-        // Add load handler to clear error state
+        // Track pending camera request to prevent pile-up
+        let cameraRequestPending = false;
+
+        // Load handler schedules next frame after current completes
         elements.cameraFeed.onload = function() {
-            // Frame loaded successfully
+            cameraRequestPending = false;
+        };
+
+        // Also clear pending on error to prevent getting stuck
+        const originalOnError = elements.cameraFeed.onerror;
+        elements.cameraFeed.onerror = function(e) {
+            cameraRequestPending = false;
+            if (originalOnError) originalOnError.call(this, e);
         };
 
         function refreshCamera() {
-            if (state.connected) {
+            // Only request new frame if previous request completed
+            if (state.connected && !cameraRequestPending) {
+                cameraRequestPending = true;
                 elements.cameraFeed.src = '/cam.jpg?' + Date.now();
             }
         }
@@ -507,16 +519,28 @@
 
         zone.addEventListener('touchend', (e) => {
             e.preventDefault();
-            state.joystickActive = false;
-            stopJoystickUpdates();
-            resetJoystick();
+            // Only reset if the tracked touch ended
+            const touchEnded = Array.from(e.changedTouches).some(
+                t => t.identifier === startTouch
+            );
+            if (touchEnded) {
+                state.joystickActive = false;
+                stopJoystickUpdates();
+                resetJoystick();
+            }
         }, { passive: false });
 
         zone.addEventListener('touchcancel', (e) => {
             e.preventDefault();
-            state.joystickActive = false;
-            stopJoystickUpdates();
-            resetJoystick();
+            // Only reset if the tracked touch was canceled
+            const touchCanceled = Array.from(e.changedTouches).some(
+                t => t.identifier === startTouch
+            );
+            if (touchCanceled) {
+                state.joystickActive = false;
+                stopJoystickUpdates();
+                resetJoystick();
+            }
         }, { passive: false });
 
         // Mouse events for desktop
@@ -591,27 +615,37 @@
     // Action Buttons
     // =========================================================================
     function setupActionButtons() {
+        // Helper to prevent double-fire on touch devices
+        // Uses a WeakMap to track last touch time per element
+        const lastTouchTime = new WeakMap();
+        const TOUCH_CLICK_THRESHOLD = 500; // ms
+
+        function addTouchClickHandler(element, handler) {
+            element.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                lastTouchTime.set(element, Date.now());
+                handler();
+            }, { passive: false });
+
+            element.addEventListener('click', () => {
+                // Skip click if it follows a recent touch
+                const lastTouch = lastTouchTime.get(element) || 0;
+                if (Date.now() - lastTouch > TOUCH_CLICK_THRESHOLD) {
+                    handler();
+                }
+            });
+        }
+
         // Stop button
-        elements.btnStop.addEventListener('click', () => {
+        addTouchClickHandler(elements.btnStop, () => {
             sendStop();
             triggerHaptic();
         });
-
-        elements.btnStop.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            sendStop();
-            triggerHaptic();
-        }, { passive: false });
 
         // Emergency stop button
-        elements.btnEmergency.addEventListener('click', () => {
+        addTouchClickHandler(elements.btnEmergency, () => {
             sendEmergencyStop();
         });
-
-        elements.btnEmergency.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            sendEmergencyStop();
-        }, { passive: false });
 
         // Reset emergency button
         elements.resetEmergency.addEventListener('click', () => {
@@ -652,6 +686,14 @@
     function setupFullscreen() {
         elements.fullscreenToggle.addEventListener('click', () => {
             toggleFullscreen();
+        });
+
+        // Sync CSS class when fullscreen state changes (e.g., via Escape key)
+        document.addEventListener('fullscreenchange', () => {
+            const container = elements.cameraContainer;
+            if (!document.fullscreenElement) {
+                container.classList.remove('fullscreen');
+            }
         });
     }
 
