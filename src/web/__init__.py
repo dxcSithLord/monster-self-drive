@@ -5,12 +5,21 @@ This module provides:
 - Single-user control manager (ADR-004)
 - Control status indicators
 - Emergency stop button (accessible to any user)
+- Mobile-optimized responsive interface
+
+Phase 1 Implementation:
+- Responsive design for mobile devices
+- Touch controls with continuous movement
+- Virtual joystick
+- WebSocket real-time communication
+- Battery/connection status indicators
 
 See Also:
     - docs/DECISIONS.md: ADR-001 for WebSocket library decision
     - docs/DECISIONS.md: ADR-004 for multi-user control model
+    - docs/IMPLEMENTATION_PLAN.md: Phase 1 specification
 """
 
-# TODO: Implement Flask-SocketIO server in Phase 1
-# Current: monsterWeb.py uses raw socketserver (to be replaced)
-# Placeholder - will be populated in Phase 1
+from src.web.server import MonsterWebServer
+
+__all__ = ['MonsterWebServer']

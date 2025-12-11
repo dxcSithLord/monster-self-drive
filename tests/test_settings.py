@@ -157,7 +157,10 @@ class TestSettings:
             assert Settings.testMode is False
         finally:
             # Restore original Settings state to avoid affecting other tests
-            Settings._loaded = original_loaded
-            if original_config is not None:
-                Settings._config = original_config
-                Settings._apply_config(original_config)
+            Settings._loaded = False
+            # Reload from the original config file
+            try:
+                Settings.load()
+            except FileNotFoundError:
+                # If no config file, use defaults
+                pass
