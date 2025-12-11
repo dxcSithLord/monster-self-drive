@@ -50,11 +50,11 @@ verify_file() {
 echo "Verifying vendored JavaScript dependencies..."
 echo ""
 
-# Socket.IO client 4.6.0
+# Socket.IO client 4.6.2 (fixes CVE-2024-38355)
 verify_file \
-    "src/web/static/js/vendor/socket.io-4.6.0.min.js" \
-    "0401de33701f1cad16ecf952899d23990b6437d0a5b7335524edf6bdfb932542" \
-    "socket.io-client 4.6.0"
+    "src/web/static/js/vendor/socket.io-4.6.2.min.js" \
+    "39d4925fad0da1c8405fb91ce0e4628c892a6fef94147a0923fafd2e6a0a25a1" \
+    "socket.io-client 4.6.2"
 
 echo ""
 echo "Checking for external runtime URLs in templates..."

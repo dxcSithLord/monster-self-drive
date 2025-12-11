@@ -21,25 +21,26 @@ All external resources MUST be:
 | Property | Value |
 |----------|-------|
 | **Name** | socket.io-client |
-| **Version** | 4.6.0 |
+| **Version** | 4.6.2 |
 | **License** | MIT |
-| **Local Path** | `src/web/static/js/vendor/socket.io-4.6.0.min.js` |
-| **Download URL** | https://registry.npmjs.org/socket.io-client/-/socket.io-client-4.6.0.tgz |
-| **NPM Registry** | https://www.npmjs.com/package/socket.io-client/v/4.6.0 |
-| **GitHub** | https://github.com/socketio/socket.io-client |
-| **SHA-256** | `0401de33701f1cad16ecf952899d23990b6437d0a5b7335524edf6bdfb932542` |
-| **NPM Integrity** | `sha512-2XOp18xnGghUICSd5ziUIS4rB0dhr6S8OvAps8y+HhOjFQlqGcf+FIh6fCIsKKZyWFxJeFPrZRNPGsHDTsz1Ug==` |
+| **Local Path** | `src/web/static/js/vendor/socket.io-4.6.2.min.js` |
+| **Download URL** | [https://registry.npmjs.org/socket.io-client/-/socket.io-client-4.6.2.tgz](https://registry.npmjs.org/socket.io-client/-/socket.io-client-4.6.2.tgz) |
+| **NPM Registry** | [https://www.npmjs.com/package/socket.io-client/v/4.6.2](https://www.npmjs.com/package/socket.io-client/v/4.6.2) |
+| **GitHub** | [https://github.com/socketio/socket.io-client](https://github.com/socketio/socket.io-client) |
+| **SHA-256** | `39d4925fad0da1c8405fb91ce0e4628c892a6fef94147a0923fafd2e6a0a25a1` |
+| **NPM Integrity** | `sha512-OwWrMbbA8wSqhBAR0yoPK6EdQLERQAYjXb3A0zLpgxfM1ZGLKoxHx8gVmCHA6pcclRX5oA/zvQf7bghAS11jRA==` |
+| **Security Note** | Version 4.6.2 fixes CVE-2024-38355 (CVSS 7.3) |
 
 **Extraction Command:**
 ```bash
-curl -sL "https://registry.npmjs.org/socket.io-client/-/socket.io-client-4.6.0.tgz" -o socket.io-client.tgz
+curl -sL "https://registry.npmjs.org/socket.io-client/-/socket.io-client-4.6.2.tgz" -o socket.io-client.tgz
 tar -xzf socket.io-client.tgz package/dist/socket.io.min.js
-cp package/dist/socket.io.min.js src/web/static/js/vendor/socket.io-4.6.0.min.js
+cp package/dist/socket.io.min.js src/web/static/js/vendor/socket.io-4.6.2.min.js
 ```
 
 **Verification Command:**
 ```bash
-echo "0401de33701f1cad16ecf952899d23990b6437d0a5b7335524edf6bdfb932542  src/web/static/js/vendor/socket.io-4.6.0.min.js" | sha256sum -c
+echo "39d4925fad0da1c8405fb91ce0e4628c892a6fef94147a0923fafd2e6a0a25a1  src/web/static/js/vendor/socket.io-4.6.2.min.js" | sha256sum -c
 ```
 
 ---
@@ -126,14 +127,14 @@ set -e
 
 echo "Verifying vendored JavaScript dependencies..."
 
-# Socket.IO client
-EXPECTED_SHA256="0401de33701f1cad16ecf952899d23990b6437d0a5b7335524edf6bdfb932542"
-ACTUAL_SHA256=$(sha256sum src/web/static/js/vendor/socket.io-4.6.0.min.js | cut -d' ' -f1)
+# Socket.IO client 4.6.2 (fixes CVE-2024-38355)
+EXPECTED_SHA256="39d4925fad0da1c8405fb91ce0e4628c892a6fef94147a0923fafd2e6a0a25a1"
+ACTUAL_SHA256=$(sha256sum src/web/static/js/vendor/socket.io-4.6.2.min.js | cut -d' ' -f1)
 
 if [ "$EXPECTED_SHA256" = "$ACTUAL_SHA256" ]; then
-    echo "✓ socket.io-4.6.0.min.js: OK"
+    echo "✓ socket.io-4.6.2.min.js: OK"
 else
-    echo "✗ socket.io-4.6.0.min.js: CHECKSUM MISMATCH"
+    echo "✗ socket.io-4.6.2.min.js: CHECKSUM MISMATCH"
     echo "  Expected: $EXPECTED_SHA256"
     echo "  Actual:   $ACTUAL_SHA256"
     exit 1

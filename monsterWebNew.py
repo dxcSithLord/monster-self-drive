@@ -145,9 +145,12 @@ class ImageCapture(threading.Thread):
 def set_motors(left: float, right: float) -> None:
     """Set motor powers (callback for web server).
 
+    Note: Power limiting is handled by MonsterWebServer's max_power parameter,
+    so this callback receives pre-scaled values in range -max_power to +max_power.
+
     Args:
-        left: Left motor power (-1.0 to 1.0)
-        right: Right motor power (-1.0 to 1.0)
+        left: Left motor power (pre-scaled by server's max_power)
+        right: Right motor power (pre-scaled by server's max_power)
     """
     # TB is read-only at module scope, no global needed
     if TB is None:
@@ -158,12 +161,8 @@ def set_motors(left: float, right: float) -> None:
         TB.MotorsOff()
         return
 
-    # Apply power limits
-    max_power = Settings.voltageOut / Settings.voltageIn
-    left *= max_power
-    right *= max_power
-
     # Set motor speeds (Motor1 = right, Motor2 = left)
+    # Note: Power scaling already applied by MonsterWebServer._set_motors()
     TB.SetMotor1(right)
     TB.SetMotor2(left)
 

@@ -505,6 +505,10 @@ class MonsterWebServer:
                     _logger.warning("Watchdog timeout - stopping motors")
                     self._set_motors(0.0, 0.0)
 
+                # Clean up timed-out entries to prevent memory leak
+                for sid in timed_out:
+                    del self._last_command_time[sid]
+
             except Exception as e:
                 _logger.error("Watchdog loop error: %s", e)
             time.sleep(0.1)
