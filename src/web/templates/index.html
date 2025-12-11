@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>MonsterBorg Control</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div id="app">
+        <!-- Header with status indicators -->
+        <header id="header">
+            <div class="status-bar">
+                <div class="status-item" id="connection-status">
+                    <span class="status-dot disconnected"></span>
+                    <span class="status-text">Disconnected</span>
+                </div>
+                <div class="status-item" id="control-status">
+                    <span class="status-text">--</span>
+                </div>
+                <div class="status-item" id="battery-status">
+                    <span class="battery-icon"></span>
+                    <span class="battery-text">--V</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Emergency stop banner (shown when active) -->
+        <div id="emergency-banner" class="hidden">
+            <span class="emergency-icon">!</span>
+            <span class="emergency-text">EMERGENCY STOP ACTIVE</span>
+            <button id="reset-emergency" class="btn-reset">RESET</button>
+        </div>
+
+        <!-- Camera view -->
+        <div id="camera-container">
+            <img id="camera-feed" src="/cam.jpg" alt="Camera Feed">
+            <div id="camera-overlay">
+                <div class="speed-display">
+                    <span id="speed-value">0</span>%
+                </div>
+            </div>
+            <button id="fullscreen-toggle" class="btn-icon" aria-label="Toggle fullscreen">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Control panel -->
+        <div id="control-panel">
+            <!-- Mode selector -->
+            <div id="mode-selector">
+                <button class="mode-btn active" data-mode="buttons">Buttons</button>
+                <button class="mode-btn" data-mode="joystick">Joystick</button>
+            </div>
+
+            <!-- Button controls (default) -->
+            <div id="button-controls" class="control-mode active">
+                <div class="button-grid">
+                    <button class="drive-btn" data-left="-1" data-right="1" aria-label="Spin Left">
+                        <span class="btn-icon-rotate-left"></span>
+                        <span class="btn-label">Spin L</span>
+                    </button>
+                    <button class="drive-btn" data-left="1" data-right="1" aria-label="Forward">
+                        <span class="btn-icon-up"></span>
+                        <span class="btn-label">Forward</span>
+                    </button>
+                    <button class="drive-btn" data-left="1" data-right="-1" aria-label="Spin Right">
+                        <span class="btn-icon-rotate-right"></span>
+                        <span class="btn-label">Spin R</span>
+                    </button>
+                    <button class="drive-btn" data-left="0" data-right="1" aria-label="Turn Left">
+                        <span class="btn-icon-left"></span>
+                        <span class="btn-label">Turn L</span>
+                    </button>
+                    <button class="drive-btn" data-left="-1" data-right="-1" aria-label="Reverse">
+                        <span class="btn-icon-down"></span>
+                        <span class="btn-label">Reverse</span>
+                    </button>
+                    <button class="drive-btn" data-left="1" data-right="0" aria-label="Turn Right">
+                        <span class="btn-icon-right"></span>
+                        <span class="btn-label">Turn R</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Joystick control -->
+            <div id="joystick-controls" class="control-mode">
+                <div id="joystick-zone">
+                    <div id="joystick-base">
+                        <div id="joystick-stick"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Speed slider -->
+            <div id="speed-control">
+                <label for="speed-slider">Speed</label>
+                <input type="range" id="speed-slider" min="0" max="100" value="100">
+                <span id="speed-label">100%</span>
+            </div>
+
+            <!-- Action buttons -->
+            <div id="action-buttons">
+                <button id="btn-stop" class="action-btn stop-btn" aria-label="Stop">
+                    STOP
+                </button>
+                <button id="btn-emergency" class="action-btn emergency-btn" aria-label="Emergency Stop">
+                    EMERGENCY
+                </button>
+                <button id="btn-photo" class="action-btn photo-btn" aria-label="Take Photo">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                        <path d="M12 15.2c1.77 0 3.2-1.43 3.2-3.2S13.77 8.8 12 8.8 8.8 10.23 8.8 12s1.43 3.2 3.2 3.2zm0-4.8c.88 0 1.6.72 1.6 1.6s-.72 1.6-1.6 1.6-1.6-.72-1.6-1.6.72-1.6 1.6-1.6z"/>
+                        <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Takeover request modal -->
+        <div id="takeover-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>Takeover Request</h3>
+                <p>Another user is requesting control.</p>
+                <div class="modal-buttons">
+                    <button id="approve-takeover" class="btn-approve">Approve</button>
+                    <button id="deny-takeover" class="btn-deny">Deny</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast notifications -->
+        <div id="toast-container"></div>
+    </div>
+
+    <!-- Socket.IO client (local copy - see docs/SBOM.md for source info) -->
+    <script src="{{ url_for('static', filename='js/vendor/socket.io-4.8.1.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
