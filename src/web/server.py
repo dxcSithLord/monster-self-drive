@@ -14,7 +14,6 @@ See Also:
     - docs/IMPLEMENTATION_PLAN.md: Phase 1 specification
 """
 
-import base64
 import logging
 import os
 import threading
@@ -23,7 +22,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
 from flask import Flask, Response, render_template, request
-from flask_socketio import SocketIO, emit, disconnect
+from flask_socketio import SocketIO, emit
 
 # Module logger
 _logger = logging.getLogger(__name__)
@@ -390,8 +389,6 @@ class MonsterWebServer:
         @self.socketio.on('take_photo')
         def handle_take_photo():
             """Handle photo capture request."""
-            sid = request.sid
-
             if self._frame_callback:
                 frame = self._frame_callback()
                 if frame:

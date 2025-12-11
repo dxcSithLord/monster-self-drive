@@ -130,7 +130,7 @@ class ImageCapture(threading.Thread):
         self.processor.join()
 
     def _trigger_stream(self):
-        global running
+        # running is read-only at module scope, no global needed
         while running:
             if self.processor.event.is_set():
                 time.sleep(0.01)
@@ -149,8 +149,7 @@ def set_motors(left: float, right: float) -> None:
         left: Left motor power (-1.0 to 1.0)
         right: Right motor power (-1.0 to 1.0)
     """
-    global TB
-
+    # TB is read-only at module scope, no global needed
     if TB is None:
         return
 
@@ -175,8 +174,7 @@ def get_frame() -> bytes:
     Returns:
         JPEG-encoded frame as bytes, or None
     """
-    global lastFrame, lockFrame
-
+    # lastFrame and lockFrame are read-only at module scope, no global needed
     with lockFrame:
         return lastFrame
 
@@ -187,8 +185,7 @@ def get_telemetry() -> dict:
     Returns:
         Dict with telemetry values
     """
-    global TB
-
+    # TB is read-only at module scope, no global needed
     telemetry = {}
 
     if TB is not None:
@@ -202,16 +199,16 @@ def get_telemetry() -> dict:
 
 def motor_stop_callback() -> None:
     """Emergency stop motor callback."""
-    global TB
+    # TB is read-only at module scope, no global needed
     if TB is not None:
         TB.MotorsOff()
         TB.SetLedShowBattery(False)
         TB.SetLeds(1, 0, 0)  # Red LED
 
 
-def on_emergency_state_change(is_stopped: bool, reason: str) -> None:
+def on_emergency_state_change(is_stopped: bool, _reason: str) -> None:
     """Callback when emergency stop state changes."""
-    global TB
+    # TB is read-only at module scope, no global needed
     if TB is not None:
         if is_stopped:
             TB.SetLeds(1, 0, 0)  # Red

@@ -87,6 +87,9 @@
 
             // Toast
             toastContainer: document.getElementById('toast-container'),
+
+            // Cached sub-elements for performance (avoid querySelector in hot paths)
+            batteryText: document.querySelector('#battery-status .battery-text'),
         };
     }
 
@@ -196,7 +199,10 @@
         // Update battery display
         if (data.battery_voltage !== undefined) {
             const voltage = data.battery_voltage.toFixed(1);
-            elements.batteryStatus.querySelector('.battery-text').textContent = `${voltage}V`;
+            // Use cached batteryText element for performance (called at 10Hz)
+            if (elements.batteryText) {
+                elements.batteryText.textContent = `${voltage}V`;
+            }
 
             // Update battery icon color based on level
             const batteryElement = elements.batteryStatus;
@@ -276,6 +282,17 @@
         if (state.cameraInterval) {
             return;
         }
+
+        // Add error handler for failed image loads
+        elements.cameraFeed.onerror = function() {
+            // Don't show error toast for every frame - just log
+            console.warn('Camera frame load failed');
+        };
+
+        // Add load handler to clear error state
+        elements.cameraFeed.onload = function() {
+            // Frame loaded successfully
+        };
 
         function refreshCamera() {
             if (state.connected) {
