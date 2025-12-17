@@ -9,6 +9,7 @@ project, including download sources, versions, and verification checksums.
 ## Security Policy
 
 All external resources MUST be:
+
 1. Downloaded and stored locally in the repository
 2. Verified using checksums before deployment
 3. Documented in this SBOM with source URL
@@ -32,6 +33,7 @@ All external resources MUST be:
 | **Security Note** | Latest stable release; includes fix for CVE-2024-38355 (since 4.6.2) |
 
 **Extraction Command:**
+
 ```bash
 curl -sL "https://registry.npmjs.org/socket.io-client/-/socket.io-client-4.8.1.tgz" -o socket.io-client.tgz
 tar -xzf socket.io-client.tgz package/dist/socket.io.min.js
@@ -39,6 +41,7 @@ cp package/dist/socket.io.min.js src/web/static/js/vendor/socket.io-4.8.1.min.js
 ```
 
 **Verification Command:**
+
 ```bash
 echo "b0e735814f8dcfecd6cdb8a7ce95a297a7e1e5f2727a29e6f5901801d52fa0c5  src/web/static/js/vendor/socket.io-4.8.1.min.js" | sha256sum -c
 ```
@@ -178,6 +181,7 @@ When adding a new dependency:
 ## License Compliance
 
 All dependencies use permissive open-source licenses compatible with this project:
+
 - MIT License
 - BSD-3-Clause License
 - Apache-2.0 License

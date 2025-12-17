@@ -35,7 +35,8 @@ verify_file() {
         return
     fi
 
-    local actual_sha256=$(sha256sum "$full_path" | cut -d' ' -f1)
+    local actual_sha256
+    actual_sha256=$(sha256sum "$full_path" | cut -d' ' -f1)
 
     if [ "$expected_sha256" = "$actual_sha256" ]; then
         echo "✓ $name: OK"
