@@ -61,7 +61,8 @@ PyPI packages are verified via pip's built-in hash checking.
 | opencv-python | >=4.10.0 | MIT | [https://pypi.org/project/opencv-python/](https://pypi.org/project/opencv-python/) |
 | opencv-contrib-python | >=4.10.0 | MIT | [https://pypi.org/project/opencv-contrib-python/](https://pypi.org/project/opencv-contrib-python/) |
 
-**Note:** NumPy 2.x is compatible - codebase uses only basic APIs (`numpy.mean`, `numpy.where`, `numpy.array`, `numpy.ones`).
+**Note:** NumPy 2.x is compatible - codebase uses only basic APIs
+(`numpy.mean`, `numpy.where`, `numpy.array`, `numpy.ones`).
 
 ### Web Framework
 
@@ -98,39 +99,32 @@ PyPI packages are verified via pip's built-in hash checking.
 | adafruit-circuitpython-mpu6050 | >=1.2.0 | MIT | [https://pypi.org/project/adafruit-circuitpython-mpu6050/](https://pypi.org/project/adafruit-circuitpython-mpu6050/) |
 | adafruit-circuitpython-bno055 | >=1.6.0 | MIT | [https://pypi.org/project/adafruit-circuitpython-bno055/](https://pypi.org/project/adafruit-circuitpython-bno055/) |
 
-### Optional: Machine Learning
+### Optional: Machine Learning (Future)
 
-| Package | Version | License | Platform | PyPI URL |
-|---------|---------|---------|----------|----------|
-| ai-edge-litert | >=2.1.0 | Apache-2.0 | ARM only | [https://pypi.org/project/ai-edge-litert/](https://pypi.org/project/ai-edge-litert/) |
-| tensorflow | >=2.16.0 | Apache-2.0 | x86_64 only | [https://pypi.org/project/tensorflow/](https://pypi.org/project/tensorflow/) |
-| keras | >=3.12.0 | Apache-2.0 | x86_64 only | [https://pypi.org/project/keras/](https://pypi.org/project/keras/) |
-| onnxruntime | >=1.16.0 | MIT | All | [https://pypi.org/project/onnxruntime/](https://pypi.org/project/onnxruntime/) |
+**Status:** No ML inference code implemented yet. Dependencies will be added when
+on-device object detection is implemented.
 
-**Platform Notes:**
+**Planned packages when inference is added:**
 
-- **ARM (armv7l/aarch64)**: Uses `ai-edge-litert` (LiteRT, formerly TensorFlow Lite) for
-inference only -lightweight runtime for running pre-trained models
-- **x86_64**: Uses full `tensorflow` + `keras` for model training and development
+| Package | Platform | License | Notes |
+|---------|----------|---------|-------|
+| ai-edge-litert | aarch64 | Apache-2.0 | LiteRT (formerly TensorFlow Lite) |
+| tensorflow | x86_64 | Apache-2.0 | Development/training only |
+| keras | x86_64 | Apache-2.0 | Requires >=3.12.0 for CVE fixes |
+| onnxruntime | All | MIT | Alternative inference runtime |
 
-**Migration Note:** `tflite-runtime` is deprecated and replaced by `ai-edge-litert` (LiteRT).
-See [migration guide](https://ai.google.dev/edge/litert/migration) for details. Import changes:
+**References:**
 
-```python
-# Old: from tflite_runtime.interpreter import Interpreter
-# New:
-from ai_edge_litert.interpreter import Interpreter
-```
+- [LiteRT Migration Guide](https://ai.google.dev/edge/litert/migration)
+  (`tflite-runtime` is deprecated)
+- [ai-edge-litert on PyPI](https://pypi.org/project/ai-edge-litert/)
 
-**Security Note:** keras >=3.12.0 (x86_64 only) required to fix critical vulnerabilities:
+**Security considerations for keras (when added):**
 
-- CVE-2025-12060 (Critical, CVSS 9.0): Path traversal in tar archive extraction
-- CVE-2025-9906 (High, CVSS 8.2): Arbitrary code execution via model loading
-- CVE-2025-9905 (High, CVSS 7.5): Unsafe deserialization in legacy formats
-- CVE-2025-12058 (Medium, CVSS 6.8): Arbitrary file read and SSRF
-
-These CVEs affect Keras model loading/training functions, not LiteRT inference.
-ARM deployments using only `ai-edge-litert` are not affected.
+- CVE-2025-12060: Path traversal in tar archive extraction
+- CVE-2025-9906: Arbitrary code execution via model loading
+- CVE-2025-9905: Unsafe deserialization in legacy formats
+- CVE-2025-12058: Arbitrary file read and SSRF
 
 ### Development Dependencies
 
@@ -145,7 +139,6 @@ ARM deployments using only `ai-edge-litert` are not affected.
 | filelock | >=3.20.1 | Unlicense | [https://pypi.org/project/filelock/](https://pypi.org/project/filelock/) |
 
 **Notes:**
-
 - pytest >=9.0.0 requires Python 3.10+ (Debian Trixie has 3.13.5)
 - filelock >=3.20.1 required to fix CVE-2025-68146 (TOCTOU symlink vulnerability)
 
