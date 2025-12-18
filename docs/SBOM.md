@@ -57,63 +57,63 @@ PyPI packages are verified via pip's built-in hash checking.
 
 | Package | Version | License | PyPI URL |
 |---------|---------|---------|----------|
-| numpy | >=1.26.0 | BSD-3-Clause | https://pypi.org/project/numpy/ |
-| opencv-python | >=4.9.0 | MIT | https://pypi.org/project/opencv-python/ |
-| opencv-contrib-python | >=4.9.0 | MIT | https://pypi.org/project/opencv-contrib-python/ |
+| numpy | >=1.26.0 | BSD-3-Clause | [https://pypi.org/project/numpy/](https://pypi.org/project/numpy/) |
+| opencv-python | >=4.9.0 | MIT | [https://pypi.org/project/opencv-python/](https://pypi.org/project/opencv-python/) |
+| opencv-contrib-python | >=4.9.0 | MIT | [https://pypi.org/project/opencv-contrib-python/](https://pypi.org/project/opencv-contrib-python/) |
 
 ### Web Framework
 
 | Package | Version | License | PyPI URL |
 |---------|---------|---------|----------|
-| Flask | >=3.0.0 | BSD-3-Clause | https://pypi.org/project/Flask/ |
-| Flask-SocketIO | >=5.3.0 | MIT | https://pypi.org/project/Flask-SocketIO/ |
-| python-socketio | >=5.10.0 | MIT | https://pypi.org/project/python-socketio/ |
+| Flask | >=3.0.0 | BSD-3-Clause | [https://pypi.org/project/Flask/](https://pypi.org/project/Flask/) |
+| Flask-SocketIO | >=5.3.0 | MIT | [https://pypi.org/project/Flask-SocketIO/](https://pypi.org/project/Flask-SocketIO/) |
+| python-socketio | >=5.10.0 | MIT | [https://pypi.org/project/python-socketio/](https://pypi.org/project/python-socketio/) |
 
 ### Hardware Interface
 
 | Package | Version | License | PyPI URL |
 |---------|---------|---------|----------|
-| smbus2 | >=0.4.3 | MIT | https://pypi.org/project/smbus2/ |
+| smbus2 | >=0.4.3 | MIT | [https://pypi.org/project/smbus2/](https://pypi.org/project/smbus2/) |
 
 ### Camera Support (Raspberry Pi)
 
 | Package | Version | License | PyPI URL |
 |---------|---------|---------|----------|
-| picamera | >=1.13 | BSD | https://pypi.org/project/picamera/ |
-| picamera2 | >=0.3.16 | BSD | https://pypi.org/project/picamera2/ |
+| picamera | >=1.13 | BSD | [https://pypi.org/project/picamera/](https://pypi.org/project/picamera/) |
+| picamera2 | >=0.3.16 | BSD | [https://pypi.org/project/picamera2/](https://pypi.org/project/picamera2/) |
 
 ### Image Processing
 
 | Package | Version | License | PyPI URL |
 |---------|---------|---------|----------|
-| Pillow | >=10.3.0 | HPND | https://pypi.org/project/Pillow/ |
-| scipy | >=1.12.0 | BSD-3-Clause | https://pypi.org/project/scipy/ |
+| Pillow | >=10.3.0 | HPND | [https://pypi.org/project/Pillow/](https://pypi.org/project/Pillow/) |
+| scipy | >=1.12.0 | BSD-3-Clause | [https://pypi.org/project/scipy/](https://pypi.org/project/scipy/) |
 
 ### Optional: IMU Support
 
 | Package | Version | License | PyPI URL |
 |---------|---------|---------|----------|
-| adafruit-circuitpython-mpu6050 | >=1.2.0 | MIT | https://pypi.org/project/adafruit-circuitpython-mpu6050/ |
-| adafruit-circuitpython-bno055 | >=1.6.0 | MIT | https://pypi.org/project/adafruit-circuitpython-bno055/ |
+| adafruit-circuitpython-mpu6050 | >=1.2.0 | MIT | [https://pypi.org/project/adafruit-circuitpython-mpu6050/](https://pypi.org/project/adafruit-circuitpython-mpu6050/) |
+| adafruit-circuitpython-bno055 | >=1.6.0 | MIT | [https://pypi.org/project/adafruit-circuitpython-bno055/](https://pypi.org/project/adafruit-circuitpython-bno055/) |
 
 ### Optional: Machine Learning
 
 | Package | Version | License | PyPI URL |
 |---------|---------|---------|----------|
-| tflite-runtime | >=2.14.0 | Apache-2.0 | https://pypi.org/project/tflite-runtime/ |
-| tensorflow | >=2.15.0 | Apache-2.0 | https://pypi.org/project/tensorflow/ |
-| onnxruntime | >=1.16.0 | MIT | https://pypi.org/project/onnxruntime/ |
+| tflite-runtime | >=2.14.0 | Apache-2.0 | [https://pypi.org/project/tflite-runtime/](https://pypi.org/project/tflite-runtime/) |
+| tensorflow | >=2.15.0 | Apache-2.0 | [https://pypi.org/project/tensorflow/](https://pypi.org/project/tensorflow/) |
+| onnxruntime | >=1.16.0 | MIT | [https://pypi.org/project/onnxruntime/](https://pypi.org/project/onnxruntime/) |
 
 ### Development Dependencies
 
 | Package | Version | License | PyPI URL |
 |---------|---------|---------|----------|
-| pytest | >=8.0.0 | MIT | https://pypi.org/project/pytest/ |
-| pytest-asyncio | >=0.23.0 | Apache-2.0 | https://pypi.org/project/pytest-asyncio/ |
-| black | >=24.0.0 | MIT | https://pypi.org/project/black/ |
-| flake8 | >=7.0.0 | MIT | https://pypi.org/project/flake8/ |
-| mypy | >=1.8.0 | MIT | https://pypi.org/project/mypy/ |
-| pre-commit | >=3.6.0 | MIT | https://pypi.org/project/pre-commit/ |
+| pytest | >=8.0.0 | MIT | [https://pypi.org/project/pytest/](https://pypi.org/project/pytest/) |
+| pytest-asyncio | >=0.23.0 | Apache-2.0 | [https://pypi.org/project/pytest-asyncio/](https://pypi.org/project/pytest-asyncio/) |
+| black | >=24.0.0 | MIT | [https://pypi.org/project/black/](https://pypi.org/project/black/) |
+| flake8 | >=7.0.0 | MIT | [https://pypi.org/project/flake8/](https://pypi.org/project/flake8/) |
+| mypy | >=1.8.0 | MIT | [https://pypi.org/project/mypy/](https://pypi.org/project/mypy/) |
+| pre-commit | >=3.6.0 | MIT | [https://pypi.org/project/pre-commit/](https://pypi.org/project/pre-commit/) |
 
 ---
 
