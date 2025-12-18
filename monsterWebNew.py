@@ -321,7 +321,7 @@ def main():
         processor.join(timeout=2)
 
         # Close camera
-        del camera
+        camera.close()
 
         _logger.info("Shutdown complete")
 
