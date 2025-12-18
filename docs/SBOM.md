@@ -109,7 +109,8 @@ PyPI packages are verified via pip's built-in hash checking.
 
 **Platform Notes:**
 
-- **ARM (armv7l/aarch64)**: Uses `ai-edge-litert` (LiteRT, formerly TensorFlow Lite) for inference only -lightweight runtime for running pre-trained models
+- **ARM (armv7l/aarch64)**: Uses `ai-edge-litert` (LiteRT, formerly TensorFlow Lite) for
+inference only -lightweight runtime for running pre-trained models
 - **x86_64**: Uses full `tensorflow` + `keras` for model training and development
 
 **Migration Note:** `tflite-runtime` is deprecated and replaced by `ai-edge-litert` (LiteRT).
@@ -128,7 +129,7 @@ from ai_edge_litert.interpreter import Interpreter
 - CVE-2025-9905 (High, CVSS 7.5): Unsafe deserialization in legacy formats
 - CVE-2025-12058 (Medium, CVSS 6.8): Arbitrary file read and SSRF
 
-These CVEs affect Keras model loading/training functions, not LiteRT inference. 
+These CVEs affect Keras model loading/training functions, not LiteRT inference.
 ARM deployments using only `ai-edge-litert` are not affected.
 
 ### Development Dependencies
