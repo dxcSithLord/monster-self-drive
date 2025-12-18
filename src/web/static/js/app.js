@@ -91,6 +91,12 @@
             // Cached sub-elements for performance (avoid querySelector in hot paths)
             batteryText: document.querySelector('#battery-status .battery-text'),
         };
+        const requiredElements = ['connectionStatus', 'cameraFeed', 'btnEmergency'];
+        requiredElements.forEach(id => {
+            if (!elements[id]) {
+                console.error(`Required element missing: ${id}`);
+            }
+        });
     }
 
     // =========================================================================
