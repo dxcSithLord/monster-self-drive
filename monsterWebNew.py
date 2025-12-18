@@ -251,6 +251,9 @@ def main():
 
     control_manager = ControlManager()
 
+    # Load settings from config
+    Settings.load()
+
     # Initialize camera
     _logger.info("Initializing camera")
     camera = picamera.PiCamera()
