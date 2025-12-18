@@ -211,7 +211,7 @@ class MonsterWebServer:
                     return
 
             # Check emergency stop
-            if self._emergency_stop and self._emergency_stop.is_stopped:
+            if self._emergency_stop and self._emergency_stop.is_stopped():
                 emit('error', {'message': 'Emergency stop active'})
                 return
 
