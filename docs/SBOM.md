@@ -103,8 +103,15 @@ PyPI packages are verified via pip's built-in hash checking.
 | Package | Version | License | PyPI URL |
 |---------|---------|---------|----------|
 | tflite-runtime | >=2.14.0 | Apache-2.0 | [https://pypi.org/project/tflite-runtime/](https://pypi.org/project/tflite-runtime/) |
-| tensorflow | >=2.15.0 | Apache-2.0 | [https://pypi.org/project/tensorflow/](https://pypi.org/project/tensorflow/) |
+| tensorflow | >=2.16.0 | Apache-2.0 | [https://pypi.org/project/tensorflow/](https://pypi.org/project/tensorflow/) |
+| keras | >=3.12.0 | Apache-2.0 | [https://pypi.org/project/keras/](https://pypi.org/project/keras/) |
 | onnxruntime | >=1.16.0 | MIT | [https://pypi.org/project/onnxruntime/](https://pypi.org/project/onnxruntime/) |
+
+**Security Note:** keras >=3.12.0 required to fix critical vulnerabilities:
+- CVE-2025-12060 (Critical, CVSS 9.0): Path traversal in tar archive extraction
+- CVE-2025-9906 (High, CVSS 8.2): Arbitrary code execution via model loading
+- CVE-2025-9905 (High, CVSS 7.5): Unsafe deserialization in legacy formats
+- CVE-2025-12058 (Medium, CVSS 6.8): Arbitrary file read and SSRF
 
 ### Development Dependencies
 
