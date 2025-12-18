@@ -212,7 +212,7 @@ class MonsterWebServer:
                     return
 
             # Check emergency stop
-            if self._emergency_stop and self._emergency_stop.is_stopped():
+            if self._emergency_stop and self._emergency_stop.is_stopped:
                 emit('error', {'message': 'Emergency stop active'})
                 return
 
@@ -251,7 +251,7 @@ class MonsterWebServer:
                     return
 
             # Check emergency stop
-            if self._emergency_stop and self._emergency_stop.is_stopped():
+            if self._emergency_stop and self._emergency_stop.is_stopped:
                 emit('error', {'message': 'Emergency stop active'})
                 return
 
@@ -496,7 +496,7 @@ class MonsterWebServer:
             'motor_left': self._current_left,
             'motor_right': self._current_right,
             'speed_multiplier': self._speed_multiplier,
-            'emergency_stopped': self._emergency_stop.is_stopped() if self._emergency_stop else False,
+            'emergency_stopped': self._emergency_stop.is_stopped if self._emergency_stop else False,
         }
 
         # Add custom telemetry

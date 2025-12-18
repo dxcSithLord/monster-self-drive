@@ -57,9 +57,11 @@ PyPI packages are verified via pip's built-in hash checking.
 
 | Package | Version | License | PyPI URL |
 |---------|---------|---------|----------|
-| numpy | >=1.26.0 | BSD-3-Clause | [https://pypi.org/project/numpy/](https://pypi.org/project/numpy/) |
+| numpy | >=2.0.0 | BSD-3-Clause | [https://pypi.org/project/numpy/](https://pypi.org/project/numpy/) |
 | opencv-python | >=4.10.0 | MIT | [https://pypi.org/project/opencv-python/](https://pypi.org/project/opencv-python/) |
 | opencv-contrib-python | >=4.10.0 | MIT | [https://pypi.org/project/opencv-contrib-python/](https://pypi.org/project/opencv-contrib-python/) |
+
+**Note:** NumPy 2.x is compatible - codebase uses only basic APIs (`numpy.mean`, `numpy.where`, `numpy.array`, `numpy.ones`).
 
 ### Web Framework
 
@@ -86,8 +88,8 @@ PyPI packages are verified via pip's built-in hash checking.
 
 | Package | Version | License | PyPI URL |
 |---------|---------|---------|----------|
-| Pillow | >=10.3.0 | HPND | [https://pypi.org/project/Pillow/](https://pypi.org/project/Pillow/) |
-| scipy | >=1.12.0 | BSD-3-Clause | [https://pypi.org/project/scipy/](https://pypi.org/project/scipy/) |
+| Pillow | >=11.0.0 | HPND | [https://pypi.org/project/Pillow/](https://pypi.org/project/Pillow/) |
+| scipy | >=1.14.0 | BSD-3-Clause | [https://pypi.org/project/scipy/](https://pypi.org/project/scipy/) |
 
 ### Optional: IMU Support
 
@@ -108,15 +110,17 @@ PyPI packages are verified via pip's built-in hash checking.
 
 | Package | Version | License | PyPI URL |
 |---------|---------|---------|----------|
-| pytest | >=8.0.0 | MIT | [https://pypi.org/project/pytest/](https://pypi.org/project/pytest/) |
-| pytest-asyncio | >=0.23.0 | Apache-2.0 | [https://pypi.org/project/pytest-asyncio/](https://pypi.org/project/pytest-asyncio/) |
+| pytest | >=9.0.0 | MIT | [https://pypi.org/project/pytest/](https://pypi.org/project/pytest/) |
+| pytest-asyncio | >=0.24.0 | Apache-2.0 | [https://pypi.org/project/pytest-asyncio/](https://pypi.org/project/pytest-asyncio/) |
 | black | >=24.0.0 | MIT | [https://pypi.org/project/black/](https://pypi.org/project/black/) |
 | flake8 | >=7.0.0 | MIT | [https://pypi.org/project/flake8/](https://pypi.org/project/flake8/) |
 | mypy | >=1.8.0 | MIT | [https://pypi.org/project/mypy/](https://pypi.org/project/mypy/) |
 | pre-commit | >=3.6.0 | MIT | [https://pypi.org/project/pre-commit/](https://pypi.org/project/pre-commit/) |
 | filelock | >=3.20.1 | Unlicense | [https://pypi.org/project/filelock/](https://pypi.org/project/filelock/) |
 
-**Security Note:** filelock >=3.20.1 required to fix CVE-2025-68146 (TOCTOU symlink vulnerability).
+**Notes:**
+- pytest >=9.0.0 requires Python 3.10+ (Debian Trixie has 3.13.5)
+- filelock >=3.20.1 required to fix CVE-2025-68146 (TOCTOU symlink vulnerability)
 
 ---
 
