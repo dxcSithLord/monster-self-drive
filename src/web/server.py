@@ -18,11 +18,13 @@ import logging
 import os
 import threading
 import time
+import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
 from flask import Flask, Response, render_template, request
 from flask_socketio import SocketIO, emit
+from src.safety.control_manager import UserRole
 
 # Module logger
 _logger = logging.getLogger(__name__)
@@ -203,7 +205,7 @@ class MonsterWebServer:
             # Check if user has control
             if self._control_manager:
                 role = self._control_manager.get_user_role(sid)
-                if role.value != 'controller':
+                if role != UserRole.CONTROLLER:
                     emit('error', {'message': 'You are not in control'})
                     return
 
@@ -425,7 +427,6 @@ class MonsterWebServer:
                         os.makedirs(self._photo_directory, exist_ok=True)
 
                         # Create safe filename
-                        import datetime
                         filename = f"Photo_{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.jpg"
                         filepath = os.path.join(self._photo_directory, filename)
 
@@ -442,7 +443,7 @@ class MonsterWebServer:
                         emit('photo_saved', {'path': filepath, 'filename': filename})
 
                     except (IOError, OSError, ValueError) as e:
-                        _logger.exception("Failed to save photo")
+                        _logger.exception("Failed to save photo: %s", e)
                         emit('error', {'message': 'Failed to save photo'})
                 else:
                     emit('error', {'message': 'No frame available'})
@@ -478,7 +479,7 @@ class MonsterWebServer:
                 try:
                     self._motor_callback(left, right)
                 except Exception as e:
-                    _logger.exception("Motor callback error")
+                    _logger.exception("Motor callback error: %s", e)
 
     def _send_telemetry(self, sid: Optional[str] = None) -> None:
         """Send telemetry data to client(s).
@@ -501,7 +502,7 @@ class MonsterWebServer:
                 if custom:
                     telemetry.update(custom)
             except Exception as e:
-                _logger.exception("Telemetry callback error")
+                _logger.exception("Telemetry callback error: %s", e)
 
         if sid:
             self.socketio.emit('telemetry', telemetry, room=sid)
@@ -514,7 +515,7 @@ class MonsterWebServer:
             try:
                 self._send_telemetry()
             except Exception as e:
-                _logger.exception("Telemetry loop error")
+                _logger.exception("Telemetry loop error: %s", e)
             time.sleep(self._telemetry_interval)
 
     def _watchdog_loop(self) -> None:
@@ -538,7 +539,7 @@ class MonsterWebServer:
                     del self._last_command_time[sid]
 
             except Exception as e:
-                _logger.exception("Watchdog loop error")
+                _logger.exception("Watchdog loop error: %s", e)
             time.sleep(0.1)
 
     def start_telemetry(self) -> None:
