@@ -58,16 +58,16 @@ PyPI packages are verified via pip's built-in hash checking.
 | Package | Version | License | PyPI URL |
 |---------|---------|---------|----------|
 | numpy | >=1.26.0 | BSD-3-Clause | [https://pypi.org/project/numpy/](https://pypi.org/project/numpy/) |
-| opencv-python | >=4.9.0 | MIT | [https://pypi.org/project/opencv-python/](https://pypi.org/project/opencv-python/) |
-| opencv-contrib-python | >=4.9.0 | MIT | [https://pypi.org/project/opencv-contrib-python/](https://pypi.org/project/opencv-contrib-python/) |
+| opencv-python | >=4.10.0 | MIT | [https://pypi.org/project/opencv-python/](https://pypi.org/project/opencv-python/) |
+| opencv-contrib-python | >=4.10.0 | MIT | [https://pypi.org/project/opencv-contrib-python/](https://pypi.org/project/opencv-contrib-python/) |
 
 ### Web Framework
 
 | Package | Version | License | PyPI URL |
 |---------|---------|---------|----------|
-| Flask | >=3.0.0 | BSD-3-Clause | [https://pypi.org/project/Flask/](https://pypi.org/project/Flask/) |
-| Flask-SocketIO | >=5.3.0 | MIT | [https://pypi.org/project/Flask-SocketIO/](https://pypi.org/project/Flask-SocketIO/) |
-| python-socketio | >=5.10.0 | MIT | [https://pypi.org/project/python-socketio/](https://pypi.org/project/python-socketio/) |
+| Flask | >=3.1.0 | BSD-3-Clause | [https://pypi.org/project/Flask/](https://pypi.org/project/Flask/) |
+| Flask-SocketIO | >=5.5.0 | MIT | [https://pypi.org/project/Flask-SocketIO/](https://pypi.org/project/Flask-SocketIO/) |
+| python-socketio | >=5.15.0 | MIT | [https://pypi.org/project/python-socketio/](https://pypi.org/project/python-socketio/) |
 
 ### Hardware Interface
 
