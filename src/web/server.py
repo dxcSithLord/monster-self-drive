@@ -396,9 +396,19 @@ class MonsterWebServer:
                             room=requester
                         )
 
+             
         @self.socketio.on('take_photo')
         def handle_take_photo():
-            """Handle photo capture request."""
+            """Handle photo capture request only if from controler."""
+            sid = request.sid
+        
+            # Check if user has control
+            if self._control_manager:
+                role = self._control_manager.get_user_role(sid)
+                if role.value != 'controller':
+                    emit('error', {'message': 'Only controller can take photos'})
+                    return
+
             if self._frame_callback:
                 frame = self._frame_callback()
                 if frame:
