@@ -102,6 +102,7 @@ class MonsterWebServer:
         self._telemetry_interval = 0.1  # 10 Hz
         self._telemetry_running = False
         self._telemetry_thread: Optional[threading.Thread] = None
+        self._watchdog_thread: Optional[threading.Thread] = None
 
         # Create Flask app with template folder
         template_dir = Path(__file__).parent / "templates"
@@ -250,7 +251,7 @@ class MonsterWebServer:
                     return
 
             # Check emergency stop
-            if self._emergency_stop and self._emergency_stop.is_stopped:
+            if self._emergency_stop and self._emergency_stop.is_stopped():
                 emit('error', {'message': 'Emergency stop active'})
                 return
 
@@ -495,7 +496,7 @@ class MonsterWebServer:
             'motor_left': self._current_left,
             'motor_right': self._current_right,
             'speed_multiplier': self._speed_multiplier,
-            'emergency_stopped': self._emergency_stop.is_stopped if self._emergency_stop else False,
+            'emergency_stopped': self._emergency_stop.is_stopped() if self._emergency_stop else False,
         }
 
         # Add custom telemetry
