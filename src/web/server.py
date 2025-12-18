@@ -65,6 +65,7 @@ class MonsterWebServer:
         control_manager: Optional[Any] = None,
         photo_directory: str = "~/monster-photos",
         max_power: float = 1.0,
+        cors_origins: str = os.environ.get('CORS_ORIGINS', '*'),
     ):
         """Initialize the web server.
 
@@ -117,7 +118,7 @@ class MonsterWebServer:
         self.socketio = SocketIO(
             self.app,
             async_mode='threading',
-            cors_allowed_origins="*",
+            cors_allowed_origins=cors_origins,
             ping_timeout=10,
             ping_interval=5,
         )
@@ -244,11 +245,13 @@ class MonsterWebServer:
             # Check if user has control
             if self._control_manager:
                 role = self._control_manager.get_user_role(sid)
-                if role.value != 'controller':
+                if role != UserRole.CONTROLLER:
+                    emit('error', {'message': 'You are not in control'})
                     return
 
             # Check emergency stop
             if self._emergency_stop and self._emergency_stop.is_stopped:
+                emit('error', {'message': 'Emergency stop active'})
                 return
 
             try:
@@ -317,7 +320,7 @@ class MonsterWebServer:
             # Only controller can reset
             if self._control_manager:
                 role = self._control_manager.get_user_role(sid)
-                if role.value != 'controller':
+                if role != UserRole.CONTROLLER:
                     emit('error', {'message': 'Only controller can reset emergency stop'})
                     return
 
@@ -342,7 +345,7 @@ class MonsterWebServer:
             # Check if user has control
             if self._control_manager:
                 role = self._control_manager.get_user_role(sid)
-                if role.value != 'controller':
+                if role != UserRole.CONTROLLER:
                     emit('error', {'message': 'You are not in control'})
                     return
             try:
@@ -409,13 +412,13 @@ class MonsterWebServer:
              
         @self.socketio.on('take_photo')
         def handle_take_photo():
-            """Handle photo capture request only if from controler."""
+            """Handle photo capture request only if from controller."""
             sid = request.sid
         
             # Check if user has control
             if self._control_manager:
                 role = self._control_manager.get_user_role(sid)
-                if role.value != 'controller':
+                if role != UserRole.CONTROLLER:
                     emit('error', {'message': 'Only controller can take photos'})
                     return
 
@@ -442,8 +445,8 @@ class MonsterWebServer:
 
                         emit('photo_saved', {'path': filepath, 'filename': filename})
 
-                    except (IOError, OSError, ValueError) as e:
-                        _logger.exception("Failed to save photo: %s", e)
+                    except (IOError, OSError, ValueError):
+                        _logger.exception("Failed to save photo")
                         emit('error', {'message': 'Failed to save photo'})
                 else:
                     emit('error', {'message': 'No frame available'})
@@ -478,8 +481,8 @@ class MonsterWebServer:
             if self._motor_callback:
                 try:
                     self._motor_callback(left, right)
-                except Exception as e:
-                    _logger.exception("Motor callback error: %s", e)
+                except Exception:
+                    _logger.exception("Motor callback error")
 
     def _send_telemetry(self, sid: Optional[str] = None) -> None:
         """Send telemetry data to client(s).
@@ -501,8 +504,8 @@ class MonsterWebServer:
                 custom = self._telemetry_callback()
                 if custom:
                     telemetry.update(custom)
-            except Exception as e:
-                _logger.exception("Telemetry callback error: %s", e)
+            except Exception:
+                _logger.exception("Telemetry callback error")
 
         if sid:
             self.socketio.emit('telemetry', telemetry, room=sid)
@@ -514,8 +517,8 @@ class MonsterWebServer:
         while self._telemetry_running:
             try:
                 self._send_telemetry()
-            except Exception as e:
-                _logger.exception("Telemetry loop error: %s", e)
+            except Exception:
+                _logger.exception("Telemetry loop error")
             time.sleep(self._telemetry_interval)
 
     def _watchdog_loop(self) -> None:
@@ -538,8 +541,8 @@ class MonsterWebServer:
                 for sid in timed_out:
                     del self._last_command_time[sid]
 
-            except Exception as e:
-                _logger.exception("Watchdog loop error: %s", e)
+            except Exception:
+                _logger.exception("Watchdog loop error")
             time.sleep(0.1)
 
     def start_telemetry(self) -> None:
