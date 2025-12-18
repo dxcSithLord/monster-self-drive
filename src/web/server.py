@@ -335,6 +335,14 @@ class MonsterWebServer:
             Args:
                 data: Dict with 'speed' value (0.0 to 1.0)
             """
+            sid = request.sid
+            
+            # Check if user has control
+            if self._control_manager:
+                role = self._control_manager.get_user_role(sid)
+                if role.value != 'controller':
+                    emit('error', {'message': 'You are not in control'})
+                    return
             try:
                 speed = float(data.get('speed', 1.0))
                 self._speed_multiplier = max(0.0, min(1.0, speed))
