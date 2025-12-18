@@ -53,3 +53,4 @@ sphinx-rtd-theme>=2.0.0  # Read the Docs theme
 
 # Version Control Helpers
 pre-commit>=3.6.0  # Git hooks for code quality
+filelock>=3.20.1  # Transitive dep; CVE-2025-68146 fix (TOCTOU symlink vulnerability)

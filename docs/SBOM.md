@@ -114,6 +114,9 @@ PyPI packages are verified via pip's built-in hash checking.
 | flake8 | >=7.0.0 | MIT | [https://pypi.org/project/flake8/](https://pypi.org/project/flake8/) |
 | mypy | >=1.8.0 | MIT | [https://pypi.org/project/mypy/](https://pypi.org/project/mypy/) |
 | pre-commit | >=3.6.0 | MIT | [https://pypi.org/project/pre-commit/](https://pypi.org/project/pre-commit/) |
+| filelock | >=3.20.1 | Unlicense | [https://pypi.org/project/filelock/](https://pypi.org/project/filelock/) |
+
+**Security Note:** filelock >=3.20.1 required to fix CVE-2025-68146 (TOCTOU symlink vulnerability).
 
 ---
 
