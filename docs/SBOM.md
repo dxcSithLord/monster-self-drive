@@ -88,10 +88,19 @@ PyPI packages are verified via pip's built-in hash checking.
 | picamera | >=1.13 | BSD | [https://pypi.org/project/picamera/](https://pypi.org/project/picamera/) |
 | picamera2 | >=0.3.16 | BSD | [https://pypi.org/project/picamera2/](https://pypi.org/project/picamera2/) |
 
-**Note:** These packages require system dependencies. On Raspberry Pi:
+**Installation Options:**
+
+Option 1 (Recommended) - Use system packages:
 
 ```bash
-sudo apt install libcap-dev python3-picamera2 python3-libcamera
+sudo apt install python3-picamera2
+python3 -m venv --system-site-packages monster_venv
+```
+
+Option 2 - Build from source (needs dev packages):
+
+```bash
+sudo apt install python3-dev libcap-dev libarchive-dev
 pip install picamera2
 ```
 

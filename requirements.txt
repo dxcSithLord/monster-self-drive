@@ -11,10 +11,17 @@ opencv-python>=4.10.0.84
 opencv-contrib-python>=4.10.0.84  # For extended tracking algorithms
 
 # Raspberry Pi Camera Support (install separately on Pi)
-# These require system dependencies - install with:
-#   sudo apt install libcap-dev python3-picamera2 python3-libcamera
-# Then: pip install picamera2
-# Note: picamera is for older camera stack, picamera2 is for libcamera (newer)
+# picamera2 has C extensions requiring build tools. Two options:
+#
+# Option 1 (Recommended): Use system packages (no pip install needed)
+#   sudo apt install python3-picamera2
+#   Then create venv with: python3 -m venv --system-site-packages monster_venv
+#
+# Option 2: Build from source in venv (slower, needs dev packages)
+#   sudo apt install python3-dev libcap-dev libarchive-dev
+#   pip install picamera2
+#
+# Note: picamera (legacy) is for older camera stack, picamera2 is for libcamera
 # picamera>=1.13; platform_machine=="armv7l" or platform_machine=="aarch64"
 # picamera2>=0.3.16; platform_machine=="armv7l" or platform_machine=="aarch64"
 
