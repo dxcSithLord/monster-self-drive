@@ -576,12 +576,37 @@
     }
 
     // =========================================================================
+    // Touch/Click Helper (for mobile compatibility)
+    // =========================================================================
+    // WeakMap to track last touch time per element (prevents double-fire)
+    const lastTouchTime = new WeakMap();
+    const TOUCH_CLICK_THRESHOLD = 500; // ms
+
+    function addTouchClickHandler(element, handler) {
+        if (!element) return;
+
+        element.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            lastTouchTime.set(element, Date.now());
+            handler();
+        }, { passive: false });
+
+        element.addEventListener('click', () => {
+            // Skip click if it follows a recent touch
+            const lastTouch = lastTouchTime.get(element) || 0;
+            if (Date.now() - lastTouch > TOUCH_CLICK_THRESHOLD) {
+                handler();
+            }
+        });
+    }
+
+    // =========================================================================
     // Mode Switching
     // =========================================================================
     function setupModeSwitcher() {
         elements.modeButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const mode = btn.dataset.mode;
+            const mode = btn.dataset.mode;
+            addTouchClickHandler(btn, () => {
                 switchMode(mode);
             });
         });
@@ -621,27 +646,6 @@
     // Action Buttons
     // =========================================================================
     function setupActionButtons() {
-        // Helper to prevent double-fire on touch devices
-        // Uses a WeakMap to track last touch time per element
-        const lastTouchTime = new WeakMap();
-        const TOUCH_CLICK_THRESHOLD = 500; // ms
-
-        function addTouchClickHandler(element, handler) {
-            element.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                lastTouchTime.set(element, Date.now());
-                handler();
-            }, { passive: false });
-
-            element.addEventListener('click', () => {
-                // Skip click if it follows a recent touch
-                const lastTouch = lastTouchTime.get(element) || 0;
-                if (Date.now() - lastTouch > TOUCH_CLICK_THRESHOLD) {
-                    handler();
-                }
-            });
-        }
-
         // Stop button
         addTouchClickHandler(elements.btnStop, () => {
             sendStop();
@@ -653,13 +657,13 @@
             sendEmergencyStop();
         });
 
-        // Reset emergency button
-        elements.resetEmergency.addEventListener('click', () => {
+        // Reset emergency button (uses shared touch/click helper for mobile)
+        addTouchClickHandler(elements.resetEmergency, () => {
             sendEmergencyReset();
         });
 
         // Photo button
-        elements.btnPhoto.addEventListener('click', () => {
+        addTouchClickHandler(elements.btnPhoto, () => {
             if (state.connected) {
                 state.socket.emit('take_photo');
                 triggerHaptic();
@@ -671,14 +675,14 @@
     // Takeover Modal
     // =========================================================================
     function setupTakeoverModal() {
-        elements.approveTakeover.addEventListener('click', () => {
+        addTouchClickHandler(elements.approveTakeover, () => {
             if (state.connected) {
                 state.socket.emit('approve_takeover');
             }
             elements.takeoverModal.classList.add('hidden');
         });
 
-        elements.denyTakeover.addEventListener('click', () => {
+        addTouchClickHandler(elements.denyTakeover, () => {
             if (state.connected) {
                 state.socket.emit('deny_takeover');
             }
@@ -690,7 +694,7 @@
     // Fullscreen
     // =========================================================================
     function setupFullscreen() {
-        elements.fullscreenToggle.addEventListener('click', () => {
+        addTouchClickHandler(elements.fullscreenToggle, () => {
             toggleFullscreen();
         });
 
