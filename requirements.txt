@@ -7,10 +7,13 @@ numpy>=2.0.0  # NumPy 2.x compatible (no deprecated APIs used)
 opencv-python>=4.10.0
 opencv-contrib-python>=4.10.0  # For extended tracking algorithms
 
-# Raspberry Pi Camera Support
+# Raspberry Pi Camera Support (install separately on Pi)
+# These require system dependencies - install with:
+#   sudo apt install libcap-dev python3-picamera2 python3-libcamera
+# Then: pip install picamera2
 # Note: picamera is for older camera stack, picamera2 is for libcamera (newer)
-picamera>=1.13; platform_machine=="armv7l" or platform_machine=="aarch64"
-picamera2>=0.3.16; platform_machine=="armv7l" or platform_machine=="aarch64"
+# picamera>=1.13; platform_machine=="armv7l" or platform_machine=="aarch64"
+# picamera2>=0.3.16; platform_machine=="armv7l" or platform_machine=="aarch64"
 
 # Alternative: For development on non-Pi systems
 # opencv-python will use regular webcam

@@ -78,12 +78,19 @@ PyPI packages are verified via pip's built-in hash checking.
 |---------|---------|---------|----------|
 | smbus2 | >=0.4.3 | MIT | [https://pypi.org/project/smbus2/](https://pypi.org/project/smbus2/) |
 
-### Camera Support (Raspberry Pi)
+### Camera Support (Raspberry Pi - install separately)
 
 | Package | Version | License | PyPI URL |
 |---------|---------|---------|----------|
 | picamera | >=1.13 | BSD | [https://pypi.org/project/picamera/](https://pypi.org/project/picamera/) |
 | picamera2 | >=0.3.16 | BSD | [https://pypi.org/project/picamera2/](https://pypi.org/project/picamera2/) |
+
+**Note:** These packages require system dependencies. On Raspberry Pi:
+
+```bash
+sudo apt install libcap-dev python3-picamera2 python3-libcamera
+pip install picamera2
+```
 
 ### Image Processing
 
