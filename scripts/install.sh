@@ -398,7 +398,7 @@ cat > "$CONFIG_FILE" << EOF
     "emergencyStopEnabled": true
   },
   "paths": {
-    "photoDirectory": "~/monster-photos"
+    "photoDirectory": "$(if $SYSTEM_INSTALL; then echo "${INSTALL_DIR}/photos"; else echo "~/monster-photos"; fi)"
   },
   "websocket": {
     "enabled": true,
@@ -410,6 +410,14 @@ cat > "$CONFIG_FILE" << EOF
 EOF
 
 success "Configuration saved to ${CONFIG_FILE}"
+
+# Create photos directory for system install
+if $SYSTEM_INSTALL; then
+    PHOTO_DIR="${INSTALL_DIR}/photos"
+    mkdir -p "$PHOTO_DIR"
+    chown "${SYSTEM_SERVICE_USER}:${SYSTEM_SERVICE_GROUP}" "$PHOTO_DIR"
+    success "Photos directory created: ${PHOTO_DIR}"
+fi
 
 # Step 6: Systemd service
 echo ""
