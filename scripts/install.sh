@@ -437,7 +437,7 @@ if prompt_yn "Install systemd service for auto-start on boot?" "y"; then
     if $SYSTEM_INSTALL; then
         SECURITY_SECTION="# Security hardening
 ProtectSystem=strict
-ReadWritePaths=${INSTALL_DIR}/config /var/log
+ReadWritePaths=${INSTALL_DIR}/config ${INSTALL_DIR}/photos /var/log
 ProtectHome=true
 NoNewPrivileges=true
 PrivateTmp=true"
