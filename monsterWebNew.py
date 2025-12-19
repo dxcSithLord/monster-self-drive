@@ -30,8 +30,8 @@ import threading
 import time
 
 import cv2
-import picamera
-import picamera.array
+from picamera2 import Picamera2
+from libcamera import Transform
 
 # Add project root to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -55,8 +55,6 @@ _logger = logging.getLogger(__name__)
 running = True
 lastFrame = None
 lockFrame = threading.Lock()
-camera = None
-processor = None
 
 # ThunderBorg motor controller
 TB = None
@@ -67,76 +65,73 @@ control_manager = None
 
 
 # =========================================================================
-# Camera Processing
+# Camera Processing (picamera2)
 # =========================================================================
-class StreamProcessor(threading.Thread):
-    """Process camera frames and encode to JPEG."""
+class CameraCapture(threading.Thread):
+    """Capture video stream from camera using picamera2."""
 
-    def __init__(self, camera_instance, flipped=True, jpeg_quality=80):
+    def __init__(self, width=640, height=480, framerate=30,
+                 flipped=True, jpeg_quality=80):
         super().__init__(daemon=True)
-        self.camera = camera_instance
-        self.stream = picamera.array.PiRGBArray(camera_instance)
-        self.event = threading.Event()
-        self.terminated = False
+        self.width = width
+        self.height = height
+        self.framerate = framerate
         self.flipped = flipped
         self.jpeg_quality = jpeg_quality
-        self.start()
+        self.terminated = False
+        self.picam2 = None
 
     def run(self):
         global lastFrame
 
-        while not self.terminated:
-            if self.event.wait(1):
-                try:
-                    self.stream.seek(0)
-                    frame = self.stream.array
+        _logger.info("Initializing picamera2")
+        self.picam2 = Picamera2()
 
-                    if self.flipped:
-                        frame = cv2.flip(frame, -1)
-
-                    retval, jpeg = cv2.imencode(
-                        '.jpg', frame,
-                        [cv2.IMWRITE_JPEG_QUALITY, self.jpeg_quality]
-                    )
-
-                    if retval:
-                        with lockFrame:
-                            lastFrame = jpeg.tobytes()
-
-                finally:
-                    self.stream.seek(0)
-                    self.stream.truncate()
-                    self.event.clear()
-
-
-class ImageCapture(threading.Thread):
-    """Capture video stream from camera."""
-
-    def __init__(self, camera_instance, processor_instance):
-        super().__init__(daemon=True)
-        self.camera = camera_instance
-        self.processor = processor_instance
-        self.start()
-
-    def run(self):
-        _logger.info("Starting camera capture")
-        self.camera.capture_sequence(
-            self._trigger_stream(),
-            format='bgr',
-            use_video_port=True
+        # Configure camera with transform for flipping
+        transform = Transform(vflip=self.flipped, hflip=self.flipped)
+        config = self.picam2.create_video_configuration(
+            main={"size": (self.width, self.height), "format": "RGB888"},
+            transform=transform,
+            controls={"FrameRate": self.framerate}
         )
-        _logger.info("Camera capture stopped")
-        self.processor.terminated = True
-        self.processor.join()
+        self.picam2.configure(config)
+        self.picam2.start()
 
-    def _trigger_stream(self):
-        # running is read-only at module scope, no global needed
-        while running:
-            if self.processor.event.is_set():
-                time.sleep(0.01)
-            else:
-                yield self.processor.stream
-                self.processor.event.set()
+        _logger.info("Camera capture started")
+
+        while not self.terminated:
+            try:
+                # Capture frame as numpy array (RGB format)
+                frame = self.picam2.capture_array()
+
+                # Convert RGB to BGR for OpenCV
+                frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+
+                # Encode to JPEG
+                retval, jpeg = cv2.imencode(
+                    '.jpg', frame_bgr,
+                    [cv2.IMWRITE_JPEG_QUALITY, self.jpeg_quality]
+                )
+
+                if retval:
+                    with lockFrame:
+                        lastFrame = jpeg.tobytes()
+
+                # Rate limit to approximately target framerate
+                time.sleep(1.0 / self.framerate)
+
+            except Exception as e:
+                _logger.error("Camera capture error: %s", e)
+                time.sleep(0.1)
+
+        _logger.info("Camera capture stopped")
+
+    def stop(self):
+        """Stop the camera capture."""
+        self.terminated = True
+        if self.picam2:
+            self.picam2.stop()
+            self.picam2.close()
 
 
 # =========================================================================
@@ -219,7 +214,7 @@ def on_emergency_state_change(is_stopped: bool, _reason: str) -> None:
 # Main
 # =========================================================================
 def main():
-    global running, camera, processor, TB, emergency_stop, control_manager
+    global running, TB, emergency_stop, control_manager
 
     _logger.info("MonsterBorg Mobile Web Interface starting...")
 
@@ -254,26 +249,19 @@ def main():
     # Load settings from config
     Settings.load()
 
-    # Initialize camera
-    _logger.info("Initializing camera")
-    camera = picamera.PiCamera()
-    camera.resolution = (Settings.cameraWidth, Settings.cameraHeight)
-    camera.framerate = Settings.frameRate
-
-    # Start stream processor
-    _logger.info("Starting stream processor")
-    processor = StreamProcessor(
-        camera,
+    # Start camera capture thread (uses picamera2)
+    _logger.info("Starting camera capture")
+    capture_thread = CameraCapture(
+        width=Settings.cameraWidth,
+        height=Settings.cameraHeight,
+        framerate=Settings.frameRate,
         flipped=Settings.flippedImage,
         jpeg_quality=Settings.jpegQuality
     )
+    capture_thread.start()
 
     # Wait for camera to warm up
     time.sleep(2)
-
-    # Start image capture
-    _logger.info("Starting image capture")
-    capture_thread = ImageCapture(camera, processor)
 
     # Create web server
     _logger.info("Creating web server")
@@ -315,13 +303,9 @@ def main():
         TB.SetLedShowBattery(False)
         TB.SetLeds(0, 0, 0)
 
-        # Wait for threads
+        # Stop camera capture
+        capture_thread.stop()
         capture_thread.join(timeout=2)
-        processor.terminated = True
-        processor.join(timeout=2)
-
-        # Close camera
-        camera.close()
 
         _logger.info("Shutdown complete")
 

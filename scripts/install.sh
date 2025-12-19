@@ -139,38 +139,63 @@ fi
 echo ""
 info "Step 3: Setting up Python virtual environment"
 
-USE_SYSTEM_SITE_PACKAGES=false
-if prompt_yn "Include system site-packages? (recommended for picamera2)" "y"; then
-    USE_SYSTEM_SITE_PACKAGES=true
-fi
-
-if [[ -d "$VENV_DIR" ]]; then
-    if prompt_yn "Virtual environment exists. Recreate it?" "n"; then
-        rm -rf "$VENV_DIR"
-    fi
-fi
-
-if [[ ! -d "$VENV_DIR" ]]; then
-    if $USE_SYSTEM_SITE_PACKAGES; then
-        python3 -m venv --system-site-packages "$VENV_DIR"
+# Check if already running in a virtual environment
+if [[ -n "$VIRTUAL_ENV" ]]; then
+    info "Already running in virtual environment: $VIRTUAL_ENV"
+    VENV_DIR="$VIRTUAL_ENV"
+    if prompt_yn "Use current virtual environment?" "y"; then
+        success "Using active virtual environment"
     else
-        python3 -m venv "$VENV_DIR"
+        warn "Please deactivate current venv and re-run install.sh"
+        exit 1
     fi
-    success "Virtual environment created"
 else
-    success "Using existing virtual environment"
-fi
+    USE_SYSTEM_SITE_PACKAGES=false
+    if prompt_yn "Include system site-packages? (recommended for picamera2)" "y"; then
+        USE_SYSTEM_SITE_PACKAGES=true
+    fi
 
-# Activate venv
-source "${VENV_DIR}/bin/activate"
+    if [[ -d "$VENV_DIR" ]]; then
+        if prompt_yn "Virtual environment exists at ${VENV_DIR}. Recreate it?" "n"; then
+            rm -rf "$VENV_DIR"
+        fi
+    fi
+
+    if [[ ! -d "$VENV_DIR" ]]; then
+        info "Creating virtual environment at ${VENV_DIR}..."
+        if $USE_SYSTEM_SITE_PACKAGES; then
+            python3 -m venv --system-site-packages "$VENV_DIR"
+        else
+            python3 -m venv "$VENV_DIR"
+        fi
+        success "Virtual environment created"
+    else
+        success "Using existing virtual environment"
+    fi
+
+    # Activate venv
+    source "${VENV_DIR}/bin/activate"
+fi
 
 # Step 4: Install Python dependencies
 echo ""
 info "Step 4: Installing Python dependencies"
 
-pip install --upgrade pip
-pip install -r "${PROJECT_DIR}/requirements.txt"
-success "Python dependencies installed"
+# Check if Flask is already installed (quick check for existing deps)
+if python3 -c "import flask" 2>/dev/null; then
+    info "Some dependencies appear to be installed already"
+    if prompt_yn "Reinstall/upgrade Python dependencies?" "n"; then
+        pip install --upgrade pip
+        pip install -r "${PROJECT_DIR}/requirements.txt"
+        success "Python dependencies installed"
+    else
+        success "Using existing dependencies"
+    fi
+else
+    pip install --upgrade pip
+    pip install -r "${PROJECT_DIR}/requirements.txt"
+    success "Python dependencies installed"
+fi
 
 # Step 5: Configuration
 echo ""
@@ -183,9 +208,9 @@ prompt WEB_PORT "Web server port" "8080"
 prompt BATTERY_CELLS "Number of battery cells (typically 10 for NiMH)" "10"
 prompt CAMERA_FLIPPED "Is camera mounted upside-down? (true/false)" "true"
 
-# Calculate voltages
-VOLTAGE_IN=$(echo "$BATTERY_CELLS * 1.2" | bc)
-VOLTAGE_OUT=$(echo "$VOLTAGE_IN * 0.95" | bc)
+# Calculate voltages (using Python instead of bc for portability)
+VOLTAGE_IN=$(python3 -c "print(${BATTERY_CELLS} * 1.2)")
+VOLTAGE_OUT=$(python3 -c "print(${VOLTAGE_IN} * 0.95)")
 
 # Security warning
 if [[ "$WEB_BIND" == "0.0.0.0" ]]; then
