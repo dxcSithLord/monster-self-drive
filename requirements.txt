@@ -11,6 +11,7 @@ opencv-python>=4.10.0.84
 opencv-contrib-python>=4.10.0.84  # For extended tracking algorithms
 
 # Raspberry Pi Camera Support (install separately on Pi)
+# This project uses picamera2 (libcamera stack). The legacy picamera (MMAL) is NOT supported.
 # picamera2 has C extensions requiring build tools. Two options:
 #
 # Option 1 (Recommended): Use system packages (no pip install needed)
@@ -20,10 +21,6 @@ opencv-contrib-python>=4.10.0.84  # For extended tracking algorithms
 # Option 2: Build from source in venv (slower, needs dev packages)
 #   sudo apt install python3-dev libcap-dev libarchive-dev
 #   pip install picamera2
-#
-# Note: picamera (legacy) is for older camera stack, picamera2 is for libcamera
-# picamera>=1.13; platform_machine=="armv7l" or platform_machine=="aarch64"
-# picamera2>=0.3.16; platform_machine=="armv7l" or platform_machine=="aarch64"
 
 # Alternative: For development on non-Pi systems
 # opencv-python will use regular webcam

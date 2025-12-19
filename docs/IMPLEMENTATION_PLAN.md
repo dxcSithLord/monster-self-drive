@@ -924,18 +924,20 @@ def send_telemetry(websocket):
 **Python Libraries**:
 
 ```bash
-# Core dependencies (already installed)
-pip3 install opencv-python
-pip3 install numpy
-pip3 install picamera
+# Core dependencies
+pip3 install opencv-python numpy
+
+# picamera2 - use system package (recommended)
+sudo apt install python3-picamera2
+# Or build from source: pip3 install picamera2
 
 # New dependencies
-pip3 install websockets        # WebSocket server
-pip3 install smbus            # I2C communication (usually pre-installed)
+pip3 install flask-socketio   # WebSocket server
+pip3 install smbus2           # I2C communication
 
 # Optional (for deep learning)
-pip3 install tensorflow-lite  # TensorFlow Lite for object detection
-pip3 install onnxruntime      # ONNX Runtime (alternative)
+# pip3 install ai-edge-litert  # LiteRT for object detection (ARM)
+# pip3 install onnxruntime     # ONNX Runtime (alternative)
 ```
 
 **System Packages**:
@@ -945,7 +947,7 @@ sudo apt-get update
 sudo apt-get install -y \
     python3-opencv \
     python3-numpy \
-    python3-picamera \
+    python3-picamera2 \
     i2c-tools \
     libatlas-base-dev
 ```

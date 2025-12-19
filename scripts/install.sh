@@ -320,7 +320,7 @@ Type=simple
 User=${INSTALL_USER}
 WorkingDirectory=${PROJECT_DIR}
 Environment="PATH=${VENV_DIR}/bin:/usr/local/bin:/usr/bin:/bin"
-ExecStart=${VENV_DIR}/bin/python ${PROJECT_DIR}/monsterWebNew.py
+ExecStart=${VENV_DIR}/bin/python ${PROJECT_DIR}/monsterWeb.py
 Restart=on-failure
 RestartSec=5
 

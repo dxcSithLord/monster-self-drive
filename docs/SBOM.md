@@ -85,8 +85,10 @@ PyPI packages are verified via pip's built-in hash checking.
 
 | Package | Version | License | PyPI URL |
 |---------|---------|---------|----------|
-| picamera | >=1.13 | BSD | [https://pypi.org/project/picamera/](https://pypi.org/project/picamera/) |
 | picamera2 | >=0.3.16 | BSD | [https://pypi.org/project/picamera2/](https://pypi.org/project/picamera2/) |
+
+**Note:** picamera2 uses the libcamera stack (modern Raspberry Pi OS).
+The legacy `picamera` package (MMAL stack) is not supported.
 
 **Installation Options:**
 
