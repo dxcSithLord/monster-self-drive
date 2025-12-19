@@ -40,14 +40,27 @@ smbus2>=0.4.3  # I2C communication (Python 3 compatible)
 adafruit-circuitpython-mpu6050>=1.2.0  # MPU6050 IMU module
 adafruit-circuitpython-bno055>=1.6.0  # BNO055 IMU (alternative)
 
-# Optional: Machine Learning
-# NOTE: No ML inference code implemented yet. When adding on-device inference:
+# Machine Learning - Object Detection (Phase 2)
+# TFLite runtime for CPU inference (fallback when Coral TPU unavailable)
+# NOTE: ai-edge-litert is the successor to tflite-runtime
 # - ARM (aarch64): ai-edge-litert (LiteRT, formerly TensorFlow Lite)
 # - x86_64 dev: tensorflow + keras (ensure keras>=3.12.0 for CVE fixes)
 # See: https://ai.google.dev/edge/litert/migration
+tflite-runtime>=2.14.0; platform_machine == "aarch64"
+
+# Google Coral TPU Support (Phase 2 - Hardware Acceleration)
+# Provides ~25-30 fps object detection on Raspberry Pi
+# Requires Edge TPU runtime: sudo apt install libedgetpu1-std
+# Install from Coral repo: https://coral.ai/docs/accelerator/get-started/
+#
+# NOTE: pycoral package should be installed from Google's repository:
+#   pip install --extra-index-url https://google-coral.github.io/py-repo/ pycoral
+#
+# For development without Coral hardware, these are optional.
+# The code gracefully falls back to CPU inference.
 
 # Optional: Advanced Object Detection
-# onnxruntime>=1.16.0  # ONNX Runtime - uncomment when inference code added
+# onnxruntime>=1.16.0  # ONNX Runtime - uncomment for ONNX model support
 
 # Utilities
 Pillow>=11.0.0  # Image processing utilities
