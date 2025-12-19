@@ -1,0 +1,42 @@
+# MonsterBorg Web Interface Systemd Service Template
+# This file is used by install.sh to generate the actual service file
+#
+# Manual installation:
+#   1. Copy to /etc/systemd/system/monsterborg.service
+#   2. Replace {{VARIABLES}} with actual values
+#   3. Run: sudo systemctl daemon-reload
+#   4. Run: sudo systemctl enable monsterborg
+#   5. Run: sudo systemctl start monsterborg
+
+[Unit]
+Description=MonsterBorg Web Interface
+Documentation=https://github.com/dxcSithLord/monster-self-drive
+After=network.target
+
+[Service]
+Type=simple
+User={{USER}}
+WorkingDirectory={{PROJECT_DIR}}
+Environment="PATH={{VENV_DIR}}/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart={{VENV_DIR}}/bin/python {{PROJECT_DIR}}/monsterWebNew.py
+Restart=on-failure
+RestartSec=5
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=monsterborg
+
+# Resource limits for real-time performance
+Nice=0
+IOSchedulingClass=realtime
+IOSchedulingPriority=0
+
+# Security hardening (optional - may need adjustment)
+# NoNewPrivileges=true
+# ProtectSystem=strict
+# ProtectHome=read-only
+# ReadWritePaths={{PROJECT_DIR}}/config
+
+[Install]
+WantedBy=multi-user.target
