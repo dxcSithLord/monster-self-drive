@@ -9,8 +9,14 @@ This module implements the mobile-optimized web interface with:
 - Emergency stop accessible to any user (ADR-009)
 
 Production Deployment:
-    Uses eventlet for async WebSocket handling. eventlet must be monkey-patched
-    before other imports. The main entry point (monsterWeb.py) handles this.
+    Uses threading mode with simple-websocket for WebSocket support.
+    This provides best compatibility with third-party libraries.
+
+    For production, use Gunicorn with threaded workers:
+        gunicorn -w 1 --threads 4 -b 0.0.0.0:8080 'monsterWeb:create_app()'
+
+    Note: eventlet/gevent are deprecated and not recommended.
+    See: https://github.com/miguelgrinberg/Flask-SocketIO/discussions/2037
 
 See Also:
     - docs/DECISIONS.md: ADR-001 for WebSocket library decision
@@ -29,15 +35,6 @@ from typing import Any, Callable, Dict, Optional
 from flask import Flask, Response, render_template, request
 from flask_socketio import SocketIO, emit
 from src.safety.control_manager import UserRole
-
-# Determine async mode based on available packages
-# eventlet is preferred for production (WebSocket-optimized, low memory)
-_ASYNC_MODE = 'threading'  # Default fallback
-try:
-    import eventlet
-    _ASYNC_MODE = 'eventlet'
-except ImportError:
-    pass
 
 # Module logger
 _logger = logging.getLogger(__name__)
@@ -128,16 +125,17 @@ class MonsterWebServer:
         )
         self.app.config['SECRET_KEY'] = os.urandom(24)
 
-        # Create SocketIO with appropriate async mode
-        # eventlet for production, threading for development
+        # Create SocketIO with threading mode
+        # Threading provides best compatibility with third-party libraries
+        # Requires simple-websocket package for WebSocket support
         self.socketio = SocketIO(
             self.app,
-            async_mode=_ASYNC_MODE,
+            async_mode='threading',
             cors_allowed_origins=cors_origins,
             ping_timeout=10,
             ping_interval=5,
         )
-        _logger.info("SocketIO using async_mode='%s'", _ASYNC_MODE)
+        _logger.info("SocketIO initialized with async_mode='threading'")
 
         # Register routes and events
         self._register_routes()
