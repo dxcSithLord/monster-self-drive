@@ -223,7 +223,8 @@
 
         // Update speed display
         if (data.motor_left !== undefined && data.motor_right !== undefined) {
-            const avgSpeed = Math.abs((data.motor_left + data.motor_right) / 2 * 100);
+            // Use max absolute value to show speed even during rotation
+            const avgSpeed = Math.max(Math.abs(data.motor_left), Math.abs(data.motor_right)) * 100;
             elements.speedValue.textContent = Math.round(avgSpeed);
         }
 
