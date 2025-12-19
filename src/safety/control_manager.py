@@ -202,6 +202,15 @@ class ControlManager:
         with self._lock:
             return self._takeover_requester is not None
 
+    def get_pending_requester(self) -> Optional[str]:
+        """Get the user ID of the pending takeover requester.
+
+        Returns:
+            User ID of the requester, or None if no pending request
+        """
+        with self._lock:
+            return self._takeover_requester
+
     def approve_takeover(self, approver_id: str) -> bool:
         """Approve a pending takeover request.
 

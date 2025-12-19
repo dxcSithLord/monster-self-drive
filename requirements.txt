@@ -3,23 +3,35 @@
 # Target: Raspberry Pi 3B with Raspberry Pi OS Trixie / Ubuntu 24.04+
 
 # Core Dependencies
-numpy>=1.26.0
-opencv-python>=4.9.0
-opencv-contrib-python>=4.9.0  # For extended tracking algorithms
+# NOTE: opencv-python 4.10.0.84+ required for NumPy 2.x compatibility
+# (4.10.0.82 and earlier are incompatible). Clear pip cache if issues arise:
+#   pip cache purge
+numpy>=2.0.0,<2.3
+opencv-python>=4.10.0.84
+opencv-contrib-python>=4.10.0.84  # For extended tracking algorithms
 
-# Raspberry Pi Camera Support
-# Note: picamera is for older camera stack, picamera2 is for libcamera (newer)
-picamera>=1.13; platform_machine=="armv7l" or platform_machine=="aarch64"
-picamera2>=0.3.16; platform_machine=="armv7l" or platform_machine=="aarch64"
+# Raspberry Pi Camera Support (install separately on Pi)
+# This project uses picamera2 (libcamera stack). The legacy picamera (MMAL) is NOT supported.
+# picamera2 has C extensions requiring build tools. Two options:
+#
+# Option 1 (Recommended): Use system packages (no pip install needed)
+#   sudo apt install python3-picamera2
+#   Then create venv with: python3 -m venv --system-site-packages monster_venv
+#
+# Option 2: Build from source in venv (slower, needs dev packages)
+#   sudo apt install python3-dev libcap-dev libarchive-dev
+#   pip install picamera2
 
 # Alternative: For development on non-Pi systems
 # opencv-python will use regular webcam
 
 # Web Server & Communication
-Flask>=3.0.0  # Web framework (used in monsterWeb.py)
-Flask-SocketIO>=5.3.0  # Real-time WebSocket communication (ADR-001)
-python-socketio>=5.10.0  # Socket.IO protocol implementation
-# Note: Flask-SocketIO supports threading, eventlet, or gevent async modes
+Flask>=3.1.0  # Web framework (used in monsterWeb.py)
+Flask-SocketIO>=5.5.0  # Real-time WebSocket communication (ADR-001)
+python-socketio>=5.15.0  # Socket.IO protocol implementation
+simple-websocket>=1.0.0  # WebSocket support for threading mode
+# Note: Uses threading mode (not eventlet/gevent) for best compatibility.
+# See: https://github.com/miguelgrinberg/Flask-SocketIO/discussions/2037
 
 # Hardware Interface (I2C for ThunderBorg and IMU)
 smbus2>=0.4.3  # I2C communication (Python 3 compatible)
@@ -28,21 +40,22 @@ smbus2>=0.4.3  # I2C communication (Python 3 compatible)
 adafruit-circuitpython-mpu6050>=1.2.0  # MPU6050 IMU module
 adafruit-circuitpython-bno055>=1.6.0  # BNO055 IMU (alternative)
 
-# Optional: Machine Learning (TensorFlow Lite for object detection)
-tflite-runtime>=2.14.0; platform_machine=="armv7l" or platform_machine=="aarch64"
-# For x86_64 development:
-tensorflow>=2.15.0; platform_machine=="x86_64"
+# Optional: Machine Learning
+# NOTE: No ML inference code implemented yet. When adding on-device inference:
+# - ARM (aarch64): ai-edge-litert (LiteRT, formerly TensorFlow Lite)
+# - x86_64 dev: tensorflow + keras (ensure keras>=3.12.0 for CVE fixes)
+# See: https://ai.google.dev/edge/litert/migration
 
 # Optional: Advanced Object Detection
-onnxruntime>=1.16.0  # ONNX Runtime for efficient inference
+# onnxruntime>=1.16.0  # ONNX Runtime - uncomment when inference code added
 
 # Utilities
-Pillow>=10.3.0  # Image processing utilities (CVE-2024-28219 fix)
-scipy>=1.12.0  # Scientific computing (for filtering, signal processing)
+Pillow>=11.0.0  # Image processing utilities
+scipy>=1.14.0  # Scientific computing (for filtering, signal processing)
 
 # Development Dependencies (not needed on Pi)
-pytest>=8.0.0  # Testing framework
-pytest-asyncio>=0.23.0  # Async testing
+pytest>=9.0.0  # Testing framework (requires Python 3.10+)
+pytest-asyncio>=0.24.0  # Async testing
 black>=24.0.0  # Code formatting
 flake8>=7.0.0  # Linting
 mypy>=1.8.0  # Type checking
@@ -53,3 +66,4 @@ sphinx-rtd-theme>=2.0.0  # Read the Docs theme
 
 # Version Control Helpers
 pre-commit>=3.6.0  # Git hooks for code quality
+filelock>=3.20.1  # Transitive dep; CVE-2025-68146 fix (TOCTOU symlink vulnerability)

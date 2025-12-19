@@ -8,6 +8,121 @@ operation support.
 
 ---
 
+## Phase 0: Deployment & Installation (MVP)
+
+**Status**: Implemented
+
+### 0.1 Minimum Viable Product
+
+**Objective**: Turn on MonsterBorg, connect via web interface, control robot
+
+**What's Included**:
+
+- Flask-SocketIO web server with real-time WebSocket communication
+- Mobile-responsive touch controls with virtual joystick
+- Emergency stop accessible to all users
+- Single-user control model with observer mode
+- Battery voltage monitoring
+- Camera live stream
+
+### 0.2 Installation Scripts
+
+**Location**: `scripts/`
+
+| Script | Purpose |
+|--------|---------|
+| `install.sh` | Interactive installer with configuration prompts |
+| `uninstall.sh` | Remove systemd service (optional: venv and config) |
+| `release.sh` | Create Git release tags with notes |
+| `verify-dependencies.sh` | Verify JavaScript dependency checksums |
+
+### 0.3 Quick Start (Raspberry Pi)
+
+```bash
+# 1. Clone repository
+git clone https://github.com/dxcSithLord/monster-self-drive.git
+cd monster-self-drive
+
+# 2. Run installer (prompts for configuration)
+./scripts/install.sh
+
+# 3. Access web interface
+# Open browser to http://<pi-ip>:8080
+```
+
+### 0.4 Installation Prompts
+
+The installer prompts for these settings (with sensible defaults):
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| Web bind address | `0.0.0.0` | Network interface (0.0.0.0 = all interfaces) |
+| Web port | `8080` | HTTP port for web interface |
+| Battery cells | `10` | NiMH cell count (for voltage calculation) |
+| Camera flipped | `true` | Rotate camera 180° (upside-down mount) |
+| System site-packages | `yes` | Include system Python packages (for picamera2) |
+| Systemd service | `yes` | Install service for auto-start on boot |
+
+### 0.5 Systemd Service
+
+The installer creates `/etc/systemd/system/monsterborg.service`:
+
+```bash
+# Service management
+sudo systemctl start monsterborg     # Start service
+sudo systemctl stop monsterborg      # Stop service
+sudo systemctl restart monsterborg   # Restart service
+sudo systemctl status monsterborg    # Check status
+sudo journalctl -u monsterborg -f    # View logs
+```
+
+### 0.6 Configuration File
+
+Generated at `config/config.json` with settings for:
+
+- Security (bind address, port)
+- Power (battery voltages)
+- Camera (resolution, frame rate, orientation)
+- Safety (watchdog timeout, battery thresholds)
+- WebSocket (telemetry rate)
+
+Edit directly or re-run `install.sh` to regenerate.
+
+### 0.7 System Requirements
+
+**Hardware**:
+
+- Raspberry Pi 3B or newer (aarch64)
+- ThunderBorg motor controller
+- Pi Camera Module (v1, v2, or v3)
+- MonsterBorg chassis with motors
+
+**Software**:
+
+- Raspberry Pi OS (Debian Trixie/Bookworm)
+- Python 3.11+
+- I2C enabled (`sudo raspi-config`)
+
+**System Packages** (installed by script):
+
+```bash
+sudo apt install python3-dev libcap-dev i2c-tools
+# For picamera2 (recommended):
+sudo apt install python3-picamera2
+```
+
+### 0.8 Release Process
+
+```bash
+# Create a release
+./scripts/release.sh 1.0.0
+
+# Create and push to GitHub
+./scripts/release.sh 1.0.0 --push
+```
+
+---
+
 ## Phase 1: Mobile Web Interface Enhancement
 
 ### 1.1 Responsive Design
@@ -809,18 +924,20 @@ def send_telemetry(websocket):
 **Python Libraries**:
 
 ```bash
-# Core dependencies (already installed)
-pip3 install opencv-python
-pip3 install numpy
-pip3 install picamera
+# Core dependencies
+pip3 install opencv-python numpy
+
+# picamera2 - use system package (recommended)
+sudo apt install python3-picamera2
+# Or build from source: pip3 install picamera2
 
 # New dependencies
-pip3 install websockets        # WebSocket server
-pip3 install smbus            # I2C communication (usually pre-installed)
+pip3 install flask-socketio   # WebSocket server
+pip3 install smbus2           # I2C communication
 
 # Optional (for deep learning)
-pip3 install tensorflow-lite  # TensorFlow Lite for object detection
-pip3 install onnxruntime      # ONNX Runtime (alternative)
+# pip3 install ai-edge-litert  # LiteRT for object detection (ARM)
+# pip3 install onnxruntime     # ONNX Runtime (alternative)
 ```
 
 **System Packages**:
@@ -830,7 +947,7 @@ sudo apt-get update
 sudo apt-get install -y \
     python3-opencv \
     python3-numpy \
-    python3-picamera \
+    python3-picamera2 \
     i2c-tools \
     libatlas-base-dev
 ```

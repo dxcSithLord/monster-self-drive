@@ -62,5 +62,12 @@
   },
   "paths": {
     "photoDirectory": "~/monster-photos"
+  },
+  "websocket": {
+    "enabled": true,
+    "pingTimeout": 10,
+    "pingInterval": 5,
+    "telemetryRate": 10,
+    "telemetryRateComment": "Telemetry updates per second (Hz)"
   }
 }
