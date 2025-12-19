@@ -616,6 +616,7 @@ class MonsterWebServer:
                 debug=debug,
                 use_reloader=False,
                 log_output=True,
+                allow_unsafe_werkzeug=True,  # Allow Werkzeug in production (OK for 1-2 users)
             )
         finally:
             self.stop_telemetry()
