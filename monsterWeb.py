@@ -188,7 +188,8 @@ def get_telemetry() -> dict:
     if TB is not None:
         try:
             telemetry['battery_voltage'] = TB.GetBatteryReading()
-        except Exception:
+        except (IOError, OSError):
+            # I2C communication failure
             telemetry['battery_voltage'] = 0.0
 
     return telemetry
