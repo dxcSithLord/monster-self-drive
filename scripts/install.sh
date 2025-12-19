@@ -124,12 +124,31 @@ if $SYSTEM_INSTALL; then
     # Create service account if it doesn't exist
     if ! id "$SYSTEM_SERVICE_USER" &>/dev/null; then
         info "Creating service account: ${SYSTEM_SERVICE_USER}"
-        useradd --system --no-create-home --shell /usr/sbin/nologin \
-            --groups i2c,video,gpio "$SYSTEM_SERVICE_USER" 2>/dev/null || \
-        useradd --system --no-create-home --shell /usr/sbin/nologin "$SYSTEM_SERVICE_USER"
+
+        # Build list of existing groups to add
+        GROUPS_TO_ADD=""
+        for grp in i2c video gpio; do
+            if getent group "$grp" &>/dev/null; then
+                GROUPS_TO_ADD="${GROUPS_TO_ADD}${grp},"
+            fi
+        done
+        GROUPS_TO_ADD="${GROUPS_TO_ADD%,}"  # Remove trailing comma
+
+        if [[ -n "$GROUPS_TO_ADD" ]]; then
+            useradd --system --no-create-home --shell /usr/sbin/nologin \
+                --groups "$GROUPS_TO_ADD" "$SYSTEM_SERVICE_USER"
+        else
+            useradd --system --no-create-home --shell /usr/sbin/nologin "$SYSTEM_SERVICE_USER"
+        fi
         success "Service account created"
     else
         success "Service account already exists: ${SYSTEM_SERVICE_USER}"
+        # Ensure user is in required groups
+        for grp in i2c video gpio; do
+            if getent group "$grp" &>/dev/null; then
+                usermod -a -G "$grp" "$SYSTEM_SERVICE_USER" 2>/dev/null || true
+            fi
+        done
     fi
 
     # Create installation directory
@@ -267,8 +286,9 @@ info "Step 4: Installing Python dependencies"
 install_deps() {
     if $SYSTEM_INSTALL; then
         # Run pip as service user for system install
-        sudo -u "$SERVICE_USER" "${VENV_DIR}/bin/pip" install --upgrade pip
-        sudo -u "$SERVICE_USER" "${VENV_DIR}/bin/pip" install -r "${INSTALL_DIR}/requirements.txt"
+        # Use --no-cache-dir since service user has no home directory
+        "${VENV_DIR}/bin/pip" install --no-cache-dir --upgrade pip
+        "${VENV_DIR}/bin/pip" install --no-cache-dir -r "${INSTALL_DIR}/requirements.txt"
     else
         pip install --upgrade pip
         pip install -r "${INSTALL_DIR}/requirements.txt"
@@ -399,12 +419,25 @@ if prompt_yn "Install systemd service for auto-start on boot?" "y"; then
     # Create service file
     SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 
-    # Build supplementary groups for hardware access
+    # Build supplementary groups - only include groups the user is actually in
     SUPP_GROUPS=""
-    if getent group i2c &>/dev/null; then SUPP_GROUPS="${SUPP_GROUPS}i2c "; fi
-    if getent group video &>/dev/null; then SUPP_GROUPS="${SUPP_GROUPS}video "; fi
-    if getent group gpio &>/dev/null; then SUPP_GROUPS="${SUPP_GROUPS}gpio "; fi
-    SUPP_GROUPS=$(echo "$SUPP_GROUPS" | xargs | tr ' ' ',')
+    for grp in i2c video gpio; do
+        if id -nG "$SERVICE_USER" 2>/dev/null | grep -qw "$grp"; then
+            SUPP_GROUPS="${SUPP_GROUPS}${grp},"
+        fi
+    done
+    SUPP_GROUPS="${SUPP_GROUPS%,}"  # Remove trailing comma
+
+    # Build security hardening section for system install
+    SECURITY_SECTION=""
+    if $SYSTEM_INSTALL; then
+        SECURITY_SECTION="# Security hardening
+ProtectSystem=strict
+ReadWritePaths=${INSTALL_DIR}/config /var/log
+ProtectHome=true
+NoNewPrivileges=true
+PrivateTmp=true"
+    fi
 
     sudo tee "$SERVICE_FILE" > /dev/null << EOF
 [Unit]
@@ -429,16 +462,7 @@ Nice=0
 IOSchedulingClass=realtime
 IOSchedulingPriority=0
 
-# Security hardening (system install only)
-$(if $SYSTEM_INSTALL; then
-cat << 'SECURITY'
-ProtectSystem=strict
-ReadWritePaths=${INSTALL_DIR}/config /var/log
-ProtectHome=true
-NoNewPrivileges=true
-PrivateTmp=true
-SECURITY
-fi)
+${SECURITY_SECTION}
 
 [Install]
 WantedBy=multi-user.target
