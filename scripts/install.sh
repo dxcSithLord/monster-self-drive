@@ -419,14 +419,10 @@ if prompt_yn "Install systemd service for auto-start on boot?" "y"; then
     # Create service file
     SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 
-    # Build supplementary groups - only include groups the user is actually in
-    SUPP_GROUPS=""
-    for grp in i2c video gpio; do
-        if id -nG "$SERVICE_USER" 2>/dev/null | grep -qw "$grp"; then
-            SUPP_GROUPS="${SUPP_GROUPS}${grp},"
-        fi
-    done
-    SUPP_GROUPS="${SUPP_GROUPS%,}"  # Remove trailing comma
+    # Note: SupplementaryGroups is NOT used because:
+    # 1. For system install: user is already added to groups during creation
+    # 2. For user install: user typically already has necessary group memberships
+    # Using SupplementaryGroups with system users can cause "No such process" errors
 
     # Build security hardening section for system install
     SECURITY_SECTION=""
@@ -447,7 +443,6 @@ After=network.target
 [Service]
 Type=simple
 User=${SERVICE_USER}
-$(if [[ -n "$SUPP_GROUPS" ]]; then echo "SupplementaryGroups=${SUPP_GROUPS}"; fi)
 WorkingDirectory=${INSTALL_DIR}
 Environment="PATH=${VENV_DIR}/bin:/usr/local/bin:/usr/bin:/bin"
 ExecStart=${VENV_DIR}/bin/python ${INSTALL_DIR}/monsterWeb.py
