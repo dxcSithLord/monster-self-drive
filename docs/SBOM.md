@@ -57,12 +57,15 @@ PyPI packages are verified via pip's built-in hash checking.
 
 | Package | Version | License | PyPI URL |
 |---------|---------|---------|----------|
-| numpy | >=2.0.0 | BSD-3-Clause | [https://pypi.org/project/numpy/](https://pypi.org/project/numpy/) |
-| opencv-python | >=4.10.0 | MIT | [https://pypi.org/project/opencv-python/](https://pypi.org/project/opencv-python/) |
-| opencv-contrib-python | >=4.10.0 | MIT | [https://pypi.org/project/opencv-contrib-python/](https://pypi.org/project/opencv-contrib-python/) |
+| numpy | >=2.0.0,<2.3 | BSD-3-Clause | [https://pypi.org/project/numpy/](https://pypi.org/project/numpy/) |
+| opencv-python | >=4.10.0.84 | MIT | [https://pypi.org/project/opencv-python/](https://pypi.org/project/opencv-python/) |
+| opencv-contrib-python | >=4.10.0.84 | MIT | [https://pypi.org/project/opencv-contrib-python/](https://pypi.org/project/opencv-contrib-python/) |
 
-**Note:** NumPy 2.x is compatible - codebase uses only basic APIs
-(`numpy.mean`, `numpy.where`, `numpy.array`, `numpy.ones`).
+**Compatibility Notes:**
+
+- NumPy 2.x compatible - codebase uses only basic APIs
+- opencv-python >=4.10.0.84 required (4.10.0.82 incompatible with NumPy 2.x)
+- If encountering NumPy errors, clear pip cache: `pip cache purge`
 
 ### Web Framework
 

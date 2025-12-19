@@ -3,9 +3,12 @@
 # Target: Raspberry Pi 3B with Raspberry Pi OS Trixie / Ubuntu 24.04+
 
 # Core Dependencies
-numpy>=2.0.0  # NumPy 2.x compatible (no deprecated APIs used)
-opencv-python>=4.10.0
-opencv-contrib-python>=4.10.0  # For extended tracking algorithms
+# NOTE: opencv-python 4.10.0.84+ required for NumPy 2.x compatibility
+# (4.10.0.82 and earlier are incompatible). Clear pip cache if issues arise:
+#   pip cache purge
+numpy>=2.0.0,<2.3
+opencv-python>=4.10.0.84
+opencv-contrib-python>=4.10.0.84  # For extended tracking algorithms
 
 # Raspberry Pi Camera Support (install separately on Pi)
 # These require system dependencies - install with:
