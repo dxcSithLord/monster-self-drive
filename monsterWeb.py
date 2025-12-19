@@ -3,8 +3,8 @@
 """MonsterBorg Mobile Web Interface - Flask-SocketIO Version.
 
 This is the Phase 1 implementation of the mobile-optimized web interface.
-It replaces the legacy monsterWeb.py with Flask-SocketIO for real-time
-WebSocket communication.
+Uses Flask-SocketIO for real-time WebSocket communication with eventlet
+for production deployment.
 
 Features:
 - Responsive design for mobile devices
@@ -16,12 +16,21 @@ Features:
 - Single-user control model (ADR-004)
 
 Usage:
-    python monsterWebNew.py
+    python monsterWeb.py
 
 See Also:
     - docs/DECISIONS.md: ADR-001 for WebSocket library decision
     - docs/IMPLEMENTATION_PLAN.md: Phase 1 specification
 """
+
+# IMPORTANT: eventlet monkey-patching must happen BEFORE other imports
+# This patches standard library modules (socket, threading, etc.) for async I/O
+try:
+    import eventlet
+    eventlet.monkey_patch()
+    _USING_EVENTLET = True
+except ImportError:
+    _USING_EVENTLET = False
 
 import logging
 import os
@@ -217,6 +226,10 @@ def main():
     global running, TB, emergency_stop, control_manager
 
     _logger.info("MonsterBorg Mobile Web Interface starting...")
+    if _USING_EVENTLET:
+        _logger.info("Using eventlet async server (production mode)")
+    else:
+        _logger.warning("eventlet not available - using threading mode (development only)")
 
     # Initialize ThunderBorg
     _logger.info("Initializing ThunderBorg")

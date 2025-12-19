@@ -29,7 +29,8 @@ opencv-contrib-python>=4.10.0.84  # For extended tracking algorithms
 Flask>=3.1.0  # Web framework (used in monsterWeb.py)
 Flask-SocketIO>=5.5.0  # Real-time WebSocket communication (ADR-001)
 python-socketio>=5.15.0  # Socket.IO protocol implementation
-# Note: Flask-SocketIO supports threading, eventlet, or gevent async modes
+eventlet>=0.39.0  # Production async server for Flask-SocketIO (low memory, WebSocket-optimized)
+# Note: eventlet is used automatically in production; threading mode for development only
 
 # Hardware Interface (I2C for ThunderBorg and IMU)
 smbus2>=0.4.3  # I2C communication (Python 3 compatible)

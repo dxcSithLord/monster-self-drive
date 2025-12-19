@@ -2,8 +2,13 @@
 # MonsterBorg Web Interface Installation Script
 # Creates virtual environment, installs dependencies, configures service
 #
-# Usage: ./scripts/install.sh [--unattended]
+# Usage: ./scripts/install.sh [--unattended] [--system]
 #   --unattended: Use all defaults without prompting
+#   --system:     Install to /opt/monsterborg with dedicated service account
+#
+# Deployment modes:
+#   User mode (default): Installs in current directory, runs as current user
+#   System mode:         Installs to /opt/monsterborg, creates 'monsterborg' service account
 
 set -e
 
@@ -14,18 +19,31 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Script directory and project root
+# Script directory and project root (source location)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-VENV_DIR="${PROJECT_DIR}/venv"
-CONFIG_FILE="${PROJECT_DIR}/config/config.json"
+SOURCE_DIR="$(dirname "$SCRIPT_DIR")"
+
+# Installation defaults (user mode)
+INSTALL_DIR="${SOURCE_DIR}"
+VENV_DIR="${INSTALL_DIR}/venv"
+CONFIG_FILE="${INSTALL_DIR}/config/config.json"
 SERVICE_NAME="monsterborg"
+SERVICE_USER="${SUDO_USER:-$USER}"
+
+# System mode settings
+SYSTEM_INSTALL=false
+SYSTEM_INSTALL_DIR="/opt/monsterborg"
+SYSTEM_SERVICE_USER="monsterborg"
+SYSTEM_SERVICE_GROUP="monsterborg"
 
 # Parse arguments
 UNATTENDED=false
-if [[ "$1" == "--unattended" ]]; then
-    UNATTENDED=true
-fi
+for arg in "$@"; do
+    case $arg in
+        --unattended) UNATTENDED=true ;;
+        --system)     SYSTEM_INSTALL=true ;;
+    esac
+done
 
 # Helper functions
 info() { echo -e "${BLUE}[INFO]${NC} $1"; }
@@ -78,6 +96,57 @@ if [[ ! -f /proc/device-tree/model ]] || ! grep -qi "raspberry" /proc/device-tre
     if ! prompt_yn "Continue anyway?" "n"; then
         exit 0
     fi
+fi
+
+# System install mode setup
+if $SYSTEM_INSTALL; then
+    info "System installation mode enabled"
+    INSTALL_DIR="$SYSTEM_INSTALL_DIR"
+    VENV_DIR="${INSTALL_DIR}/venv"
+    CONFIG_FILE="${INSTALL_DIR}/config/config.json"
+    SERVICE_USER="$SYSTEM_SERVICE_USER"
+
+    # Must run as root for system install
+    if [[ $EUID -ne 0 ]]; then
+        error "System installation requires root. Run with: sudo $0 --system"
+    fi
+
+    echo ""
+    info "System installation will:"
+    echo "  - Create service account: ${SYSTEM_SERVICE_USER}"
+    echo "  - Install to: ${INSTALL_DIR}"
+    echo "  - Run service as: ${SERVICE_USER}"
+    echo ""
+    if ! prompt_yn "Proceed with system installation?" "y"; then
+        exit 0
+    fi
+
+    # Create service account if it doesn't exist
+    if ! id "$SYSTEM_SERVICE_USER" &>/dev/null; then
+        info "Creating service account: ${SYSTEM_SERVICE_USER}"
+        useradd --system --no-create-home --shell /usr/sbin/nologin \
+            --groups i2c,video,gpio "$SYSTEM_SERVICE_USER" 2>/dev/null || \
+        useradd --system --no-create-home --shell /usr/sbin/nologin "$SYSTEM_SERVICE_USER"
+        success "Service account created"
+    else
+        success "Service account already exists: ${SYSTEM_SERVICE_USER}"
+    fi
+
+    # Create installation directory
+    if [[ ! -d "$INSTALL_DIR" ]]; then
+        info "Creating installation directory: ${INSTALL_DIR}"
+        mkdir -p "$INSTALL_DIR"
+    fi
+
+    # Copy project files (excluding venv, __pycache__, .git)
+    info "Copying project files to ${INSTALL_DIR}..."
+    rsync -a --exclude='venv' --exclude='__pycache__' --exclude='.git' \
+        --exclude='*.pyc' --exclude='.pytest_cache' \
+        "${SOURCE_DIR}/" "${INSTALL_DIR}/"
+    success "Project files copied"
+
+    # Set ownership
+    chown -R "${SYSTEM_SERVICE_USER}:${SYSTEM_SERVICE_GROUP}" "$INSTALL_DIR"
 fi
 
 # Check Python version
@@ -139,8 +208,8 @@ fi
 echo ""
 info "Step 3: Setting up Python virtual environment"
 
-# Check if already running in a virtual environment
-if [[ -n "$VIRTUAL_ENV" ]]; then
+# Check if already running in a virtual environment (not applicable for system install)
+if [[ -n "$VIRTUAL_ENV" ]] && ! $SYSTEM_INSTALL; then
     info "Already running in virtual environment: $VIRTUAL_ENV"
     VENV_DIR="$VIRTUAL_ENV"
     if prompt_yn "Use current virtual environment?" "y"; then
@@ -163,37 +232,60 @@ else
 
     if [[ ! -d "$VENV_DIR" ]]; then
         info "Creating virtual environment at ${VENV_DIR}..."
-        if $USE_SYSTEM_SITE_PACKAGES; then
-            python3 -m venv --system-site-packages "$VENV_DIR"
+        if $SYSTEM_INSTALL; then
+            # For system install, create venv as service user
+            if $USE_SYSTEM_SITE_PACKAGES; then
+                sudo -u "$SERVICE_USER" python3 -m venv --system-site-packages "$VENV_DIR"
+            else
+                sudo -u "$SERVICE_USER" python3 -m venv "$VENV_DIR"
+            fi
         else
-            python3 -m venv "$VENV_DIR"
+            if $USE_SYSTEM_SITE_PACKAGES; then
+                python3 -m venv --system-site-packages "$VENV_DIR"
+            else
+                python3 -m venv "$VENV_DIR"
+            fi
         fi
         success "Virtual environment created"
     else
         success "Using existing virtual environment"
     fi
 
-    # Activate venv
-    source "${VENV_DIR}/bin/activate"
+    # Activate venv (for user mode) or set up env for system mode
+    if $SYSTEM_INSTALL; then
+        # For system install, we'll run pip as service user
+        info "Virtual environment created for service account"
+    else
+        source "${VENV_DIR}/bin/activate"
+    fi
 fi
 
 # Step 4: Install Python dependencies
 echo ""
 info "Step 4: Installing Python dependencies"
 
+install_deps() {
+    if $SYSTEM_INSTALL; then
+        # Run pip as service user for system install
+        sudo -u "$SERVICE_USER" "${VENV_DIR}/bin/pip" install --upgrade pip
+        sudo -u "$SERVICE_USER" "${VENV_DIR}/bin/pip" install -r "${INSTALL_DIR}/requirements.txt"
+    else
+        pip install --upgrade pip
+        pip install -r "${INSTALL_DIR}/requirements.txt"
+    fi
+}
+
 # Check if Flask is already installed (quick check for existing deps)
-if python3 -c "import flask" 2>/dev/null; then
+if "${VENV_DIR}/bin/python" -c "import flask" 2>/dev/null; then
     info "Some dependencies appear to be installed already"
     if prompt_yn "Reinstall/upgrade Python dependencies?" "n"; then
-        pip install --upgrade pip
-        pip install -r "${PROJECT_DIR}/requirements.txt"
+        install_deps
         success "Python dependencies installed"
     else
         success "Using existing dependencies"
     fi
 else
-    pip install --upgrade pip
-    pip install -r "${PROJECT_DIR}/requirements.txt"
+    install_deps
     success "Python dependencies installed"
 fi
 
@@ -219,7 +311,7 @@ if [[ "$WEB_BIND" == "0.0.0.0" ]]; then
 fi
 
 # Create config directory if needed
-mkdir -p "${PROJECT_DIR}/config"
+mkdir -p "${INSTALL_DIR}/config"
 
 # Generate config file
 cat > "$CONFIG_FILE" << EOF
@@ -304,11 +396,15 @@ echo ""
 info "Step 6: Setting up systemd service"
 
 if prompt_yn "Install systemd service for auto-start on boot?" "y"; then
-    # Get the current user
-    INSTALL_USER="${SUDO_USER:-$USER}"
-
     # Create service file
     SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
+
+    # Build supplementary groups for hardware access
+    SUPP_GROUPS=""
+    if getent group i2c &>/dev/null; then SUPP_GROUPS="${SUPP_GROUPS}i2c "; fi
+    if getent group video &>/dev/null; then SUPP_GROUPS="${SUPP_GROUPS}video "; fi
+    if getent group gpio &>/dev/null; then SUPP_GROUPS="${SUPP_GROUPS}gpio "; fi
+    SUPP_GROUPS=$(echo "$SUPP_GROUPS" | xargs | tr ' ' ',')
 
     sudo tee "$SERVICE_FILE" > /dev/null << EOF
 [Unit]
@@ -317,10 +413,11 @@ After=network.target
 
 [Service]
 Type=simple
-User=${INSTALL_USER}
-WorkingDirectory=${PROJECT_DIR}
+User=${SERVICE_USER}
+$(if [[ -n "$SUPP_GROUPS" ]]; then echo "SupplementaryGroups=${SUPP_GROUPS}"; fi)
+WorkingDirectory=${INSTALL_DIR}
 Environment="PATH=${VENV_DIR}/bin:/usr/local/bin:/usr/bin:/bin"
-ExecStart=${VENV_DIR}/bin/python ${PROJECT_DIR}/monsterWeb.py
+ExecStart=${VENV_DIR}/bin/python ${INSTALL_DIR}/monsterWeb.py
 Restart=on-failure
 RestartSec=5
 
@@ -331,6 +428,17 @@ ExecStopPost=/bin/sh -c 'echo "Service stopped" | logger -t monsterborg'
 Nice=0
 IOSchedulingClass=realtime
 IOSchedulingPriority=0
+
+# Security hardening (system install only)
+$(if $SYSTEM_INSTALL; then
+cat << 'SECURITY'
+ProtectSystem=strict
+ReadWritePaths=${INSTALL_DIR}/config /var/log
+ProtectHome=true
+NoNewPrivileges=true
+PrivateTmp=true
+SECURITY
+fi)
 
 [Install]
 WantedBy=multi-user.target
@@ -351,7 +459,7 @@ EOF
     fi
 else
     info "Skipping systemd service installation"
-    echo "To run manually: source ${VENV_DIR}/bin/activate && python monsterWebNew.py"
+    echo "To run manually: source ${VENV_DIR}/bin/activate && python monsterWeb.py"
 fi
 
 # Step 7: Summary
@@ -360,10 +468,19 @@ echo "========================================"
 echo " Installation Complete!"
 echo "========================================"
 echo ""
+info "Install dir:   ${INSTALL_DIR}"
 info "Configuration: ${CONFIG_FILE}"
 info "Virtual env:   ${VENV_DIR}"
+info "Service user:  ${SERVICE_USER}"
 info "Web interface: http://$(hostname -I | awk '{print $1}'):${WEB_PORT}"
 echo ""
+
+if $SYSTEM_INSTALL; then
+    info "System installation completed"
+    echo "  Files installed to: ${INSTALL_DIR}"
+    echo "  Running as user:    ${SERVICE_USER}"
+    echo ""
+fi
 
 if systemctl is-enabled --quiet "${SERVICE_NAME}.service" 2>/dev/null; then
     info "Service commands:"

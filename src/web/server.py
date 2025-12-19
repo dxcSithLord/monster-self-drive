@@ -8,6 +8,10 @@ This module implements the mobile-optimized web interface with:
 - Single-user control model (ADR-004)
 - Emergency stop accessible to any user (ADR-009)
 
+Production Deployment:
+    Uses eventlet for async WebSocket handling. eventlet must be monkey-patched
+    before other imports. The main entry point (monsterWeb.py) handles this.
+
 See Also:
     - docs/DECISIONS.md: ADR-001 for WebSocket library decision
     - docs/DECISIONS.md: ADR-004 for multi-user control model
@@ -25,6 +29,15 @@ from typing import Any, Callable, Dict, Optional
 from flask import Flask, Response, render_template, request
 from flask_socketio import SocketIO, emit
 from src.safety.control_manager import UserRole
+
+# Determine async mode based on available packages
+# eventlet is preferred for production (WebSocket-optimized, low memory)
+_ASYNC_MODE = 'threading'  # Default fallback
+try:
+    import eventlet
+    _ASYNC_MODE = 'eventlet'
+except ImportError:
+    pass
 
 # Module logger
 _logger = logging.getLogger(__name__)
@@ -115,14 +128,16 @@ class MonsterWebServer:
         )
         self.app.config['SECRET_KEY'] = os.urandom(24)
 
-        # Create SocketIO with async_mode for threading
+        # Create SocketIO with appropriate async mode
+        # eventlet for production, threading for development
         self.socketio = SocketIO(
             self.app,
-            async_mode='threading',
+            async_mode=_ASYNC_MODE,
             cors_allowed_origins=cors_origins,
             ping_timeout=10,
             ping_interval=5,
         )
+        _logger.info("SocketIO using async_mode='%s'", _ASYNC_MODE)
 
         # Register routes and events
         self._register_routes()
