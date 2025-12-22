@@ -283,24 +283,41 @@ X-axis: Left/Right steering (-1.0 to 1.0)
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**Coral TPU Setup (Raspberry Pi)**:
+**Coral TPU Setup (Debian 13 Trixie / Raspberry Pi)**:
 
 ```bash
-# Add Coral repository
-echo "deb https://packages.cloud.google.com/apt coral-edgetpu-stable main" | \
-    sudo tee /etc/apt/sources.list.d/coral-edgetpu.list
-curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-sudo apt-get update
+# 1. Add Coral repository with proper signing key (Debian 13+ method)
+curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
+    sudo gpg --dearmor -o /etc/apt/keyrings/coral-edgetpu.gpg
 
-# Install Edge TPU runtime (standard clock - recommended)
-sudo apt-get install libedgetpu1-std
+echo "deb [signed-by=/etc/apt/keyrings/coral-edgetpu.gpg] https://packages.cloud.google.com/apt coral-edgetpu-stable main" | \
+    sudo tee /etc/apt/sources.list.d/coral-edgetpu.list
+
+sudo apt update
+
+# 2. Install Edge TPU runtime (standard clock - recommended)
+sudo apt install libedgetpu1-std
 
 # For maximum performance (higher power, runs hotter):
-# sudo apt-get install libedgetpu1-max
+# sudo apt install libedgetpu1-max
 
-# Python bindings
-pip install pycoral
+# 3. Python bindings - ai-edge-litert (works with Python 3.13)
+pip install ai-edge-litert>=2.1.0
+
+# NOTE: pycoral is NOT available for Python 3.13
+# For Python 3.11 environments, pycoral can be installed:
+#   pip install --index-url https://google-coral.github.io/py-repo/ pycoral~=2.0
+# WARNING: Do NOT use --extra-index-url (PyPI has a different 'pycoral' package)
 ```
+
+**Python Compatibility Matrix**:
+
+| Package | Python 3.11 | Python 3.13 | Notes |
+|---------|-------------|-------------|-------|
+| pycoral | ✅ | ❌ | No wheels for 3.13 |
+| tflite-runtime | ✅ | ❌ | Deprecated, use ai-edge-litert |
+| ai-edge-litert | ✅ | ✅ | Recommended for all versions |
+| libedgetpu | ✅ | ✅ | System library, Python-independent |
 
 **Supported Models**:
 

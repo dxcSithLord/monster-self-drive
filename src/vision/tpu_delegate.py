@@ -9,6 +9,7 @@ Features:
 - Graceful fallback to CPU inference when TPU unavailable
 - Model loading with TPU/CPU interpreter selection
 - Runtime performance monitoring
+- Support for ai-edge-litert with Edge TPU delegate (Python 3.13+)
 
 Usage:
     delegate = TPUDelegate()
@@ -17,18 +18,24 @@ Usage:
     else:
         interpreter = delegate.make_interpreter("model.tflite", use_tpu=False)
 
-Hardware Setup (Raspberry Pi):
-    # Add Coral repository
-    echo "deb https://packages.cloud.google.com/apt coral-edgetpu-stable main" | \
+Hardware Setup (Debian 13 Trixie / Raspberry Pi):
+    # Add Coral repository with proper signing key
+    curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
+        sudo gpg --dearmor -o /etc/apt/keyrings/coral-edgetpu.gpg
+
+    echo "deb [signed-by=/etc/apt/keyrings/coral-edgetpu.gpg] https://packages.cloud.google.com/apt coral-edgetpu-stable main" | \
         sudo tee /etc/apt/sources.list.d/coral-edgetpu.list
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-    sudo apt-get update
+
+    sudo apt update
 
     # Install Edge TPU runtime
-    sudo apt-get install libedgetpu1-std
+    sudo apt install libedgetpu1-std
 
-    # Python bindings (from Coral repo)
-    pip install --extra-index-url https://google-coral.github.io/py-repo/ pycoral
+    # Python bindings (ai-edge-litert works with Python 3.13)
+    pip install ai-edge-litert>=2.1.0
+
+    # NOTE: pycoral is NOT available for Python 3.13
+    # For Python 3.11, use: pip install --index-url https://google-coral.github.io/py-repo/ pycoral~=2.0
 """
 
 from __future__ import annotations
@@ -99,17 +106,54 @@ class TPUDelegate:
     stats: TPUStats = field(default_factory=TPUStats)
     _tpu_available: bool | None = field(default=None, repr=False)
     _tflite_available: bool | None = field(default=None, repr=False)
+    _edgetpu_delegate_available: bool = field(default=False, repr=False)
     _interpreter: Any = field(default=None, repr=False)
     _pycoral_module: Any = field(default=None, repr=False)
     _tflite_module: Any = field(default=None, repr=False)
+    _edgetpu_lib_path: str | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         """Initialize and detect available backends."""
         self._detect_backends()
 
+    def _find_edgetpu_library(self) -> str | None:
+        """Find the libedgetpu shared library.
+
+        Returns:
+            Path to libedgetpu.so if found, None otherwise.
+        """
+        import ctypes.util
+
+        # Common library names
+        lib_names = ["edgetpu", "libedgetpu.so.1", "libedgetpu.so"]
+
+        for name in lib_names:
+            path = ctypes.util.find_library(name)
+            if path:
+                return path
+
+        # Check common paths directly
+        common_paths = [
+            "/lib/aarch64-linux-gnu/libedgetpu.so.1",
+            "/usr/lib/aarch64-linux-gnu/libedgetpu.so.1",
+            "/lib/x86_64-linux-gnu/libedgetpu.so.1",
+            "/usr/lib/x86_64-linux-gnu/libedgetpu.so.1",
+        ]
+        for path in common_paths:
+            if Path(path).exists():
+                return path
+
+        return None
+
     def _detect_backends(self) -> None:
         """Detect available inference backends."""
-        # Try importing pycoral for Coral TPU
+        # First, check if libedgetpu is available (system library)
+        self._edgetpu_lib_path = self._find_edgetpu_library()
+        if self._edgetpu_lib_path:
+            logger.info(f"Edge TPU library found: {self._edgetpu_lib_path}")
+            self._edgetpu_delegate_available = True
+
+        # Try importing pycoral for Coral TPU (preferred for Python 3.11)
         try:
             from pycoral.utils import edgetpu
 
@@ -118,33 +162,40 @@ class TPUDelegate:
             devices = edgetpu.list_edge_tpus()
             self._tpu_available = len(devices) > 0
             if self._tpu_available:
-                logger.info(f"Coral TPU detected: {devices}")
+                logger.info(f"Coral TPU detected via pycoral: {devices}")
             else:
-                logger.info("Coral TPU library available but no device connected")
+                logger.info("pycoral available but no TPU device connected")
         except ImportError:
-            logger.info("pycoral not installed - Coral TPU unavailable")
-            self._tpu_available = False
+            logger.info("pycoral not installed (expected on Python 3.13+)")
+            # If pycoral not available but libedgetpu is, we can still use TPU
+            # via ai-edge-litert delegate loading
+            if self._edgetpu_delegate_available:
+                self._tpu_available = True
+                logger.info("Edge TPU available via libedgetpu delegate")
+            else:
+                self._tpu_available = False
         except Exception as e:
-            logger.warning(f"Error detecting Coral TPU: {e}")
-            self._tpu_available = False
+            logger.warning(f"Error detecting Coral TPU via pycoral: {e}")
+            # Fallback to delegate method
+            self._tpu_available = self._edgetpu_delegate_available
 
-        # Try importing TFLite runtime for CPU fallback
+        # Try importing TFLite runtime (ai-edge-litert preferred)
         try:
-            import tflite_runtime.interpreter as tflite
+            from ai_edge_litert import interpreter as litert
 
-            self._tflite_module = tflite
+            self._tflite_module = litert
             self._tflite_available = True
-            logger.info("TFLite runtime available for CPU inference")
+            logger.info("ai-edge-litert available for inference")
         except ImportError:
-            # Try ai-edge-litert as alternative
+            # Try legacy tflite_runtime
             try:
-                from ai_edge_litert import interpreter as litert
+                import tflite_runtime.interpreter as tflite
 
-                self._tflite_module = litert
+                self._tflite_module = tflite
                 self._tflite_available = True
-                logger.info("ai-edge-litert available for CPU inference")
+                logger.info("tflite-runtime available for CPU inference")
             except ImportError:
-                logger.info("No TFLite runtime available - CPU inference unavailable")
+                logger.info("No TFLite runtime available - inference unavailable")
                 self._tflite_available = False
 
     def is_available(self) -> bool:
@@ -229,6 +280,9 @@ class TPUDelegate:
     def _make_tpu_interpreter(self, model_path: Path) -> Any:
         """Create a Coral TPU interpreter.
 
+        Uses pycoral if available (Python 3.11), otherwise falls back to
+        ai-edge-litert with Edge TPU delegate (Python 3.13+).
+
         Args:
             model_path: Path to the Edge TPU model.
 
@@ -236,8 +290,31 @@ class TPUDelegate:
             Interpreter configured for TPU execution.
         """
         logger.info(f"Loading model on Coral TPU: {model_path}")
-        interpreter = self._pycoral_module.make_interpreter(str(model_path))
-        interpreter.allocate_tensors()
+
+        # Method 1: Use pycoral if available (preferred)
+        if self._pycoral_module is not None:
+            interpreter = self._pycoral_module.make_interpreter(str(model_path))
+            interpreter.allocate_tensors()
+            logger.info("Using pycoral for Edge TPU inference")
+
+        # Method 2: Use ai-edge-litert with Edge TPU delegate
+        elif self._tflite_module is not None and self._edgetpu_lib_path:
+            try:
+                # Load Edge TPU delegate
+                # ai-edge-litert supports experimental_delegates parameter
+                delegate = self._tflite_module.load_delegate(self._edgetpu_lib_path)
+                interpreter = self._tflite_module.Interpreter(
+                    model_path=str(model_path),
+                    experimental_delegates=[delegate],
+                )
+                interpreter.allocate_tensors()
+                logger.info("Using ai-edge-litert with Edge TPU delegate")
+            except Exception as e:
+                logger.warning(f"Failed to load Edge TPU delegate: {e}")
+                logger.info("Falling back to CPU inference")
+                return self._make_cpu_interpreter(model_path)
+        else:
+            raise RuntimeError("No TPU backend available")
 
         # Update stats
         self.stats.backend = TPUBackend.CORAL_TPU
@@ -352,12 +429,19 @@ class TPUDelegate:
         Returns:
             List of TPU device identifiers.
         """
-        if not self._tpu_available or self._pycoral_module is None:
-            return []
-        try:
-            return self._pycoral_module.list_edge_tpus()
-        except Exception:
-            return []
+        # Try pycoral first
+        if self._pycoral_module is not None:
+            try:
+                return self._pycoral_module.list_edge_tpus()
+            except Exception:
+                pass
+
+        # Fallback: check if libedgetpu is available
+        if self._edgetpu_delegate_available:
+            # Can't enumerate devices without pycoral, but we know TPU is available
+            return ["Edge TPU (via libedgetpu delegate)"]
+
+        return []
 
     def reset_stats(self) -> None:
         """Reset performance statistics."""
