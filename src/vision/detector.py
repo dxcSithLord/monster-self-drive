@@ -431,7 +431,7 @@ class ObjectDetector:
     @property
     def backend(self) -> TPUBackend:
         """Get the current inference backend."""
-        return self._delegate.get_backend()
+        return self._delegate.stats.backend
 
     def detect(self, frame: "NDArray[np.uint8]") -> list[Detection]:
         """Detect objects in a frame.
