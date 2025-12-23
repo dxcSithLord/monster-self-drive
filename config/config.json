@@ -30,9 +30,9 @@
   },
   "detection": {
     "enabled": true,
-    "backend": "auto",
-    "backendComment": "Detection backend: 'coral' (TPU), 'cpu' (TFLite), 'opencv' (tracker only), 'color', 'auto' (best available)",
-    "modelPath": "models/ssd_mobilenet_v2_coco_quant_postprocess_edgetpu.tflite",
+    "backend": "cpu",
+    "backendComment": "Detection backend: 'coral' (TPU), 'cpu' (TFLite), 'opencv' (tracker only), 'color', 'auto' (best available). NOTE: Coral TPU has known issues with Python 3.13 + ai-edge-litert 2.1.0",
+    "modelPath": "models/ssd_mobilenet_v2_coco_quant_postprocess.tflite",
     "modelPathComment": "Path to TFLite model (relative to project root)",
     "labelsPath": "models/coco_labels.txt",
     "confidenceThreshold": 0.5,

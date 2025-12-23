@@ -317,7 +317,25 @@ pip install ai-edge-litert>=2.1.0
 | pycoral | ✅ | ❌ | No wheels for 3.13 |
 | tflite-runtime | ✅ | ❌ | Deprecated, use ai-edge-litert |
 | ai-edge-litert | ✅ | ✅ | Recommended for all versions |
-| libedgetpu | ✅ | ✅ | System library, Python-independent |
+| libedgetpu | ✅ | ⚠️ | Segfault with ai-edge-litert 2.1.0 |
+
+**Known Issue: Edge TPU + Python 3.13**
+
+As of December 2024, there is a known incompatibility between:
+- `ai-edge-litert 2.1.0`
+- `libedgetpu 16.0`
+- Python 3.13 (Debian Trixie)
+
+**Symptoms**: Segmentation fault when loading Edge TPU model with delegate.
+
+**Workaround**: Use CPU inference with non-EdgeTPU models:
+```bash
+# Use CPU model instead of EdgeTPU model
+wget https://raw.githubusercontent.com/google-coral/test_data/master/ssd_mobilenet_v2_coco_quant_postprocess.tflite
+```
+
+**Expected Resolution**: Future versions of pycoral or ai-edge-litert may fix this.
+For now, CPU inference (~3-5 fps) is the recommended fallback on Python 3.13.
 
 **Supported Models**:
 

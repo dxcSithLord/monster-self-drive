@@ -311,6 +311,7 @@ class ObjectDetector:
         target_classes: List of class names to detect (None = all).
         max_detections: Maximum number of detections to return.
         input_size: Model input size (width, height).
+        force_cpu: Force CPU inference even if TPU is available.
     """
 
     model_path: str | Path
@@ -319,6 +320,7 @@ class ObjectDetector:
     target_classes: list[str] | None = None
     max_detections: int = 10
     input_size: tuple[int, int] = (300, 300)
+    force_cpu: bool = False
 
     # Internal state
     _delegate: TPUDelegate = field(default=None, repr=False)  # type: ignore
@@ -391,7 +393,12 @@ class ObjectDetector:
             return
 
         try:
-            self._interpreter = self._delegate.make_interpreter(model_path)
+            # Use CPU if force_cpu is True, otherwise let delegate decide
+            use_tpu = None if not self.force_cpu else False
+            if self.force_cpu:
+                logger.info("Forcing CPU inference (force_cpu=True)")
+
+            self._interpreter = self._delegate.make_interpreter(model_path, use_tpu=use_tpu)
             self._input_details = self._delegate.get_input_details()
             self._output_details = self._delegate.get_output_details()
 
@@ -638,9 +645,21 @@ def create_detector_from_config(config: dict) -> ObjectDetector | None:
 
     # Resolve model path relative to project root
     model_path = detection_config.get(
-        "modelPath", "models/ssd_mobilenet_v2_coco_quant_postprocess_edgetpu.tflite"
+        "modelPath", "models/ssd_mobilenet_v2_coco_quant_postprocess.tflite"
     )
     labels_path = detection_config.get("labelsPath", "models/coco_labels.txt")
+
+    # Determine if we should force CPU inference
+    # Backend options: 'auto', 'coral', 'cpu', 'opencv', 'color'
+    backend = detection_config.get("backend", "auto").lower()
+    force_cpu = backend == "cpu"
+
+    if backend == "cpu":
+        logger.info("Backend set to 'cpu' - forcing CPU inference")
+    elif backend == "coral":
+        logger.info("Backend set to 'coral' - will attempt TPU inference")
+    elif backend == "auto":
+        logger.info("Backend set to 'auto' - will use best available")
 
     detector = ObjectDetector(
         model_path=model_path,
@@ -652,6 +671,7 @@ def create_detector_from_config(config: dict) -> ObjectDetector | None:
             detection_config.get("inputWidth", 300),
             detection_config.get("inputHeight", 300),
         ),
+        force_cpu=force_cpu,
     )
 
     return detector
