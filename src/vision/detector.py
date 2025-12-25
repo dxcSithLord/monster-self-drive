@@ -415,7 +415,7 @@ class ObjectDetector:
                 f"input_size={self.input_size}"
             )
         except Exception as e:
-            logger.error(f"Error initializing detector: {e}")
+            logger.exception(f"Error initializing detector: {e}")
             self._status = DetectionStatus.ERROR
 
     @property
