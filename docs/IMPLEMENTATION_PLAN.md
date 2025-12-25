@@ -264,7 +264,7 @@ X-axis: Left/Right steering (-1.0 to 1.0)
 
 **Implementation Strategy**:
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    Object Detection Pipeline                 │
 ├─────────────────────────────────────────────────────────────┤
@@ -322,6 +322,7 @@ pip install ai-edge-litert>=2.1.0
 **Known Issue: Edge TPU + Python 3.13**
 
 As of December 2024, there is a known incompatibility between:
+
 - `ai-edge-litert 2.1.0`
 - `libedgetpu 16.0`
 - Python 3.13 (Debian Trixie)
@@ -329,6 +330,7 @@ As of December 2024, there is a known incompatibility between:
 **Symptoms**: Segmentation fault when loading Edge TPU model with delegate.
 
 **Workaround**: Use CPU inference with non-EdgeTPU models:
+
 ```bash
 # Use CPU model instead of EdgeTPU model
 wget https://raw.githubusercontent.com/google-coral/test_data/master/ssd_mobilenet_v2_coco_quant_postprocess.tflite
