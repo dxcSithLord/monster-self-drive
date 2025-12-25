@@ -116,12 +116,12 @@ class TrackedObject:
     frames_since_detection: int = 0
     frames_lost: int = 0
     velocity: tuple[float, float] = (0.0, 0.0)
-    _last_center: tuple[float, float] = field(default=(0.0, 0.0), repr=False)
+    _last_center: tuple[float, float] | None = field(default=None, repr=False)
 
     def update_velocity(self) -> None:
         """Update velocity estimate based on position change."""
         current_center = self.bbox.center
-        if self._last_center != (0.0, 0.0):
+        if self._last_center is not None:
             dx = current_center[0] - self._last_center[0]
             dy = current_center[1] - self._last_center[1]
             # Smooth velocity estimate
@@ -252,7 +252,7 @@ class ObjectTracker:
         try:
             success = self._tracker.init(frame, opencv_bbox)
         except Exception as e:
-            logger.error(f"Tracker initialization failed: {e}")
+            logger.exception(f"Tracker initialization failed: {e}")
             return False
 
         if not success:
@@ -318,7 +318,7 @@ class ObjectTracker:
         try:
             success, opencv_bbox = self._tracker.update(frame)
         except Exception as e:
-            logger.error(f"Tracker update failed: {e}")
+            logger.exception(f"Tracker update failed: {e}")
             success = False
             opencv_bbox = (0, 0, 0, 0)
 
@@ -413,7 +413,7 @@ class ObjectTracker:
             try:
                 success = self._tracker.init(frame, opencv_bbox)
             except Exception as e:
-                logger.error(f"Tracker reinitialization failed: {e}")
+                logger.exception(f"Tracker reinitialization failed: {e}")
                 return False
 
             if success:
