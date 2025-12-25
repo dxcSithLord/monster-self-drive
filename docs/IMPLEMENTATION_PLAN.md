@@ -357,43 +357,71 @@ For now, CPU inference (~3-5 fps) is the recommended fallback on Python 3.13.
 #### Option A: Coral TPU Detection (Primary - Recommended)
 
 ```python
-# Hardware-accelerated ML inference
+# Hardware-accelerated ML inference using ai-edge-litert
 # Uses pre-trained COCO models for 90 object classes
 # Person, dog, cat, car, bicycle, etc.
-from pycoral.adapters import detect
-from pycoral.utils.edgetpu import make_interpreter
+from ai_edge_litert import interpreter as litert
+import numpy as np
+import cv2
 
 class CoralDetector:
-    def __init__(self, model_path: str):
-        self.interpreter = make_interpreter(model_path)
+    def __init__(self, model_path: str, edgetpu_lib: str = "libedgetpu.so.1"):
+        # Load Edge TPU delegate for hardware acceleration
+        delegate = litert.load_delegate(edgetpu_lib)
+        self.interpreter = litert.Interpreter(
+            model_path=model_path,
+            experimental_delegates=[delegate]
+        )
         self.interpreter.allocate_tensors()
+        self.input_details = self.interpreter.get_input_details()
+        self.output_details = self.interpreter.get_output_details()
 
     def detect(self, frame) -> list[Detection]:
-        # Resize and preprocess
-        input_tensor = self.preprocess(frame)
-        # Run inference on TPU
+        # Resize and preprocess to model input size (e.g., 300x300)
+        input_shape = self.input_details[0]['shape'][1:3]
+        resized = cv2.resize(frame, (input_shape[1], input_shape[0]))
+        input_tensor = np.expand_dims(resized, axis=0).astype(np.uint8)
+
+        # Set input and run inference on TPU
+        self.interpreter.set_tensor(self.input_details[0]['index'], input_tensor)
         self.interpreter.invoke()
-        # Parse detections
+
+        # Parse detection outputs (boxes, classes, scores)
         return self.parse_output()
 ```
 
 **Pros**: Fast (25-30 fps), semantic understanding, robust
-**Cons**: Requires Coral USB device (~$60)
+**Cons**: Requires Coral USB device (~$60), Python 3.13 has known segfault issue
 
 #### Option B: CPU TFLite Detection (Fallback)
 
 ```python
 # Software inference when TPU unavailable
-# Uses same models, slower execution
-import tflite_runtime.interpreter as tflite
+# Uses ai-edge-litert (successor to tflite-runtime)
+from ai_edge_litert import interpreter as litert
+import numpy as np
+import cv2
 
 class CPUDetector:
     def __init__(self, model_path: str):
-        self.interpreter = tflite.Interpreter(model_path=model_path)
+        # CPU-only interpreter (no delegate)
+        self.interpreter = litert.Interpreter(model_path=model_path)
         self.interpreter.allocate_tensors()
+        self.input_details = self.interpreter.get_input_details()
+        self.output_details = self.interpreter.get_output_details()
+
+    def detect(self, frame) -> list[Detection]:
+        # Same preprocessing as TPU version
+        input_shape = self.input_details[0]['shape'][1:3]
+        resized = cv2.resize(frame, (input_shape[1], input_shape[0]))
+        input_tensor = np.expand_dims(resized, axis=0).astype(np.uint8)
+
+        self.interpreter.set_tensor(self.input_details[0]['index'], input_tensor)
+        self.interpreter.invoke()
+        return self.parse_output()
 ```
 
-**Pros**: No special hardware needed
+**Pros**: No special hardware needed, works on Python 3.13
 **Cons**: Slow (3-5 fps on RPi 3B)
 
 #### Option C: Feature-Based Tracking (Maintenance)
