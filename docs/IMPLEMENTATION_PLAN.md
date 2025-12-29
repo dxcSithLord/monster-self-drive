@@ -321,7 +321,7 @@ pip install ai-edge-litert>=2.1.0
 
 **Known Issue: Edge TPU + Python 3.13**
 
-As of December 2024, there is a known incompatibility between:
+As of December 2025, there is a known incompatibility between:
 
 - `ai-edge-litert 2.1.0`
 - `libedgetpu 16.0`
