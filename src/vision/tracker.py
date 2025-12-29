@@ -252,7 +252,7 @@ class ObjectTracker:
         try:
             success = self._tracker.init(frame, opencv_bbox)
         except Exception:
-            logger.exception(f"Tracker initialization failed")
+            logger.exception("Tracker initialization failed")
             return False
 
         if not success:
@@ -318,7 +318,7 @@ class ObjectTracker:
         try:
             success, opencv_bbox = self._tracker.update(frame)
         except Exception:
-            logger.exception(f"Tracker update failed:")
+            logger.exception("Tracker update failed:")
             success = False
             opencv_bbox = (0, 0, 0, 0)
 
@@ -413,7 +413,7 @@ class ObjectTracker:
             try:
                 success = self._tracker.init(frame, opencv_bbox)
             except Exception:
-                logger.exception(f"Tracker reinitialization failed:")
+                logger.exception("Tracker reinitialization failed:")
                 return False
 
             if success:
