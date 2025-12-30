@@ -456,7 +456,7 @@ class ObjectDetector:
         logger.debug(f"Inference time: {inference_time:.1f}ms")
 
         # Parse output
-        detections = self._parse_output(frame.shape[1], frame.shape[0])
+        detections = self._parse_output()
 
         # Filter by target classes
         if self._target_class_ids:
@@ -493,15 +493,11 @@ class ObjectDetector:
         input_index = self._input_details[0]["index"]
         self._interpreter.set_tensor(input_index, input_tensor)
 
-    def _parse_output(self, frame_width: int, frame_height: int) -> list[Detection]:
+    def _parse_output(self) -> list[Detection]:
         """Parse model output into Detection objects.
 
-        Args:
-            frame_width: Original frame width.
-            frame_height: Original frame height.
-
         Returns:
-            List of Detection objects.
+            List of Detection objects with normalized bounding boxes.
         """
         detections = []
 

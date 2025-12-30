@@ -445,6 +445,17 @@ class ObjectTracker:
 
         Returns:
             Predicted bounding box, or None if not tracking.
+
+        Note:
+            Unlike get_search_region(), this method intentionally does NOT clamp
+            coordinates to [0, 1] bounds. This is correct behavior because:
+            1. The prediction represents where the object would be if it continues
+               moving at current velocity, even if that's off-screen.
+            2. Downstream consumers (e.g., re-acquisition algorithms) may use the
+               predicted direction to determine search patterns even when the
+               object has left the frame.
+            3. Callers needing bounded coordinates should clamp the result or use
+               get_search_region() instead.
         """
         if self._tracked_object is None:
             return None
@@ -452,7 +463,7 @@ class ObjectTracker:
         bbox = self._tracked_object.bbox
         vx, vy = self._tracked_object.velocity
 
-        # Simple linear prediction
+        # Simple linear prediction - may exceed [0, 1] bounds (see docstring)
         dx = vx * frames_ahead
         dy = vy * frames_ahead
 
