@@ -40,14 +40,34 @@ smbus2>=0.4.3  # I2C communication (Python 3 compatible)
 adafruit-circuitpython-mpu6050>=1.2.0  # MPU6050 IMU module
 adafruit-circuitpython-bno055>=1.6.0  # BNO055 IMU (alternative)
 
-# Optional: Machine Learning
-# NOTE: No ML inference code implemented yet. When adding on-device inference:
-# - ARM (aarch64): ai-edge-litert (LiteRT, formerly TensorFlow Lite)
-# - x86_64 dev: tensorflow + keras (ensure keras>=3.12.0 for CVE fixes)
+# Machine Learning - Object Detection (Phase 2)
+# LiteRT (formerly TensorFlow Lite) for CPU inference
+# ai-edge-litert is Google's successor to tflite-runtime
+# Verified working on Python 3.13 + Debian Trixie + aarch64
 # See: https://ai.google.dev/edge/litert/migration
+ai-edge-litert>=2.1.0
+
+# Google Coral TPU Support (Phase 2 - Hardware Acceleration)
+# Provides ~25-30 fps object detection on Raspberry Pi
+#
+# IMPORTANT: pycoral is NOT available for Python 3.13 yet.
+# The code uses ai-edge-litert with Edge TPU delegate as fallback.
+#
+# System setup for Coral TPU (Debian 13 Trixie):
+#   # Install Edge TPU runtime
+#   curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
+#       sudo gpg --dearmor -o /etc/apt/keyrings/coral-edgetpu.gpg
+#   echo "deb [signed-by=/etc/apt/keyrings/coral-edgetpu.gpg] https://packages.cloud.google.com/apt coral-edgetpu-stable main" | \
+#       sudo tee /etc/apt/sources.list.d/coral-edgetpu.list
+#   sudo apt update && sudo apt install libedgetpu1-std
+#
+# For Python 3.11 environments where pycoral IS available:
+#   pip install --index-url https://google-coral.github.io/py-repo/ pycoral~=2.0
+#
+# NOTE: Do NOT use --extra-index-url for pycoral (PyPI has wrong package)
 
 # Optional: Advanced Object Detection
-# onnxruntime>=1.16.0  # ONNX Runtime - uncomment when inference code added
+# onnxruntime>=1.16.0  # ONNX Runtime - uncomment for ONNX model support
 
 # Utilities
 Pillow>=11.0.0  # Image processing utilities

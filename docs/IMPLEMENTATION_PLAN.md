@@ -231,74 +231,227 @@ X-axis: Left/Right steering (-1.0 to 1.0)
 
 ### 2.1 Architecture Overview
 
-**New Module**: `ObjectTracker.py`
+**New Modules**: `src/vision/`
 
 **Components**:
 
-1. Object Detection Module
-2. Object Tracking Module
-3. Distance Estimation Module
-4. Motion Controller
-5. Re-acquisition Module
-6. Inversion Detection Module
+1. Object Detection Module (`detector.py`)
+2. Object Tracking Module (`tracker.py`)
+3. TPU Delegate (`tpu_delegate.py`) - Google Coral TPU abstraction
+4. Distance Estimation Module
+5. Motion Controller
+6. Re-acquisition Module
+7. Inversion Detection Module
 
-### 2.2 Object Detection Module
+### 2.2 Hardware Acceleration: Google Coral TPU
+
+**Objective**: Enable high-performance ML inference for object detection
+
+**Hardware**: Google Coral USB Accelerator
+
+- USB 3.0 connection (USB 2.0 compatible, slower)
+- Edge TPU for TensorFlow Lite models
+- ~4 TOPS inference performance
+- Supports MobileNet SSD, EfficientDet-Lite, YOLO variants
+
+**Detection Performance Targets**:
+
+| Hardware | Expected FPS | Notes |
+|----------|-------------|-------|
+| Coral TPU | 25-30 fps | Full object detection |
+| CPU (TFLite) | 3-5 fps | Fallback mode |
+| OpenCV Tracker | 15-25 fps | Tracking only (no detection) |
+
+**Implementation Strategy**:
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                    Object Detection Pipeline                 │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────┐    ┌──────────────┐    ┌──────────────┐   │
+│  │ Frame Input │───▶│ TPU Delegate │───▶│  Detections  │   │
+│  └─────────────┘    └──────────────┘    └──────────────┘   │
+│                            │                    │           │
+│                     ┌──────┴──────┐             │           │
+│                     ▼             ▼             ▼           │
+│               ┌──────────┐  ┌──────────┐  ┌──────────┐     │
+│               │ Coral TPU│  │CPU TFLite│  │ Tracker  │     │
+│               │ (Primary)│  │(Fallback)│  │(Maintain)│     │
+│               └──────────┘  └──────────┘  └──────────┘     │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Coral TPU Setup (Debian 13 Trixie / Raspberry Pi)**:
+
+```bash
+# 1. Add Coral repository with proper signing key (Debian 13+ method)
+curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
+    sudo gpg --dearmor -o /etc/apt/keyrings/coral-edgetpu.gpg
+
+echo "deb [signed-by=/etc/apt/keyrings/coral-edgetpu.gpg] https://packages.cloud.google.com/apt coral-edgetpu-stable main" | \
+    sudo tee /etc/apt/sources.list.d/coral-edgetpu.list
+
+sudo apt update
+
+# 2. Install Edge TPU runtime (standard clock - recommended)
+sudo apt install libedgetpu1-std
+
+# For maximum performance (higher power, runs hotter):
+# sudo apt install libedgetpu1-max
+
+# 3. Python bindings - ai-edge-litert (works with Python 3.13)
+pip install ai-edge-litert>=2.1.0
+
+# NOTE: pycoral is NOT available for Python 3.13
+# For Python 3.11 environments, pycoral can be installed:
+#   pip install --index-url https://google-coral.github.io/py-repo/ pycoral~=2.0
+# WARNING: Do NOT use --extra-index-url (PyPI has a different 'pycoral' package)
+```
+
+**Python Compatibility Matrix**:
+
+| Package | Python 3.11 | Python 3.13 | Notes |
+|---------|-------------|-------------|-------|
+| pycoral | ✅ | ❌ | No wheels for 3.13 |
+| tflite-runtime | ✅ | ❌ | Deprecated, use ai-edge-litert |
+| ai-edge-litert | ✅ | ✅ | Recommended for all versions |
+| libedgetpu | ✅ | ⚠️ | Segfault with ai-edge-litert 2.1.0 |
+
+**Known Issue: Edge TPU + Python 3.13**
+
+As of December 2025, there is a known incompatibility between:
+
+- `ai-edge-litert 2.1.0`
+- `libedgetpu 16.0`
+- Python 3.13 (Debian Trixie)
+
+**Symptoms**: Segmentation fault when loading Edge TPU model with delegate.
+
+**Workaround**: Use CPU inference with non-EdgeTPU models:
+
+```bash
+# Use CPU model instead of EdgeTPU model
+wget https://raw.githubusercontent.com/google-coral/test_data/master/ssd_mobilenet_v2_coco_quant_postprocess.tflite
+```
+
+**Expected Resolution**: Future versions of pycoral or ai-edge-litert may fix this.
+For now, CPU inference (~3-5 fps) is the recommended fallback on Python 3.13.
+
+**Supported Models**:
+
+| Model | Size | Coral FPS | Use Case |
+|-------|------|-----------|----------|
+| MobileNet SSD v2 | 6.8MB | ~30 fps | General objects (COCO 90 classes) |
+| EfficientDet-Lite0 | 4.4MB | ~25 fps | Higher accuracy detection |
+| MobileNet v2 (classify) | 3.2MB | ~60 fps | Classification only |
+| YOLOv5n (edge) | 3.9MB | ~20 fps | Fast detection |
+
+### 2.3 Object Detection Module
 
 **Objective**: Identify and select objects to follow
 
-**Methods**:
+**Methods** (Priority Order):
 
-#### Option A: Template Matching (Simple, Fast)
+#### Option A: Coral TPU Detection (Primary - Recommended)
 
 ```python
-# User clicks on web interface to select object
-# System captures template from current frame
-# Uses cv2.matchTemplate() for tracking
+# Hardware-accelerated ML inference using ai-edge-litert
+# Uses pre-trained COCO models for 90 object classes
+# Person, dog, cat, car, bicycle, etc.
+from ai_edge_litert import interpreter as litert
+import numpy as np
+import cv2
+
+class CoralDetector:
+    def __init__(self, model_path: str, edgetpu_lib: str = "libedgetpu.so.1"):
+        # Load Edge TPU delegate for hardware acceleration
+        delegate = litert.load_delegate(edgetpu_lib)
+        self.interpreter = litert.Interpreter(
+            model_path=model_path,
+            experimental_delegates=[delegate]
+        )
+        self.interpreter.allocate_tensors()
+        self.input_details = self.interpreter.get_input_details()
+        self.output_details = self.interpreter.get_output_details()
+
+    def detect(self, frame) -> list[Detection]:
+        # Resize and preprocess to model input size (e.g., 300x300)
+        input_shape = self.input_details[0]['shape'][1:3]
+        resized = cv2.resize(frame, (input_shape[1], input_shape[0]))
+        input_tensor = np.expand_dims(resized, axis=0).astype(np.uint8)
+
+        # Set input and run inference on TPU
+        self.interpreter.set_tensor(self.input_details[0]['index'], input_tensor)
+        self.interpreter.invoke()
+
+        # Parse detection outputs (boxes, classes, scores)
+        return self.parse_output()
 ```
 
-**Pros**: No external dependencies, fast on RPi 3B
-**Cons**: Sensitive to scale/rotation changes
+**Pros**: Fast (25-30 fps), semantic understanding, robust
+**Cons**: Requires Coral USB device (~$60), Python 3.13 has known segfault issue
 
-#### Option B: Color-Based Detection (Current Track-Following Logic)
+#### Option B: CPU TFLite Detection (Fallback)
+
+```python
+# Software inference when TPU unavailable
+# Uses ai-edge-litert (successor to tflite-runtime)
+from ai_edge_litert import interpreter as litert
+import numpy as np
+import cv2
+
+class CPUDetector:
+    def __init__(self, model_path: str):
+        # CPU-only interpreter (no delegate)
+        self.interpreter = litert.Interpreter(model_path=model_path)
+        self.interpreter.allocate_tensors()
+        self.input_details = self.interpreter.get_input_details()
+        self.output_details = self.interpreter.get_output_details()
+
+    def detect(self, frame) -> list[Detection]:
+        # Same preprocessing as TPU version
+        input_shape = self.input_details[0]['shape'][1:3]
+        resized = cv2.resize(frame, (input_shape[1], input_shape[0]))
+        input_tensor = np.expand_dims(resized, axis=0).astype(np.uint8)
+
+        self.interpreter.set_tensor(self.input_details[0]['index'], input_tensor)
+        self.interpreter.invoke()
+        return self.parse_output()
+```
+
+**Pros**: No special hardware needed, works on Python 3.13
+**Cons**: Slow (3-5 fps on RPi 3B)
+
+#### Option C: Feature-Based Tracking (Maintenance)
+
+```python
+# Use cv2.TrackerKCF / cv2.TrackerCSRT
+# For maintaining track between detections
+# Lower latency than running detection every frame
+```
+
+**Pros**: Low latency, maintains smooth tracking
+**Cons**: Can drift, needs periodic re-detection
+
+#### Option D: Color-Based Detection (Legacy)
 
 ```python
 # Extend existing color detection from ImageProcessor.py
-# Allow user to select color range via web interface
-# Track largest blob of specified color
+# Fallback for non-ML operation
 ```
 
-**Pros**: Already implemented, robust
+**Pros**: Already implemented, no model files
 **Cons**: Limited to color-distinctive objects
 
-#### Option C: Feature-Based Tracking (Recommended)
+**Recommended Approach**: Hybrid Pipeline
 
-```python
-# Use cv2.goodFeaturesToTrack() + optical flow
-# Or cv2.TrackerKCF / cv2.TrackerCSRT
-# More robust to appearance changes
-```
+1. **Detection Phase**: Coral TPU runs detection every N frames (e.g., every 5 frames)
+2. **Tracking Phase**: OpenCV tracker maintains position between detections
+3. **Fallback**: CPU TFLite if Coral unavailable, color detection if no models
 
-**Pros**: Handles rotation/scale, more robust
-**Cons**: Higher computational load
-
-#### Option D: Deep Learning (Advanced)
-
-```python
-# Use TensorFlow Lite or ONNX Runtime
-# MobileNet SSD or YOLO-tiny for object detection
-# Classes: person, cat, dog, car, etc.
-```
-
-**Pros**: Semantic understanding, robust
-**Cons**: Requires model files, slower inference
-
-**Recommended Approach**: Hybrid
-
-- Start with feature-based tracking (Option C)
-- Optional: Add TF Lite for object classification
-- Fallback to color tracking if features lost
-
-### 2.3 Object Tracking Implementation
+### 2.4 Object Tracking Implementation
 
 **Core Algorithm**:
 
@@ -339,7 +492,7 @@ class ObjectTracker:
 4. **LOST**: Object not found, returning to last position
 5. **WAITING**: At last known position, waiting for input
 
-### 2.4 Distance Estimation & Safe Following
+### 2.5 Distance Estimation & Safe Following
 
 ### Method 1: Bounding Box Size (Simple)
 
@@ -427,7 +580,7 @@ def calculate_steering(bbox_center_x, frame_width):
     return steering
 ```
 
-### 2.5 Object Velocity Estimation
+### 2.6 Object Velocity Estimation
 
 **Optical Flow Method**:
 
